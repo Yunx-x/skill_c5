@@ -1,0 +1,19 @@
+{
+  "name": "skill-c5",
+  "version": "1.0.0",
+  "main": "/src/main.ts",
+  "scripts": {
+    "build": "webpack --mode production --config webpack.config.js --no-cache --stats-error-details"
+  },
+  "dependencies": {
+    "@types/frida-gum": "^18.5.1",
+    "frida-compile": "^16.4.1",
+    "typescript": "^5.6.3"
+  },
+  "devDependencies": {
+    "terser-webpack-plugin": "^5.3.10",
+    "ts-loader": "^9.5.1",
+    "webpack": "^5.95.0",
+    "webpack-cli": "^6.0.1"
+  }
+}

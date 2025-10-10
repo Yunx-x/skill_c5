@@ -1,0 +1,17 @@
+{
+	"compilerOptions": {
+		"target": "es2020",
+		"lib": ["es2020"],
+		"allowJs": true,
+		"noEmit": false,
+		"strict": false,
+		"esModuleInterop": true,
+		"moduleResolution": "node",
+		"baseUrl": "./",
+		"paths": {
+			"*": ["*", "src/*"]
+		},
+		"skipLibCheck": true,
+		"allowSyntheticDefaultImports": true
+	}
+}
