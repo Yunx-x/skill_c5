@@ -1,6 +1,5 @@
 import {HookFuncCore} from "../HookFuncCore";
 import {PointerClass} from "../PointerClass";
-import {zrand} from "../ConstFunc";
 
 /**
  * 技能中的Player
