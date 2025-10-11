@@ -470,7 +470,7 @@ export abstract class BaseHookSkillStub {
 	}
 
 	/**
-	 * 法阵效果
+	 * 法阵效果，被动效果
 	 * @param {NativePointer} stub
 	 * @param {Skill} skill
 	 * @param {NativeFunction} originFunc
