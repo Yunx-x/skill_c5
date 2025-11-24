@@ -1,5 +1,6 @@
-import { BaseHookSkillStub } from "base/skill/BaseHookSkillStub";
-import { Skill } from "src/base/skill/Skill";
+import {BaseHookSkillStub} from "base/skill/BaseHookSkillStub";
+import {Skill} from "src/base/skill/Skill";
+import {setUniqprompt} from "base/ExtFunc";
 
 /**
  * 223 寒冰咒   9
@@ -154,8 +155,7 @@ class Skill222 extends BaseHookSkillStub {
     }
 
     BlessMe(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
-        const player = skill.GetPlayerNice();
-        player.SetUniqprompt(1)
+        setUniqprompt(stub, skill, originFunc)
         return true
     }
 
@@ -330,7 +330,7 @@ class Skill235 extends BaseHookSkillStub {
     StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
         const player = skill.GetPlayerNice();
         player.SetMagicshield(0.08 + skill.GetLevel() * 0.01, 2 * player.GetMaxmp(), 30000)
-        player.SetDeccrithurt(120, 30000, 0.1, 1)
+        player.SetDecfatalhurt(120, 0.1, 30000, 1)
         return true
     }
 
@@ -377,9 +377,7 @@ class Skill239 extends BaseHookSkillStub {
 
     StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
         const player = skill.GetPlayerNice();
-
         player.SetMpgen(120, 3000 * skill.GetLevel() + 3000, 0, 72 + skill.GetLevel() * 180, 5)
-
         return true
     }
 }
@@ -409,7 +407,8 @@ class Skill224 extends BaseHookSkillStub {
  * 真气贯穿+2（真气大于95%时追加本体攻击力8%）
  * 单体攻击10.7米，施法时间1秒，技能冷却60秒。
  * 攻击目标1次，附加468/897点攻击力，定身能力为自身定抗的5%/45%，效果持续2.1/4.5秒。
- * 当自身攻击大于目标攻击时，有6%/54%概率令目标进入焱阳状态，持续15秒，效果为：令目标每次攻击都会丢失自身一个常规有利状态，且每次攻击目标造成伤害的50%由自身承担，青云自身每2万点攻击可额外提高成功率15%。
+ * 当自身攻击大于目标攻击时，有6%/54%概率令目标进入焱阳状态，持续15秒，
+ * 效果为：令目标每次攻击都会丢失自身一个常规有利状态，且每次攻击目标造成伤害的50%由自身承担，青云自身每2万点攻击可额外提高成功率15%。
  */
 class Skill312 extends BaseHookSkillStub {
 
@@ -435,6 +434,11 @@ class Skill312 extends BaseHookSkillStub {
         player.SetVar1(player.GetRes3() * (skillLevel * 0.05))
         player.SetVar2(player.GetMaxatk())
         player.SetPerform(1)
+    }
+
+    BlessMe(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        setUniqprompt(stub, skill, originFunc)
+        return true
     }
 
     StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
@@ -532,13 +536,10 @@ class Skill228 extends BaseHookSkillStub {
 
     StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
         const player = skill.GetPlayerNice();
-
         player.SetDrainmagic(120, 0.1 * skill.GetLevel())
-
         // if (player.GetVar1() > player.GetMaxmp()) {
-
+        //
         // }
-
         return true
     }
 
@@ -559,9 +560,19 @@ class Skill238 extends BaseHookSkillStub {
         return 2000;
     }
 
+    Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice();
+
+        skill.SetPlus(429 + skill.GetLevel() * 21)
+
+        player.SetPerform(1)
+    }
+
 }
 
 /**
+ * TODO://被动改主动
+ *
  * 461 黄帝内经   3
  * 自身祝福，施法时间1秒，技能冷却120/100秒。
  * 获得神佑效果，免疫6/18次伤害和负面效果，持续16/24秒，且最初3秒自身获得无敌效果。
@@ -576,6 +587,13 @@ class Skill461 extends BaseHookSkillStub {
         return 130000 - skill.GetLevel() * 10000;
     }
 
+    BlessMe(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice();
+        player.SetBlessed(skill.GetLevel() * 6, 16000 + (skill.GetLevel() - 1) * 8000)
+        player.SetInvincible(3100)
+        return true
+    }
+
 }
 
 /**
@@ -588,6 +606,13 @@ class Skill313 extends BaseHookSkillStub {
 
     constructor() {
         super(313);
+    }
+
+    TakeEffect(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice();
+        player.SetPasaddattack(skill.GetLevel() * 100)
+        player.SetPasincattack(skill.GetLevel() * 0.02)
+        return true
     }
 
 }
@@ -606,6 +631,17 @@ class Skill236 extends BaseHookSkillStub {
 
     GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
         return 145000 - skill.GetLevel() * 5000;
+    }
+    Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice();
+        player.SetVar1(player.GetRes3())
+        player.SetPerform(1)
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice();
+        player.SetWrap(player.GetVar1(),6100)
+        return true
     }
 
 }
