@@ -1,6 +1,6 @@
-import {BaseHookSkillStub} from "base/skill/BaseHookSkillStub";
-import {Skill} from "src/base/skill/Skill";
-import {setUniqprompt} from "base/ExtFunc";
+import { BaseHookSkillStub } from "base/skill/BaseHookSkillStub";
+import { Skill } from "src/base/skill/Skill";
+import { setUniqprompt } from "base/ExtFunc";
 
 /**
  * 223 寒冰咒   9
@@ -632,6 +632,7 @@ class Skill236 extends BaseHookSkillStub {
     GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
         return 145000 - skill.GetLevel() * 5000;
     }
+
     Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
         const player = skill.GetPlayerNice();
         player.SetVar1(player.GetRes3())
@@ -640,7 +641,7 @@ class Skill236 extends BaseHookSkillStub {
 
     StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
         const player = skill.GetPlayerNice();
-        player.SetWrap(player.GetVar1(),6100)
+        player.SetWrap(player.GetVar1(), 6100)
         return true
     }
 
@@ -662,6 +663,38 @@ class Skill237 extends BaseHookSkillStub {
         return 8000;
     }
 
+    Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice();
+        const skillLevel = skill.GetLevel();
+
+        const mp = player.GetMp();
+        const maxmp = player.GetMaxmp();
+        if (mp / maxmp > 0.95) {
+            skill.SetRatio(1 + 0.12)
+        }
+
+        const v41 = 1.42 - skillLevel * 0.05;
+        const v34 = 114 * skillLevel + 901;
+        const v27 = skillLevel * 6.4;
+        const v42 = (v34 - skillLevel * v27) * v41;
+        const v35 = skillLevel * 0.05 + 0.55;
+        const v28 = skillLevel * 1.8;
+        const v29 = skillLevel * v28;
+        const v43 = (77 * skillLevel + v29 + 636) * v35 + v42;
+        skill.SetPlus(Math.floor(v43));
+        player.SetPerform(1);
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        //并令目标在未来8秒内损失3296/6016气血
+        const player = skill.GetPlayerNice();
+        const prob = (1.0 - player.GetLevel() * 0.002) * 100.0;
+
+        const amount = 340 * skill.GetLevel() + 2956;
+        player.SetHpleak(prob, 8000, amount, 0, 1);
+        return true
+    }
+
 }
 
 /**
@@ -677,6 +710,28 @@ class Skill241 extends BaseHookSkillStub {
 
     GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
         return 120000;
+    }
+
+    BlessMe(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+
+        return true
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice();
+        const skillLevel = skill.GetLevel();
+        
+        // 防御提升20/60点，持续10/30分钟
+        const defenceValue = 20 + (skillLevel - 1) * 10;
+        const defenceTime = (10 + (skillLevel - 1) * 5) * 60 * 1000;
+        player.SetAdddefence(120, defenceTime, defenceValue, 1);
+        
+        // 真气上限提升200/1000点，持续10/30分钟
+        const mpValue = 200 * skillLevel;
+        const mpTime = (10 + (skillLevel - 1) * 5) * 60 * 1000;
+        player.SetAddmp(mpTime, mpValue, 1);
+        
+        return true
     }
 
 }
