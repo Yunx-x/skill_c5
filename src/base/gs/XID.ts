@@ -8,4 +8,8 @@ export class XID extends PointerClass {
 	getID(): number {
 		return this.pointer.add(4).readInt();
 	}
+
+    IsPlayerClass():boolean{
+        return this.getType()==1;
+    }
 }

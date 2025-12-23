@@ -1,6 +1,6 @@
-import { BaseHookSkillStub } from "base/skill/BaseHookSkillStub";
-import { Skill } from "src/base/skill/Skill";
-import { setUniqprompt } from "base/ExtFunc";
+import {BaseHookSkillStub} from "../base/skill/BaseHookSkillStub";
+import {Skill} from "../base/skill/Skill";
+import {setUniqprompt} from "../base/ExtFunc";
 
 /**
  * 223 寒冰咒   9
@@ -515,7 +515,7 @@ class Skill229 extends BaseHookSkillStub {
  * 单体攻击16米，施法时间1秒，技能冷却60秒。
  * 攻击目标1次，附加352/612点攻击力，并有100%概率减少目标真气，
  * 减少数值为自身真气上限10%/90%，
- * @未实现 若自身真气上限高于目标时，则目标4秒内无法通过吃药来回复真气。
+ * TODO:未实现 若自身真气上限高于目标时，则目标4秒内无法通过吃药来回复真气。
  */
 class Skill228 extends BaseHookSkillStub {
 
@@ -571,7 +571,7 @@ class Skill238 extends BaseHookSkillStub {
 }
 
 /**
- * TODO://被动改主动
+ * TODO:被动改主动
  *
  * 461 黄帝内经   3
  * 自身祝福，施法时间1秒，技能冷却120/100秒。
@@ -720,17 +720,17 @@ class Skill241 extends BaseHookSkillStub {
     StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
         const player = skill.GetPlayerNice();
         const skillLevel = skill.GetLevel();
-        
+
         // 防御提升20/60点，持续10/30分钟
         const defenceValue = 20 + (skillLevel - 1) * 10;
         const defenceTime = (10 + (skillLevel - 1) * 5) * 60 * 1000;
         player.SetAdddefence(120, defenceTime, defenceValue, 1);
-        
+
         // 真气上限提升200/1000点，持续10/30分钟
         const mpValue = 200 * skillLevel;
         const mpTime = (10 + (skillLevel - 1) * 5) * 60 * 1000;
         player.SetAddmp(mpTime, mpValue, 1);
-        
+
         return true
     }
 
@@ -751,6 +751,29 @@ class Skill242 extends BaseHookSkillStub {
         return 2000;
     }
 
+    GetExecutetime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        return 1000
+    }
+
+    GetTime1(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        return 600
+    }
+
+    GetTime2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        return 400
+    }
+
+    Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice();
+        const attackValue = Math.floor(609 + (skill.GetLevel() - 1) * 189 / 8);
+        skill.SetPlus(attackValue);
+        player.SetPerform(1)
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        return true
+    }
+
 }
 
 /**
@@ -768,6 +791,13 @@ class Skill240 extends BaseHookSkillStub {
         return 16000;
     }
 
+    Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice();
+        const level = skill.GetLevel()
+        skill.SetPlus(1570 + level * 69);
+        player.SetPerform(1)
+    }
+
 }
 
 /**
@@ -782,7 +812,36 @@ class Skill381 extends BaseHookSkillStub {
         super(381);
     }
 
+    TakeEffect(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice();
+        player.SetPasadddefence(5 * skill.GetLevel() + 1)
+        player.SetPasdecfatalhurt(0.05 * skill.GetLevel())
+        return true
+    }
+
 }
+
+
+/**
+* 537   霜天雪舞    9
+*
+*/
+class Skill537 extends BaseHookSkillStub {
+
+    constructor() {
+        super(537);
+    }
+
+}
+
+// 霜燃之寒+1
+// (如成功减速，则2秒后追加气血伤害)
+// 群体政击自标周围5米踪称年心目标限制6个
+// 施法时间1秒
+// 技能冷却60秒
+// 攻击目标周围5米内的敌人1次，附加724/934点攻击力，59%几率令目标减速25%,效果持续4秒。
+// 当自身攻击高于目标，可令目标周围冰冻2.5/6.5秒，令其陷入“霜结"状态,使其技能停止冷却,最多影响6个目标。
+// *霜燃之寒造成伤害为目标级别的20%/180%*
 
 
 class QingYunSkillList {
