@@ -32,9 +32,9 @@ export class KillBossLastManager extends BaseManager {
                         const attacker = args[1]
                         const type = attacker.readInt()
                         if (type == 1) {
+                            // console.log("角色击杀Boss怪，记录")
                             const id = attacker.add(4).readInt()
                             const npcId = npc.GetNPCID()
-
                             killBossLastManager.allNPCMap.set(npcId, {type, id})
                         }
                     }
@@ -43,8 +43,8 @@ export class KillBossLastManager extends BaseManager {
         );
 
         // gnpc_imp::DropItem(gnpc_imp *this, XID *, int, int, int, anti_wallow *, int, XID)
-        const dropItemFunc = HookFuncCore.getNativeFunc("_ZN8gnpc_imp8DropItemERK3XIDiiiiiS0_",
-            "void", ["pointer", "pointer", "int32", "int32", "int32", "int32", "int32", "pointer"]);
+        // const dropItemFunc = HookFuncCore.getNativeFunc("_ZN8gnpc_imp8DropItemERK3XIDiiiiiS0_",
+        //     "void", ["pointer", "pointer", "int32", "int32", "int32", "int32", "int32", "pointer"]);
 
         //gnpc_imp::DispatchExp(
         // gnpc_imp *const this, XID *const owner, int *const team_id,
@@ -57,13 +57,10 @@ export class KillBossLastManager extends BaseManager {
             new NativeCallback((gnpc_imp, owner, team_id, team_seq,
                                 level, task_owner, wallow_level,
                                 troupe_id, troupe_leader) => {
-                // const origin = HookFuncCore.getNativeFunc("_ZN8gnpc_imp11DispatchExpER3XIDRiS2_S2_S1_S2_S2_S2_",
-                //     "void", ["pointer", "pointer", "pointer", "pointer", "pointer", "pointer", "pointer", "pointer", "pointer"]);
-                // origin(gnpc_imp, owner, team_id, team_seq, level, task_owner, wallow_level, troupe_id, troupe_leader);
-
                 const npc = new GNpcImp(gnpc_imp);
                 const npcId = npc.GetNPCID();
                 if (killBossLastManager.allNPCMap.has(npcId)) {
+                    // console.log(npcId, "Boss怪，自定义分发")
                     const lastOwner = killBossLastManager.allNPCMap.get(npcId)
                     const player: GPlayer = gsManager.allPlayer.get(lastOwner.id)
                     const realOwner = Memory.alloc(8)
@@ -94,6 +91,11 @@ export class KillBossLastManager extends BaseManager {
 
                     // killBossLastManager.broadcastMsg(player, npcId)
                     // console.log(gnpc_imp, realOwner, rlv, rTeamId, rTeamSeq, rwlv, rtroupe_leader)
+                } else {
+                    // console.log(npcId, "普通怪，原版分发")
+                    const origin = HookFuncCore.getNativeFunc("_ZN8gnpc_imp11DispatchExpER3XIDRiS2_S2_S1_S2_S2_S2_",
+                        "void", ["pointer", "pointer", "pointer", "pointer", "pointer", "pointer", "pointer", "pointer", "pointer"]);
+                    origin(gnpc_imp, owner, team_id, team_seq, level, task_owner, wallow_level, troupe_id, troupe_leader);
                 }
             }, "void", ["pointer", "pointer", "pointer", "pointer", "pointer", "pointer", "pointer", "pointer", "pointer"]));
     }

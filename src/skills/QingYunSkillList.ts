@@ -821,27 +821,121 @@ class Skill381 extends BaseHookSkillStub {
 
 }
 
-
 /**
-* 537   霜天雪舞    9
-*
-*/
+ * 537   霜天雪舞    9
+ * **技能冷却**: 60秒
+ * - 霜燃之寒+1 (如成功减速，则2秒后追加气血伤害)
+ * - 攻击目标周围5米内的敌人1次，附加724/934点攻击力
+ * - 有49%/59%几率令多目标减速25%，效果持续4秒
+ * - 当自身攻击高于目标，可令目标周围冰冻2.5/6.5秒，令其陷入“霜结"状态,使其技能停止冷却,最多影响6个目标。
+ * - *霜燃之寒造成每秒为目标级别的20%/180%*
+ */
 class Skill537 extends BaseHookSkillStub {
 
     constructor() {
         super(537);
     }
 
+    Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice();
+        skill.SetPlus(700 + skill.GetLevel() * 24 + (skill.GetLevel() - 1) * 2)
+        player.SetVar1(player.GetMaxatk())
+        player.SetPerform(1)
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice();
+        const skillLevel = skill.GetLevel()
+        player.SetSlow(41 + skillLevel * 2, 0.25, 4100, 1)
+        player.SetHpleak(-1, 2000, player.GetLevel() * skillLevel * 0.2, 0, 1)
+
+        if (player.GetVar1() > player.GetMaxatk()) {
+            const time = 2000 + skillLevel * 500
+            player.SetFrozen(120, 1, time, 1)
+            player.SetGFrosty(120, time)
+        }
+
+        return true
+    }
+
 }
 
-// 霜燃之寒+1
-// (如成功减速，则2秒后追加气血伤害)
-// 群体政击自标周围5米踪称年心目标限制6个
-// 施法时间1秒
-// 技能冷却60秒
-// 攻击目标周围5米内的敌人1次，附加724/934点攻击力，59%几率令目标减速25%,效果持续4秒。
-// 当自身攻击高于目标，可令目标周围冰冻2.5/6.5秒，令其陷入“霜结"状态,使其技能停止冷却,最多影响6个目标。
-// *霜燃之寒造成伤害为目标级别的20%/180%*
+/**
+ * 538   大道无形    3
+ * **技能冷却**: 120秒
+ * - 16秒内有55%几率减少自身受到的伤害30%/60%
+ */
+class Skill538 extends BaseHookSkillStub {
+
+    constructor() {
+        super(538);
+    }
+
+    GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        return 120000
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice()
+        player.SetDecdamage(55, 0.3 + skill.GetLevel() * 0.1, 16100)
+        return true
+    }
+
+}
+
+/**
+ * 539   天玄冰 6
+ * **技能冷却**: 150/125秒
+ * - 自身在2/12秒内，免疫部分不利状态和致命一击效果
+ */
+class Skill539 extends BaseHookSkillStub {
+
+    constructor() {
+        super(539);
+    }
+
+    GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        return 155000 - 5000 * skill.GetLevel()
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice()
+        player.SetChihun(120, 2100 * skill.GetLevel(), 0, 0, 9)
+        return true
+    }
+
+}
+
+/**
+ * 540   极度深寒    7
+ * **技能冷却**: 90秒
+ * - 施法距离18/36米，令目标持续减少防御共计80/464点
+ * - 持续减少目标减免伤害百分比共计8%
+ * - 降低气血与真气上限28%，持续8/20秒
+ */
+class Skill540 extends BaseHookSkillStub {
+
+    constructor() {
+        super(540);
+    }
+
+    GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        return 90000
+    }
+
+    BlessMe(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        return true
+    }
+
+    // StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+    //     const player = skill.GetPlayerNice()
+    //     const time = skill.GetLevel() * 2000 + 6100
+    //     player.SetCycsubdefence(120, 64 * skill.GetLevel() + 16, time, 1)
+    //     player.SetFlamecurse(120,time,0.08,1)
+    //     player.SetSubhp()
+    //     return true
+    // }
+}
 
 
 class QingYunSkillList {

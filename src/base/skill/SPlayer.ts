@@ -1,10 +1,17 @@
 import {HookFuncCore} from "../HookFuncCore";
 import {PointerClass} from "../PointerClass";
+import {gsManager} from "../../manager/GsManager";
+import {GPlayer} from "../gs/GPlayer";
 
 /**
  * 技能中的Player
  */
 export class SPlayer extends PointerClass {
+    toGPlayer():GPlayer{
+        const id = this.GetID()
+        return gsManager.allPlayer.get(id)
+    }
+
     /**
      * 获取id（roleID）
      */
