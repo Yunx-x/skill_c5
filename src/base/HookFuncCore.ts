@@ -61,21 +61,7 @@ export class HookFuncCore {
 		address: NativePointer,
 		ret: FunctionTypes,
 		args: FunctionTypes[],
-	): NativeFunction<
-		GetNativeFunctionReturnValue<
-			| "void"
-			| "bool"
-			| "char"
-			| "int32"
-			| "int64"
-			| "float"
-			| "double"
-			| "pointer"
-		>,
-		ResolveVariadic<
-			Extract<GetNativeFunctionArgumentValue<FunctionTypes[]>, unknown[]>
-		>
-	> | null {
+	):any{
 		if (address == null) {
 			return null;
 		}

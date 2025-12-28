@@ -22,3 +22,10 @@ export function zrand(max): number {
 export function INT(n: number): number {
 	return Math.floor(n);
 }
+
+/**
+ * 在 [min, max] 区间内随机生成一个整数（包含 min 和 max）
+ */
+export function randomInt(min: number, max: number): number {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}

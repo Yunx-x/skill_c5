@@ -1,7 +1,7 @@
 import {BaseManager} from "../base/BaseManager";
 import {HookFuncCore} from "../base/HookFuncCore";
 import {GPlayer} from "../base/gs/GPlayer";
-import {badStr, beltStone} from "../configs";
+import {badStr, beltStone, ok10UpgradeItem} from "../configs";
 import {dataMan} from "../main";
 import {ItemBody} from "../base/gs/ItemBody";
 import {EquipItem} from "../base/gs/EquipItem";
@@ -20,6 +20,7 @@ class GsManager extends BaseManager {
         this.multiStoneReinforceSupport();
         this.fanZha();
         this.mysticStoneEmbed();
+        this.ok10Upgrade();
     }
 
     /**
@@ -597,6 +598,34 @@ class GsManager extends BaseManager {
         return originFunc(0, cStringPointer, msg.length * 2, channel, 0, 0, 0)
     }
 
+
+    private ok10Upgrade() {
+        //(gplayer_imp *this, unsigned int, int, unsigned int)
+        const funcName = "_ZN11gplayer_imp22UpgradeMysticEquipmentEjij";
+        const address = HookFuncCore.getFuncAddress(funcName);
+        Interceptor.replace(
+            address,
+            new NativeCallback(
+                (player, a1, a2, a3) => {
+                    const originFunc = HookFuncCore.getNativeFunc(funcName, "int32", ["pointer", "int32", "int32", "int32"]);
+                    console.log(a1, a2, a3)
+
+                    const gplayer = new GPlayer(player)
+                    if (gplayer.countItemById(ok10UpgradeItem) > 0) {
+                        if (gplayer.tryTakeOutItem(ok10UpgradeItem, 1) != 0) {
+                            for (let i = 0; i < 10; i++) {
+                                originFunc(player, a1, a2, a3);
+                            }
+                        }
+                    }
+
+                    return originFunc(player, a1, a2, a3);
+                },
+                "int32", ["pointer", "int32", "int32", "int32"]
+            ),
+        );
+
+    }
 }
 
 export const gsManager = new GsManager();

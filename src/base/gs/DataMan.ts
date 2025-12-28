@@ -36,4 +36,19 @@ export class DataMan extends PointerClass {
 
 		return fc(this.pointer, id, 0, len);
 	}
+
+    generateItem(itemId: number,type:number) {
+        const f = HookFuncCore.getNativeFunc(
+            "_ZN11itemdataman13generate_itemEjPKvji",
+            "pointer",
+            ["pointer", "int32", "pointer", "int32", "int32"],
+        );
+
+        const item_tag_t = Memory.alloc(2)
+        item_tag_t.add(0).writeU8(type)
+        item_tag_t.add(1).writeU8(0)
+
+        return f(this.pointer, itemId, item_tag_t, 2, 0)
+    }
+
 }

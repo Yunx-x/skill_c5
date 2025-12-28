@@ -29,6 +29,11 @@ export const badStr = [
  */
 export const beltStone=[311000,311001]
 
+/**
+ * 一键十连蕴灵凭证
+ */
+export const ok10UpgradeItem=340058
+
 
 /**
  * 一星Boss
@@ -105,4 +110,18 @@ export const star5Boss=[
     400041,//灵魄·盘古
     400042,//灵魄·女娲
     400043,//混蛋·黑心老G
+]
+
+export const star6Boss=[
+    400046,//鸿钧神猴·无支祁
+    400047,//混沌主宰
+    400048,//异界守护者
+]
+
+export const starWeek8Boss=[
+    400002,//万霆
+    400003,//川壅
+    400005,//月神·望舒
+    400044,//蚩尤
+    400045,//魔尊
 ]
