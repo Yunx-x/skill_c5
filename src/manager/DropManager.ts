@@ -1,6 +1,19 @@
 import {BaseManager} from "../base/BaseManager";
 import {HookFuncCore} from "../base/HookFuncCore";
-import {star1Boss, star2Boss, star3Boss, star4Boss, star5Boss, star6Boss, starWeek8Boss} from "../configs";
+import {
+    siXiang1Boss,
+    siXiang2Boss,
+    siXiang3Boss,
+    siXiang4Boss,
+    siXiang5Boss,
+    star1Boss,
+    star2Boss,
+    star3Boss,
+    star4Boss,
+    star5Boss,
+    star6Boss,
+    starWeek8Boss
+} from "../configs";
 import {randomInt, zrand} from "../base/ConstFunc";
 
 
@@ -117,11 +130,19 @@ const extra_list_w = [
     "510104",
 ]
 
+interface DropRule {
+    dropList: any;
+    extraList?: any;
+    extraCount: number;
+}
+
+
 /**
  * 掉落管理器
  *
  */
 export class DropManager extends BaseManager {
+    private bossDropMap = new Map<number, DropRule>();
 
     dropCalc(item_table: string[], extra_table: string[], extraCount: number, dropList: NativePointer, maxSize: number): number {
         let dropCount = 0
@@ -170,32 +191,70 @@ export class DropManager extends BaseManager {
         return dropCount
     }
 
+    registerBoss(list: number[], rule: DropRule) {
+        for (const id of list) {
+            dropManager.bossDropMap.set(id, rule);
+        }
+    }
+
     attach() {
+        // 星级 boss
+        dropManager.registerBoss([...star1Boss, ...siXiang1Boss], {
+            dropList: drop_list_1,
+            extraCount: 0
+        });
+
+        dropManager.registerBoss([...star2Boss, ...siXiang2Boss], {
+            dropList: drop_list_2,
+            extraCount: 0
+        });
+
+        dropManager.registerBoss([...star3Boss, ...siXiang3Boss], {
+            dropList: drop_list_3,
+            extraCount: 0
+        });
+
+        dropManager.registerBoss([...star4Boss, ...siXiang4Boss], {
+            dropList: drop_list_4,
+            extraCount: 0
+        });
+
+        dropManager.registerBoss([...star5Boss, ...siXiang5Boss], {
+            dropList: drop_list_5,
+            extraCount: 0
+        });
+
+        dropManager.registerBoss(star6Boss, {
+            dropList: drop_list_6,
+            extraList: extra_list_6,
+            extraCount: 2
+        });
+
+        dropManager.registerBoss(starWeek8Boss, {
+            dropList: drop_list_w,
+            extraList: extra_list_w,
+            extraCount: 1
+        });
+
         //itemdataman::generate_item_from_monster(itemdataman *this, unsigned int, int *, unsigned int)
         const address = HookFuncCore.getFuncAddress("_ZN11itemdataman26generate_item_from_monsterEjPij")
         Interceptor.replace(address,
             new NativeCallback((itemdataman, npcId, list, maxSize) => {
-                if (star1Boss.includes(npcId)) {
-                    return this.dropCalc(drop_list_1, undefined, 0, list, maxSize)
-                } else if (star2Boss.includes(npcId)) {
-                    return this.dropCalc(drop_list_2, undefined, 0, list, maxSize)
-                } else if (star3Boss.includes(npcId)) {
-                    return this.dropCalc(drop_list_3, undefined, 0, list, maxSize)
-                } else if (star4Boss.includes(npcId)) {
-                    return this.dropCalc(drop_list_4, undefined, 0, list, maxSize)
-                } else if (star5Boss.includes(npcId)) {
-                    return this.dropCalc(drop_list_5, undefined, 0, list, maxSize)
-                } else if (star6Boss.includes(npcId)) {
-                    return this.dropCalc(drop_list_6, extra_list_6, 2, list, maxSize)
-                } else if (starWeek8Boss.includes(npcId)) {
-                    return this.dropCalc(drop_list_w, extra_list_w, 1, list, maxSize)
-                } else {
-                    const origin = HookFuncCore.getNativeFunc("_ZN11itemdataman26generate_item_from_monsterEjPij",
-                        "int32", ["pointer", "int32", "pointer", "int32"]);
-                    return origin(itemdataman, npcId, list, maxSize);
+                const rule = dropManager.bossDropMap.get(npcId);
+                if (rule) {
+                    return dropManager.dropCalc(
+                        rule.dropList,
+                        rule.extraList,
+                        rule.extraCount,
+                        list,
+                        maxSize
+                    );
                 }
-            }, "int32", ["pointer", "int32", "pointer", "int32"]));
 
+                const origin = HookFuncCore.getNativeFunc("_ZN11itemdataman26generate_item_from_monsterEjPij",
+                    "int32", ["pointer", "int32", "pointer", "int32"]);
+                return origin(itemdataman, npcId, list, maxSize);
+            }, "int32", ["pointer", "int32", "pointer", "int32"]));
     }
 
 }

@@ -125,3 +125,43 @@ export const starWeek8Boss=[
     400044,//蚩尤
     400045,//魔尊
 ]
+
+export const siXiang1Boss=[
+    53676,
+    53681,
+    53686,
+    53934,
+    54017,
+]
+
+export const siXiang2Boss=[
+    53677,
+    53682,
+    53687,
+    54098,
+    54730,
+]
+
+export const siXiang3Boss=[
+    53678,
+    53683,
+    53688,
+    54099,
+    54731,
+]
+
+export const siXiang4Boss=[
+    53679,
+    53684,
+    53689,
+    54100,
+    54732,
+]
+
+export const siXiang5Boss=[
+    53680,
+    53685,
+    53690,
+    54101,
+    54733,
+]
