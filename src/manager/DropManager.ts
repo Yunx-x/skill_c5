@@ -1,7 +1,7 @@
 import {BaseManager} from "../base/BaseManager";
 import {HookFuncCore} from "../base/HookFuncCore";
-import {star1Boss} from "../configs";
-import {randomInt} from "../base/ConstFunc";
+import {star1Boss, star2Boss, star3Boss, star4Boss, star5Boss, star6Boss, starWeek8Boss} from "../configs";
+import {randomInt, zrand} from "../base/ConstFunc";
 
 
 const drop_list_1 = [
@@ -90,31 +90,31 @@ const drop_list_w = [
  * 六星Boss额外随机两张至圣符
  */
 const extra_list_6 = [
-    "42894=2",
-    "42895=2",
-    "42896=2",
-    "42897=2",
-    "42898=2",
-    "42900=2",
-    "42901=2",
-    "42902=2",
-    "42903=2",
-    "42904=2",
-    "42905=2",
-    "42906=2",
-    "42907=2",
-    "111552=2",
-    "111553=2",
+    "42894",
+    "42895",
+    "42896",
+    "42897",
+    "42898",
+    "42900",
+    "42901",
+    "42902",
+    "42903",
+    "42904",
+    "42905",
+    "42906",
+    "42907",
+    "111552",
+    "111553",
 ]
 
 /**
  * 周晚八点Boss额外随机一个混虚玉
  */
 const extra_list_w = [
-    "510101=1",
-    "510102=1",
-    "510103=1",
-    "510104=1",
+    "510101",
+    "510102",
+    "510103",
+    "510104",
 ]
 
 /**
@@ -123,10 +123,8 @@ const extra_list_w = [
  */
 export class DropManager extends BaseManager {
 
-
-    dropCalc(item_table: string[], dropList: NativePointer, maxSize): number {
+    dropCalc(item_table: string[], extra_table: string[], extraCount: number, dropList: NativePointer, maxSize: number): number {
         let dropCount = 0
-
         //模拟倍率
         for (let i = 0; i < 1; i++) {
             for (let i = 0; i < item_table.length; i++) {
@@ -154,6 +152,18 @@ export class DropManager extends BaseManager {
                     break
                 }
             }
+
+            if (extra_table != undefined && extra_table.length > 0 && extraCount > 0) {
+                for (let j = 0; j < extraCount; j++) {
+                    const itemId = parseInt(extra_table[zrand(extra_table.length - 1)])
+                    dropList.add(4 * dropCount).writeInt(itemId)
+                    console.log("额外掉落：", itemId)
+                    dropCount++
+                    if (dropCount >= maxSize) {
+                        break
+                    }
+                }
+            }
         }
 
         console.log("共计掉落", dropCount)
@@ -161,95 +171,24 @@ export class DropManager extends BaseManager {
     }
 
     attach() {
-        // gnpc_imp::DropItemFromData(gnpc_imp *this, const XID *, int, int, int, gmatrix *, int)
-        //gnpc_imp::DropItemFromData(const XID & owner, int owner_level, int team_id,int team_seq, int wallow_level)
-        // const address = HookFuncCore.getFuncAddress("_ZN8gnpc_imp16DropItemFromDataERK3XIDiiiii")
-        // Interceptor.replace(address,
-        //     new NativeCallback((gnpc_imp, owner, owner_level, team_id,
-        //                         team_seq, wallow_level, troupe) => {
-        //         const npc = new GNpcImp(gnpc_imp);
-        //         const npcId = npc.GetNPCID();
-        //
-        //         let drop_list = []
-        //         if (star1Boss.includes(npcId)) {
-        //             for (let i = 0; i < drop_list_1.length; i++) {
-        //                 const dropData = drop_list_1[i].split("=")
-        //                 const itemId = parseInt(dropData[0])
-        //                 const countData = dropData[1].split('-')
-        //                 let count = 0
-        //                 if (countData.length > 1) {
-        //                     count = randomInt(parseInt(countData[0]), parseInt(countData[1]))
-        //                 } else {
-        //                     count = parseInt(countData[0])
-        //                 }
-        //
-        //                 for (let j = 0; j < count; j++) {
-        //                     drop_list.push(itemId)
-        //                 }
-        //             }
-        //
-        //             const oi = npc.GetObjectInterface()
-        //             const world = npc.pointer.add(4).readPointer()
-        //             const pos = getPos(oi)
-        //             let x = pos.add(0).readFloat()
-        //             let y = pos.add(8).readFloat()
-        //             for (let j = 0; j < drop_list.length; j++) {
-        //                 const posData = randomPointInSquare(x, y, 6)
-        //                 pos.add(0).writeFloat(posData[0])
-        //                 pos.add(8).writeFloat(posData[1])
-        //
-        //                 const itemId = drop_list[j]
-        //                 const item_data = dataMan.generateItem(itemId, 2)
-        //                 try {
-        //                     item_data.add(4).writeU32(1)
-        //                     dropItemDataFunc(world, pos, item_data, owner, team_id, team_seq, 0, 0, 0, -1, -1)
-        //                     console.log("掉落物品：", itemId,)
-        //                 } catch (e) {
-        //                     console.log("掉落物品异常：", itemId)
-        //                 }
-        //             }
-        //         } else {
-        //             const origin = HookFuncCore.getNativeFunc("_ZN8gnpc_imp16DropItemFromDataERK3XIDiiiii",
-        //                 "void", ["pointer", "pointer", "int32", "int32", "int32", "int32", "int32"]);
-        //
-        //             origin(gnpc_imp, owner, owner_level, team_id, team_seq, wallow_level, troupe);
-        //         }
-        //     }, "void", ["pointer", "pointer", "int32", "int32", "int32", "int32", "int32"]));
-
         //itemdataman::generate_item_from_monster(itemdataman *this, unsigned int, int *, unsigned int)
         const address = HookFuncCore.getFuncAddress("_ZN11itemdataman26generate_item_from_monsterEjPij")
         Interceptor.replace(address,
             new NativeCallback((itemdataman, npcId, list, maxSize) => {
                 if (star1Boss.includes(npcId)) {
-                    // let dropCount = 0
-                    //
-                    //
-                    // for (let i = 0; i < drop_list_1.length; i++) {
-                    //     const dropData = drop_list_1[i].split("=")
-                    //     const itemId = parseInt(dropData[0])
-                    //     const countData = dropData[1].split('-')
-                    //     let count = 0
-                    //     if (countData.length > 1) {
-                    //         count = randomInt(parseInt(countData[0]), parseInt(countData[1]))
-                    //     } else {
-                    //         count = parseInt(countData[0])
-                    //     }
-                    //
-                    //     for (let j = 0; j < count; j++) {
-                    //         list.add(4 * dropCount).writeInt(itemId)
-                    //         console.log("掉落：", itemId)
-                    //         dropCount++
-                    //
-                    //         if (dropCount >= maxSize) {
-                    //             break
-                    //         }
-                    //     }
-                    //
-                    //     if (dropCount >= maxSize) {
-                    //         break
-                    //     }
-                    // }
-                    return this.dropCalc(drop_list_1, list, maxSize)
+                    return this.dropCalc(drop_list_1, undefined, 0, list, maxSize)
+                } else if (star2Boss.includes(npcId)) {
+                    return this.dropCalc(drop_list_2, undefined, 0, list, maxSize)
+                } else if (star3Boss.includes(npcId)) {
+                    return this.dropCalc(drop_list_3, undefined, 0, list, maxSize)
+                } else if (star4Boss.includes(npcId)) {
+                    return this.dropCalc(drop_list_4, undefined, 0, list, maxSize)
+                } else if (star5Boss.includes(npcId)) {
+                    return this.dropCalc(drop_list_5, undefined, 0, list, maxSize)
+                } else if (star6Boss.includes(npcId)) {
+                    return this.dropCalc(drop_list_6, extra_list_6, 2, list, maxSize)
+                } else if (starWeek8Boss.includes(npcId)) {
+                    return this.dropCalc(drop_list_w, extra_list_w, 1, list, maxSize)
                 } else {
                     const origin = HookFuncCore.getNativeFunc("_ZN11itemdataman26generate_item_from_monsterEjPij",
                         "int32", ["pointer", "int32", "pointer", "int32"]);
