@@ -50,12 +50,12 @@ export class GPlayer extends GActiveImp {
         return this.pointer.add(4 * 4);
     }
 
-    notify_player_drop_item(where: number, index: number, type: number, count: number, drop_type: number):number{
+    notify_player_drop_item(where: number, index: number, type: number, count: number, drop_type: number): number {
         //(size_t where, size_t index,int type,size_t count,unsigned char drop_type) {}
         const fc = HookFuncCore.getNativeFunc(
             "_ZN18gplayer_dispatcher16player_drop_itemEjjijh",
             "bool",
-            ["pointer","int32","int32","int32","int32","int32"],
+            ["pointer", "int32", "int32", "int32", "int32", "int32"],
         );
 
         return fc(this.getRunner().readPointer(), where, index, type, count, drop_type);
@@ -626,7 +626,27 @@ export class GPlayer extends GActiveImp {
         return func(this.pointer, itemId, itemCount, unknown1, cash, orderId, 1);
     }
 
-    SummonNPCOrMonster(id: number, duration: number) {
+    //归属模式：0:默认的普通怪 1:自己 2:师傅 3:徒弟 4:仙侣 5:队伍 6:队伍或自己 7:队伍与自己 8:不限
+    SummonNPCOrMonster(id: number, duration: number, owner_type: number = 0): number {
+        //(int id, int tag, A3DVECTOR & pos, int lifetime, int count, char owner_type, float radius
+        const func = HookFuncCore.getNativeFunc(
+            "_ZN16object_interface13CreateMonsterEiiR9A3DVECTORiicf",
+            "int32",
+            ["pointer", "int32", "int32", "pointer", "int32", "int32", "int32", "float"],
+        );
+
+        const tag = this.getWorldTag()
+        const pos = this.GetPos()
+        const posPointer = Memory.alloc(12)
+        posPointer.writeFloat(pos[0])
+        posPointer.add(4).writeFloat(pos[1])
+        posPointer.add(8).writeFloat(pos[2])
+
+        console.log("SummonNPCOrMonster", id, tag, pos, duration, 1, owner_type, 6.0)
+        return func(this.GetObjectInterface(), id, tag, posPointer, duration, 1, owner_type, 6.0);
+    }
+
+    SummonNPCOrMonster2(id: number, duration: number) {
         let oi = Memory.alloc(0x08);
         oi.add(0).writePointer(this.pointer);
         oi.add(4).writeByteArray([0]);
@@ -925,9 +945,9 @@ export class GPlayer extends GActiveImp {
 
     /**
      GetMaxDp() {
-		const extend_prop = this.pointer.add(1056);
-		return extend_prop.add(8).readInt();
-	}
+     const extend_prop = this.pointer.add(1056);
+     return extend_prop.add(8).readInt();
+     }
 
      /**
      * 获取小攻

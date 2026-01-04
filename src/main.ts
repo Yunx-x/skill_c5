@@ -5,9 +5,6 @@ import {HookModuleBase} from "./base/HookModuleBase";
 import {TaiHaoSkillList} from "./skills/TaiHaoSkillList";
 import {lingCaiManager} from "./manager/LingCaiManager";
 import {dropManager} from "./manager/DropManager";
-import {HookFuncCore} from "./base/HookFuncCore";
-import {GPlayer} from "./base/gs/GPlayer";
-
 // 初始化模块基址索引
 HookModuleBase.initializeModuleBaseIndex(Process.enumerateModules());
 

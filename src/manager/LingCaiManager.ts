@@ -40,19 +40,40 @@ class Skill516 extends BaseHookSkillStub {
         const player = skill.GetPlayerNice()
         const level = skill.GetLevel()
 
-        const list = []
+        let list = []
         if (level >= 1) {
-            list.concat(star1Boss, star2Boss, star3Boss, star4Boss, star5Boss)
+            list.push(
+                ...star1Boss,
+                ...star2Boss,
+                ...star3Boss,
+                ...star4Boss,
+                ...star5Boss
+            );
         } else if (level >= 2) {
-            list.concat(star2Boss, star3Boss, star4Boss, star5Boss)
+            list.push(
+                ...star2Boss,
+                ...star3Boss,
+                ...star4Boss,
+                ...star5Boss
+            );
         } else if (level >= 3) {
-            list.concat(star3Boss, star4Boss, star5Boss)
+            list.push(
+                ...star3Boss,
+                ...star4Boss,
+                ...star5Boss
+            );
         } else if (level >= 4) {
-            list.concat(star4Boss, star5Boss)
+            list.push(
+                ...star4Boss,
+                ...star5Boss
+            );
         } else if (level >= 5) {
-            list.concat(star5Boss)
+            list.push(
+                ...star5Boss
+            );
         }
 
+        console.log("boss List",list)
         if (list.length > 0) {
             player.toGPlayer().SummonNPCOrMonster(list[zrand(list.length - 1)], 5400)
         }
