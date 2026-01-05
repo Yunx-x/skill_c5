@@ -1408,4 +1408,12 @@ export class GPlayer extends GActiveImp {
             "int32", ['pointer', 'pointer']);
         return func(this.pointer.add(608), this.pointer)
     }
+
+    DropItemOnDeath(inv_drop: number, eq_drop: number) {
+        //(size_t inv_drop, size_t eq_drop, const XID & owner , int team_id, int team_seq)
+        const func = HookFuncCore.getNativeFunc("_ZN11gplayer_imp15DropItemOnDeathEjjRK3XIDii",
+            "void", ['pointer', 'int32', 'int32', 'pointer', 'int32', 'int32']);
+        const owner = Memory.alloc(0x8)
+        func(this.pointer, inv_drop, eq_drop, owner, 0, 0)
+    }
 }

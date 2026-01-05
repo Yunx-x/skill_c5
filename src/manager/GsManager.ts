@@ -1,13 +1,15 @@
 import {BaseManager} from "../base/BaseManager";
 import {HookFuncCore} from "../base/HookFuncCore";
 import {GPlayer} from "../base/gs/GPlayer";
-import {badStr, beltStone, ok10UpgradeItem} from "../configs";
+import {badStr, beltStone, kongShouCityDeathRecord, ok10UpgradeItem} from "../configs";
 import {dataMan} from "../main";
 import {ItemBody} from "../base/gs/ItemBody";
 import {EquipItem} from "../base/gs/EquipItem";
 import {EquipEssenceNew} from "../base/gs/data/equip_essence_new";
 import {GNpcImp} from "../base/gs/GNpcImp";
 import {XID} from "../base/gs/XID";
+import {getCurrentDate2Seconds} from "../utils/DateUtil";
+import {Item} from "../base/gs/Item";
 
 class GsManager extends BaseManager {
     allPlayer = new Map<number, any>();
@@ -21,6 +23,8 @@ class GsManager extends BaseManager {
         this.fanZha();
         this.mysticStoneEmbed();
         this.ok10Upgrade();
+        this.OnPlayerDeath();
+
     }
 
     /**
@@ -598,7 +602,6 @@ class GsManager extends BaseManager {
         return originFunc(0, cStringPointer, msg.length * 2, channel, 0, 0, 0)
     }
 
-
     private ok10Upgrade() {
         //(gplayer_imp *this, unsigned int, int, unsigned int)
         const funcName = "_ZN11gplayer_imp22UpgradeMysticEquipmentEjij";
@@ -625,6 +628,105 @@ class GsManager extends BaseManager {
             ),
         );
 
+    }
+
+    /**
+     * 死亡记录
+     */
+    private OnPlayerDeath() {
+        // const _ZL14TestIsDropItemRK4itemAddress = HookFuncCore.getFuncAddress("_ZL14TestIsDropItemRK4item");
+        const _ZL14TestIsDropItemRK4itemAddress =ptr("0x86D9379")
+        Interceptor.replace(
+            _ZL14TestIsDropItemRK4itemAddress,
+            new NativeCallback(
+                (item: NativePointer) => {
+                    const testItem = new Item(item)
+                    const type = testItem.GetType()
+                    if (type == 4544 || type == 21695) {
+                        return 0
+                    }
+
+                    console.log("物品检测", testItem.GetType())
+                    return 1
+                },
+                "bool",
+                ["pointer"]
+            ),
+        );
+
+        const IsEraseOnDropAddress = HookFuncCore.getFuncAddress("_ZNK4item13IsEraseOnDropEv");
+        const func = HookFuncCore.getNativeFuncForAddress(
+            IsEraseOnDropAddress,
+            "int32",
+            ["pointer"],
+        );
+
+        Interceptor.replace(
+            IsEraseOnDropAddress,
+            new NativeCallback(
+                (item: NativePointer) => {
+                    const testItem = new Item(item)
+                    const type = testItem.GetType()
+                    if (type == 4544 || type == 21695) {
+                        return 0
+                    }
+
+                    console.log("物品检测", testItem.GetType(), func(item))
+                    return 1
+                },
+                "int32",
+                ["pointer"]
+            ),
+        );
+
+        //4544
+        //21695
+
+        //gplayer_imp::OnDeath(gplayer_imp *this, XID *, bool, bool, bool, int *)
+        //(const XID & lastattack,bool is_pariah, bool faction_battle, bool is_hostile_duel, int time)
+        const funcName = "_ZN11gplayer_imp7OnDeathERK3XIDbbbi";
+        const address = HookFuncCore.getFuncAddress(funcName);
+        Interceptor.replace(
+            address,
+            new NativeCallback(
+                (playerPointer: NativePointer, lastattack: NativePointer, is_pariah: number, faction_battle: number, is_hostile_duel: number, time: number) => {
+                    const originFunc = HookFuncCore.getNativeFunc(funcName, "void",
+                        ["pointer", "pointer", "int32", "int32", "int32", "int32"]);
+                    originFunc(playerPointer, lastattack, is_pariah, faction_battle, is_hostile_duel, time);
+
+                    const player = new GPlayer(playerPointer)
+                    if (player.getWorldTag() == 1099) {
+                        const currentTime = getCurrentDate2Seconds()
+                        let info = kongShouCityDeathRecord.get(player.getPlayerID())
+                        if (info == undefined) {
+                            info = {
+                                time: currentTime,
+                                count: 1
+                            }
+                        } else {
+                            if (currentTime - info.time > 3600) {
+                                info.count = 0
+                            }
+
+                            info.count += 1
+                            if (info.count >= 1) {
+                                //爆东西
+                                // const eq_drop = Memory.alloc(4).writeInt(1)
+                                // const inv_drop = Memory.alloc(4).writeInt(1)
+                                // player_template.GetDeathDropRate(6, eq_drop, inv_drop)
+                                // console.log("多少",eq_drop.readInt(), inv_drop.readInt())
+                                player.DropItemOnDeath(1, 10)
+                                info.count = 0
+                                gsManager.sendBroadcastMsg(player.getPlayerName() + " 惨死街头", 1)
+                            }
+                        }
+
+                        kongShouCityDeathRecord.set(player.getPlayerID(), info)
+                    }
+                },
+                "void", ["pointer", "pointer", "int32", "int32", "int32", "int32"]
+            ),
+        );
     }
 }
 

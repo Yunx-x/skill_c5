@@ -165,3 +165,10 @@ export const siXiang5Boss=[
     54101,
     54733,
 ]
+
+//困兽城死亡记录
+type DeathInfo = { time: number; count: number; };
+
+//key-玩家id，value-死亡记录
+export const kongShouCityDeathRecord=new Map<number,DeathInfo>
+
