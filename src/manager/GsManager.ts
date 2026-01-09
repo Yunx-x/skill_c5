@@ -24,6 +24,7 @@ class GsManager extends BaseManager {
         this.mysticStoneEmbed();
         this.ok10Upgrade();
         this.OnPlayerDeath();
+        this.fixCaoMiaoBug();
 
     }
 
@@ -635,7 +636,7 @@ class GsManager extends BaseManager {
      */
     private OnPlayerDeath() {
         // const _ZL14TestIsDropItemRK4itemAddress = HookFuncCore.getFuncAddress("_ZL14TestIsDropItemRK4item");
-        const _ZL14TestIsDropItemRK4itemAddress =ptr("0x86D9379")
+        const _ZL14TestIsDropItemRK4itemAddress = ptr("0x86D9379")
         Interceptor.replace(
             _ZL14TestIsDropItemRK4itemAddress,
             new NativeCallback(
@@ -727,6 +728,28 @@ class GsManager extends BaseManager {
                 "void", ["pointer", "pointer", "int32", "int32", "int32", "int32"]
             ),
         );
+    }
+
+    private fixCaoMiaoBug() {
+        const funcName = "_ZN18gplayer_controller9CheckDenyEj";
+        const address = HookFuncCore.getFuncAddress(funcName);
+        Interceptor.replace(
+            address,
+            new NativeCallback(
+                (controller, index) => {
+                    const originFunc = HookFuncCore.getNativeFunc(funcName, "bool", ["pointer", "int32"]);
+                    const gplayer = new GPlayer(controller.add(4).readPointer())
+                    // console.log("世界tag",gplayer.getPlayerID(),gplayer.getClientTag())
+                    if (gplayer.getClientTag() == 553) {//草庙
+                        return 0
+                    }
+
+                    return originFunc(controller, index);
+                },
+                "bool", ["pointer", "int32"]
+            ),
+        );
+
     }
 }
 

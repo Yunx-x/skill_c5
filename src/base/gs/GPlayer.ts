@@ -105,6 +105,16 @@ export class GPlayer extends GActiveImp {
     }
 
     /**
+     * 有时候还要以客户端地图id为准，比如副本
+     */
+    getClientTag(): number {
+        const fc = HookFuncCore.getNativeFunc(
+            "_ZN11gobject_imp12GetClientTagEv",
+            'int32', ['pointer']);
+        return fc(this.pointer);
+    }
+
+    /**
      * 获取玩家职业
      */
     GetPlayerOccupation(): number {
