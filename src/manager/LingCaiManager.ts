@@ -40,6 +40,11 @@ class Skill516 extends BaseHookSkillStub {
         const player = skill.GetPlayerNice()
         const level = skill.GetLevel()
 
+        const mapId = player.toGPlayer().getWorldTag()
+        if (mapId != 1101) {
+            return true
+        }
+
         let list = []
         if (level >= 1) {
             list.push(
@@ -73,7 +78,7 @@ class Skill516 extends BaseHookSkillStub {
             );
         }
 
-        console.log("boss List",list)
+        console.log("boss List", list)
         if (list.length > 0) {
             player.toGPlayer().SummonNPCOrMonster(list[zrand(list.length - 1)], 5400)
         }

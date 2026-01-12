@@ -696,7 +696,7 @@ class GsManager extends BaseManager {
                     originFunc(playerPointer, lastattack, is_pariah, faction_battle, is_hostile_duel, time);
 
                     const player = new GPlayer(playerPointer)
-                    if (player.getWorldTag() == 1099) {
+                    if (player.getWorldTag() == 1101) {
                         const currentTime = getCurrentDate2Seconds()
                         let info = kongShouCityDeathRecord.get(player.getPlayerID())
                         if (info == undefined) {
@@ -716,9 +716,9 @@ class GsManager extends BaseManager {
                                 // const inv_drop = Memory.alloc(4).writeInt(1)
                                 // player_template.GetDeathDropRate(6, eq_drop, inv_drop)
                                 // console.log("多少",eq_drop.readInt(), inv_drop.readInt())
-                                player.DropItemOnDeath(1, 10)
+                                player.DropItemOnDeath(1, 1)
                                 info.count = 0
-                                gsManager.sendBroadcastMsg(player.getPlayerName() + " 惨死街头", 1)
+                                gsManager.sendBroadcastMsg(player.getPlayerName() + " 惨死街头，装备爆了一地", 1)
                             }
                         }
 
