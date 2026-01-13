@@ -39,9 +39,9 @@ class Skill516 extends BaseHookSkillStub {
     StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
         const player = skill.GetPlayerNice()
         const level = skill.GetLevel()
-
-        const mapId = player.toGPlayer().getWorldTag()
-        if (mapId != 1101) {
+        const gPlayer = player.toGPlayer()
+        const mapId = gPlayer.getWorldTag()
+        if (mapId != 1101 && gPlayer.IsInSanctuary()) {
             return true
         }
 
@@ -89,6 +89,43 @@ class Skill516 extends BaseHookSkillStub {
 }
 
 
+const bro_list = [
+    [400049, 30000],
+    [400050, 60000],
+    [400051, 90000],
+    [400052, 120000],
+    [400053, 150000]
+]
+
+/**
+ * 516 绝代双骄 改 召唤小弟
+ *
+ */
+class Skill515 extends BaseHookSkillStub {
+
+    constructor() {
+        super(515);
+    }
+
+    GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        return 360000
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice()
+        const level = skill.GetLevel()
+
+        let data = bro_list[level - 1]
+        if (data != undefined) {
+            player.SetSummon(120, data[0], 1, data[1], 1)
+        }
+
+        return true
+    }
+
+}
+
+
 /**
  * 灵材管理器
  *
@@ -98,6 +135,7 @@ export class LingCaiManager extends BaseManager {
     attach() {
         new Skill473()
         new Skill516()
+        new Skill515()
     }
 
 }
