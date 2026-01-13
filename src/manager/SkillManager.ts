@@ -1,7 +1,7 @@
 import {BaseManager} from "../base/BaseManager";
 import {QuickCoolDownList} from "../base/skill/QuickSkillUtil";
 import {Skill} from "../base/skill/Skill";
-import {LingCaiManager} from "./LingCaiManager";
+import {TongYongSkillList} from "../skills/TongYongSkillList";
 
 
 class DebugTestSkillXuanCooldown extends QuickCoolDownList {
@@ -13,7 +13,6 @@ class DebugTestSkillXuanCooldown extends QuickCoolDownList {
             3019,
             3020,
             //鬼王玄
-            3020,
             3021,
             3022,
             3023,
@@ -63,7 +62,6 @@ class DebugTestSkillXuanCooldown extends QuickCoolDownList {
             3574,
             3584,
             3585,
-            3587,
 
             4585,
             4586,
@@ -323,6 +321,7 @@ export class SkillManager extends BaseManager {
         new DebugTestSkillXuanCooldown()
         new DebugTestSkillShaCooldown()
         new DebugTestSkillChanCooldown()
+        new TongYongSkillList()
     }
 
 }

@@ -156,11 +156,6 @@ class GsManager extends BaseManager {
                     `player_id:${input_player_id} msg:${input_msg} channel:${input_channel}`,
                 );
                 if (player !== undefined) {
-                    if (input_msg.indexOf("11") !== -1) {
-                        player.pointer.add(5 * 4).add(0x5C).readInt()
-                        return;
-                    }
-
                     // if (input_msg.indexOf("1") !== -1) {
                     //     player.tryDeliverItem(340009, 1, 100)
                     //     player.tryDeliverItem(340010,  1, 100)
