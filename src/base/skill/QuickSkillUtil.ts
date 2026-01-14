@@ -38,6 +38,50 @@ export abstract class QuickCoolDownList {
 	}
 }
 
+export abstract class QuickCoolDownList2 {
+    constructor() {
+        this.parseChange();
+    }
+
+    abstract getSkillList(): number[];
+
+    protected parseChange() {
+        const coolDown = this.GetCooldowntime;
+        if (coolDown !== undefined) {
+            for (const id of this.getSkillList()) {
+                SkillFuncCore.hookSkillValue(
+                    getHookStubFuncName(id, "GetCooldowntime"),
+                    "int32",
+                    this.GetCooldowntime,
+                );
+
+                SkillFuncCore.hookSkillValue(
+                    getHookStubFuncName(id, "GetDpcost"),
+                    "int32",
+                    this.GetDpcost,
+                );
+            }
+        }
+    }
+
+    protected GetCooldowntime(
+        stub: NativePointer,
+        skill: Skill,
+        originFunc: NativeFunction<number, NativePointer[]>,
+    ): number {
+        return originFunc(stub, skill.pointer);
+    }
+
+    protected GetDpcost(
+        stub: NativePointer,
+        skill: Skill,
+        originFunc: NativeFunction<number, NativePointer[]>,
+    ): number {
+        return originFunc(stub, skill.pointer);
+    }
+}
+
+
 /**
  * 快速对多个技能设置相同 cooldownTime
  */

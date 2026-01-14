@@ -1,10 +1,10 @@
 import {BaseManager} from "../base/BaseManager";
-import {QuickCoolDownList} from "../base/skill/QuickSkillUtil";
+import {QuickCoolDownList2} from "../base/skill/QuickSkillUtil";
 import {Skill} from "../base/skill/Skill";
 import {TongYongSkillList} from "../skills/TongYongSkillList";
 
 
-class DebugTestSkillXuanCooldown extends QuickCoolDownList {
+class DebugTestSkillXuanCooldown extends QuickCoolDownList2 {
     getSkillList(): number[] {
         return [
             //青云玄
@@ -105,9 +105,13 @@ class DebugTestSkillXuanCooldown extends QuickCoolDownList {
         return 0
     }
 
+    protected GetDpcost(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        return 0
+    }
+
 }
 
-class DebugTestSkillShaCooldown extends QuickCoolDownList {
+class DebugTestSkillShaCooldown extends QuickCoolDownList2 {
     getSkillList(): number[] {
         return [
             3065,
@@ -208,9 +212,14 @@ class DebugTestSkillShaCooldown extends QuickCoolDownList {
     protected GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
         return 0
     }
+
+    protected GetDpcost(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        return 0
+    }
+
 }
 
-class DebugTestSkillChanCooldown extends QuickCoolDownList {
+class DebugTestSkillChanCooldown extends QuickCoolDownList2 {
     getSkillList(): number[] {
         return [
             3113,
@@ -312,6 +321,11 @@ class DebugTestSkillChanCooldown extends QuickCoolDownList {
     protected GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
         return 0
     }
+
+    protected GetDpcost(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        return 0
+    }
+
 }
 
 

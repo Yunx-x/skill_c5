@@ -11,7 +11,7 @@ import {QuickCoolDownList} from "../base/skill/QuickSkillUtil";
  * 令寸地诀60%概率瞬间冷却
  * 技能达到5级时，减少纵横令II的冷却时间10秒
  */
-class Skill3467 extends BaseHookSkillStub {
+export class Skill3467 extends BaseHookSkillStub {
 
     constructor() {
         super(3467);
@@ -52,7 +52,7 @@ class Skill3467 extends BaseHookSkillStub {
 
         const v16 = 3000 * skill.GetLevel();
         const da = v16 + 2000 * skill.GetT0() + 2000 * starLvlSum;
-        const db = Math.floor(skill.GetLevel() * 0.8 + 1.0);
+        const db = Math.floor(skill.GetLevel() * 0.8 + 15.0);
         const adjustedDb = Math.floor(skill.GetT0() * 0.2 + db);
         player.SetAddspeed(120, da, adjustedDb, 1);
         player.SetBuffClearImmune(120, 14000 + player.GetSkilllevel(3547) * 1000)
