@@ -131,6 +131,31 @@ const extra_list_w = [
     "510104",
 ]
 
+/**
+ * 财神Boss随机附加3，4，5星额外掉落
+ */
+const extra_list_cs = [
+    "77548",
+    "51109",
+    "54761",
+    "67508",
+    "340021",
+    "360095",
+    "106777",
+    "54762",
+    "67506",
+    "360088",
+    "63020",
+    "360116",
+    "84815",
+    "67507",
+    "360089",
+    "102219",
+    "360097",
+    "63387",
+    "360098"
+]
+
 interface DropRule {
     dropList: any;
     extraList?: any;
@@ -169,6 +194,41 @@ export class DropManager extends BaseManager {
                         break
                     }
                 }
+
+                if (dropCount >= maxSize) {
+                    break
+                }
+            }
+
+            if (extra_table != undefined && extra_table.length > 0 && extraCount > 0) {
+                for (let j = 0; j < extraCount; j++) {
+                    const itemId = parseInt(extra_table[zrand(extra_table.length - 1)])
+                    dropList.add(4 * dropCount).writeInt(itemId)
+                    console.log("额外掉落：", itemId)
+                    dropCount++
+                    if (dropCount >= maxSize) {
+                        break
+                    }
+                }
+            }
+        }
+
+        console.log("共计掉落", dropCount)
+        return dropCount
+    }
+
+    dropCalcCaiShen(item_table: string[], itemCount: number, extra_table: string[], extraCount: number, dropList: NativePointer, maxSize: number): number {
+        let dropCount = 0
+        //模拟倍率
+        for (let i = 0; i < 1; i++) {
+            for (let i = 0; i < item_table.length; i++) {
+                const itemData = item_table[randomInt(0, itemCount - 1)]
+                const dropData = itemData.split("=")
+                const itemId = parseInt(dropData[0])
+
+                dropList.add(4 * dropCount).writeInt(itemId)
+                console.log("掉落：", itemId)
+                dropCount++
 
                 if (dropCount >= maxSize) {
                     break
@@ -241,15 +301,26 @@ export class DropManager extends BaseManager {
         const address = HookFuncCore.getFuncAddress("_ZN11itemdataman26generate_item_from_monsterEjPij")
         Interceptor.replace(address,
             new NativeCallback((itemdataman, npcId, list, maxSize) => {
-                const rule = dropManager.bossDropMap.get(npcId);
-                if (rule) {
-                    return dropManager.dropCalc(
-                        rule.dropList,
-                        rule.extraList,
-                        rule.extraCount,
+                if (npcId == 58592) {//财神
+                    dropManager.dropCalcCaiShen(
+                        [...drop_list_3, ...drop_list_4, ...drop_list_5],
+                        100,
+                        extra_list_cs,
+                        20,
                         list,
                         maxSize
                     );
+                } else {
+                    const rule = dropManager.bossDropMap.get(npcId);
+                    if (rule) {
+                        return dropManager.dropCalc(
+                            rule.dropList,
+                            rule.extraList,
+                            rule.extraCount,
+                            list,
+                            maxSize
+                        );
+                    }
                 }
 
                 const origin = HookFuncCore.getNativeFunc("_ZN11itemdataman26generate_item_from_monsterEjPij",

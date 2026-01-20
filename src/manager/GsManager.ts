@@ -10,6 +10,7 @@ import {GNpcImp} from "../base/gs/GNpcImp";
 import {XID} from "../base/gs/XID";
 import {getCurrentDate2Seconds} from "../utils/DateUtil";
 import {Item} from "../base/gs/Item";
+import {ItemList} from "../base/gs/ItemList";
 
 class GsManager extends BaseManager {
     allPlayer = new Map<number, any>();
@@ -705,7 +706,7 @@ class GsManager extends BaseManager {
                             }
 
                             info.count += 1
-                            if (info.count >= 1) {
+                            if (info.count >= 10) {
                                 //爆东西
                                 // const eq_drop = Memory.alloc(4).writeInt(1)
                                 // const inv_drop = Memory.alloc(4).writeInt(1)
