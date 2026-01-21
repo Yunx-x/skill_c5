@@ -38,7 +38,7 @@ const drop_list_2 = [
     "86020=1",//混元天符
 ]
 
-const drop_list_3 = [
+export const drop_list_3 = [
     "340003=2-5",//三星灵珠
     "360070=3-5",//月德（10）
     "360085=3-5",//姚黄10
@@ -49,7 +49,7 @@ const drop_list_3 = [
     "86020=2-3",//混元天符
 ]
 
-const drop_list_4 = [
+export const drop_list_4 = [
     "340004=2-5",//四星灵珠
     "360112=3-5",//月德20
     "360113=3-5",//姚黄20
@@ -60,7 +60,7 @@ const drop_list_4 = [
     "86020=4-5",//混元天符
 ]
 
-const drop_list_5 = [
+export const drop_list_5 = [
     "340005=2-5",//五星灵珠
     "360071=6-8",//月德30
     "360086=6-8",//姚黄30
@@ -134,7 +134,7 @@ const extra_list_w = [
 /**
  * 财神Boss随机附加3，4，5星额外掉落
  */
-const extra_list_cs = [
+export const extra_list_cs = [
     "77548",
     "51109",
     "54761",
@@ -221,8 +221,9 @@ export class DropManager extends BaseManager {
         let dropCount = 0
         //模拟倍率
         for (let i = 0; i < 1; i++) {
-            for (let i = 0; i < item_table.length; i++) {
-                const itemData = item_table[randomInt(0, itemCount - 1)]
+            for (let i = 0; i < itemCount; i++) {
+                const itemData = item_table[randomInt(0, item_table.length - 1)]
+
                 const dropData = itemData.split("=")
                 const itemId = parseInt(dropData[0])
 
@@ -302,8 +303,9 @@ export class DropManager extends BaseManager {
         Interceptor.replace(address,
             new NativeCallback((itemdataman, npcId, list, maxSize) => {
                 if (npcId == 58592) {//财神
-                    dropManager.dropCalcCaiShen(
-                        [...drop_list_3, ...drop_list_4, ...drop_list_5],
+                    const itemList = [...drop_list_3, ...drop_list_4, ...drop_list_5]
+                    return dropManager.dropCalcCaiShen(
+                        itemList,
                         100,
                         extra_list_cs,
                         20,

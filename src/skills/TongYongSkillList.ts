@@ -57,6 +57,25 @@ class Skill1926 extends BaseHookSkillStub {
     }
 }
 
+class Skill1740 extends BaseHookSkillStub {
+
+    constructor() {
+        super(6511);
+    }
+
+    Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayer()
+        skill.SetSkillaccu(99999)
+        player.SetPerform(1)
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayer()
+        player.SetDirecthurt(120, 99999999)
+        return true
+    }
+}
+
 
 export class TongYongSkillList {
 
@@ -125,5 +144,6 @@ export class TongYongSkillList {
 
         new Skill1970()
         new Skill1926()
+        // new Skill1740()
     }
 }
