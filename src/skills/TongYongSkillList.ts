@@ -17,7 +17,8 @@ class Skill1970 extends BaseHookSkillStub {
     }
 
     GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
-        return 15000
+        // return 15000
+        return 0
     }
 }
 
@@ -60,7 +61,7 @@ class Skill1926 extends BaseHookSkillStub {
 class Skill1740 extends BaseHookSkillStub {
 
     constructor() {
-        super(6511);
+        super(1740);
     }
 
     Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
@@ -71,7 +72,7 @@ class Skill1740 extends BaseHookSkillStub {
 
     StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
         const player = skill.GetPlayer()
-        player.SetDirecthurt(120, 99999999)
+        player.SetDirecthurt(120, player.GetMaxhp()/2)
         return true
     }
 }
@@ -139,11 +140,11 @@ export class TongYongSkillList {
     }
 
     constructor() {
-        this.RealDmgRatio1_5()
+        // this.RealDmgRatio1_5()
         this.SetInvincible()
 
         new Skill1970()
         new Skill1926()
-        // new Skill1740()
+        new Skill1740()
     }
 }

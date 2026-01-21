@@ -10,7 +10,6 @@ import {GNpcImp} from "../base/gs/GNpcImp";
 import {XID} from "../base/gs/XID";
 import {getCurrentDate2Seconds} from "../utils/DateUtil";
 import {Item} from "../base/gs/Item";
-import {ItemList} from "../base/gs/ItemList";
 
 class GsManager extends BaseManager {
     allPlayer = new Map<number, any>();
@@ -26,7 +25,7 @@ class GsManager extends BaseManager {
         this.ok10Upgrade();
         this.OnPlayerDeath();
         this.fixCaoMiaoBug();
-
+        this.CatchPetSuccess();
     }
 
     /**
@@ -745,7 +744,27 @@ class GsManager extends BaseManager {
                 "bool", ["pointer", "int32"]
             ),
         );
+    }
 
+    private CatchPetSuccess() {
+        const funcName = "_ZN11gplayer_imp15CatchPetSuccessEi";
+        const address = HookFuncCore.getFuncAddress(funcName);
+        Interceptor.replace(
+            address,
+            new NativeCallback(
+                (playerPointer, petId) => {
+                    if (petId >= 340059 && petId <= 340063) {
+                        const player = new GPlayer(playerPointer)
+                        player.DeliverItem(petId, 1, 1)
+                        return true
+                    }
+
+                    const originFunc = HookFuncCore.getNativeFunc(funcName, "bool", ["pointer", "int32"]);
+                    return originFunc(playerPointer, petId);
+                },
+                "bool", ["pointer", "int32"]
+            ),
+        );
     }
 }
 

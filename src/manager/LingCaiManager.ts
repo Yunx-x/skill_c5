@@ -90,11 +90,11 @@ class Skill516 extends BaseHookSkillStub {
 
 
 const bro_list = [
-    [400049, 30000],
-    [400050, 60000],
-    [400051, 90000],
-    [400052, 120000],
-    [400053, 150000]
+    [400049, 60000],
+    [400050, 120000],
+    [400051, 150000],
+    [400052, 180000],
+    [400053, 240000]
 ]
 
 /**
@@ -108,7 +108,7 @@ class Skill515 extends BaseHookSkillStub {
     }
 
     GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
-        return 360000
+        return 15000
     }
 
     StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
