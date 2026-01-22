@@ -26,6 +26,7 @@ class GsManager extends BaseManager {
         this.OnPlayerDeath();
         this.fixCaoMiaoBug();
         this.CatchPetSuccess();
+        this.TransferEquipmentAttr2();
     }
 
     /**
@@ -763,6 +764,25 @@ class GsManager extends BaseManager {
                     return originFunc(playerPointer, petId);
                 },
                 "bool", ["pointer", "int32"]
+            ),
+        );
+    }
+
+    private TransferEquipmentAttr2() {
+        //int __cdecl gplayer_imp::TransferEquipmentAttr2(gplayer_imp *this, unsigned int, int, unsigned int, int, unsigned int, int)
+
+        const funcName = "_ZN11gplayer_imp22TransferEquipmentAttr2Ejijiji";
+        const address = HookFuncCore.getFuncAddress(funcName);
+        Interceptor.replace(
+            address,
+            new NativeCallback(
+                (playerPointer, a1, a2, a3, a4, a5, a6) => {
+                    const originFunc = HookFuncCore.getNativeFunc(funcName, "int32", ["pointer", "int32", "int32", "int32", "int32", "int32", "int32"]);
+                    const result = originFunc(playerPointer, a1, a2, a3, a4, a5, a6);
+                    console.log("TransferEquipmentAttr2", a1, a2, a3, a4, a5, a6, result)
+                    return result
+                },
+                "int32", ["pointer", "int32", "int32", "int32", "int32", "int32", "int32"]
             ),
         );
     }
