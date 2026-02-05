@@ -157,6 +157,11 @@ class GsManager extends BaseManager {
                     `player_id:${input_player_id} msg:${input_msg} channel:${input_channel}`,
                 );
                 if (player !== undefined) {
+                    // if (input_msg.indexOf("11") !== -1) {
+                    //     gsManager.test(player.pointer)
+                    //     return;
+                    // }
+
                     // if (input_msg.indexOf("1") !== -1) {
                     //     player.tryDeliverItem(340009, 1, 100)
                     //     player.tryDeliverItem(340010,  1, 100)
@@ -770,7 +775,6 @@ class GsManager extends BaseManager {
 
     private TransferEquipmentAttr2() {
         //int __cdecl gplayer_imp::TransferEquipmentAttr2(gplayer_imp *this, unsigned int, int, unsigned int, int, unsigned int, int)
-
         const funcName = "_ZN11gplayer_imp22TransferEquipmentAttr2Ejijiji";
         const address = HookFuncCore.getFuncAddress(funcName);
         Interceptor.replace(
@@ -785,6 +789,13 @@ class GsManager extends BaseManager {
                 "int32", ["pointer", "int32", "int32", "int32", "int32", "int32", "int32"]
             ),
         );
+    }
+
+    private test(player: NativePointer) {
+        const funcName = "_ZN11gplayer_imp19PlayerClearStarSoulEv";
+        const address = HookFuncCore.getFuncAddress(funcName);
+        const originFunc = HookFuncCore.getNativeFunc(funcName, "int32", ["pointer"]);
+        originFunc(player)
     }
 }
 
