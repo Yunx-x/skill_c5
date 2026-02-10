@@ -1,6 +1,7 @@
 import {BaseManager} from "../base/BaseManager";
 import {HookFuncCore} from "../base/HookFuncCore";
 import {
+    chunJieBoss,
     siXiang1Boss,
     siXiang2Boss,
     siXiang3Boss,
@@ -156,6 +157,37 @@ export const extra_list_cs = [
     "360098"
 ]
 
+
+/**
+ * 新春Boss掉落
+ */
+const drop_list_cj = [
+    "340007=6-10",//七星灵珠
+    "360075=8",//月德
+    "360115=8",//姚黄
+    "330006=3",//鸿运符
+    "330009=3",//铁玉16级
+    "360089=8",//冲天石10
+    "360100=8",//彰武碎片5
+    "102219=3",//天道血魂
+    "360102=8",//混元天符10
+    "375015=5",//至圣符宝匣（高级）
+]
+
+const extra_list_cj = [
+    "375008",
+    "375009",
+    "375010",
+    "375011",
+    "360047",
+    "85873",
+    "82626",
+    "90991",
+    "96779",
+    "105990"
+]
+
+
 interface DropRule {
     dropList: any;
     extraList?: any;
@@ -295,6 +327,12 @@ export class DropManager extends BaseManager {
         dropManager.registerBoss(starWeek8Boss, {
             dropList: drop_list_w,
             extraList: extra_list_w,
+            extraCount: 1
+        });
+
+        dropManager.registerBoss(chunJieBoss, {
+            dropList: drop_list_cj,
+            extraList: extra_list_cj,
             extraCount: 1
         });
 

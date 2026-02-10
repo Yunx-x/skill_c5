@@ -2,6 +2,7 @@ import {BaseManager} from "../base/BaseManager";
 import {QuickCoolDownList2} from "../base/skill/QuickSkillUtil";
 import {Skill} from "../base/skill/Skill";
 import {TongYongSkillList} from "../skills/TongYongSkillList";
+import {BossSkillList} from "../skills/BossSkillList";
 
 
 class DebugTestSkillXuanCooldown extends QuickCoolDownList2 {
@@ -336,6 +337,7 @@ export class SkillManager extends BaseManager {
         new DebugTestSkillShaCooldown()
         new DebugTestSkillChanCooldown()
         new TongYongSkillList()
+        new BossSkillList()
     }
 
 }

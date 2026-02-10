@@ -784,6 +784,8 @@ class GsManager extends BaseManager {
                     const originFunc = HookFuncCore.getNativeFunc(funcName, "int32", ["pointer", "int32", "int32", "int32", "int32", "int32", "int32"]);
                     const result = originFunc(playerPointer, a1, a2, a3, a4, a5, a6);
                     console.log("TransferEquipmentAttr2", a1, a2, a3, a4, a5, a6, result)
+                    const player = new GPlayer(playerPointer)
+                    player.TakeOutItem(a1, a2, 1)
                     return result
                 },
                 "int32", ["pointer", "int32", "int32", "int32", "int32", "int32", "int32"]

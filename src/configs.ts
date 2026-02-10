@@ -166,6 +166,10 @@ export const siXiang5Boss=[
     54733,
 ]
 
+export const chunJieBoss=[
+    400055,//相柳
+]
+
 //困兽城死亡记录
 type DeathInfo = { time: number; count: number; };
 

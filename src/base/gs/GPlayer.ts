@@ -482,6 +482,8 @@ export class GPlayer extends GActiveImp {
         return func(this.pointer, itemId, count);
     }
 
+
+    //取出背包内指定位置的物品
     TakeOutItem(inv_index, itemId, count): number {
         const func = HookFuncCore.getNativeFunc(
             "_ZN11gplayer_imp11TakeOutItemEiii",
