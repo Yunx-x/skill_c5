@@ -49,17 +49,17 @@ class Skill6296 extends BaseHookSkillStub {
         const player = skill.GetPlayerNice()
         const r = zrand(5)
         if (r == 1) {
-            player.SetParry2(120, 10000, 0.75, player.GetHp() / 2, 0, 0)
+            player.SetParry2(120, 10000, 0.7, player.GetHp() / 2, 0, 0)
             player.SetSlant(120, 10000, 1)
         } else if (r == 2) {
             player.SetDecay(120, 10000, 0.8, 2)
-            player.SetAvert(120, 10000, 1)
+            player.SetAvert(120, 10000, 0.001)
         } else if (r == 3) {
-            player.SetSlant(120, 10000, 1)
+            player.SetSlant(120, 10000, 0.7)
             player.SetBuffClearImmune(120, 10000)
         } else if (r == 4) {
-            player.SetParry2(120, 10000, 0.75, player.GetHp() / 2, 0, 0)
-            player.SetAvert(120, 10000, 1)
+            player.SetParry2(120, 10000, 0.7, player.GetHp() / 2, 0, 0)
+            player.SetAvert(120, 10000, 0.001)
         }
 
         return super.StateAttack(stub, skill, originFunc);
@@ -84,12 +84,12 @@ class Skill5977 extends BaseHookSkillStub {
 
      StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
         const player = skill.GetPlayerNice()
-        player.SetTurndebuff(20000, 10, 1)
-        player.SetChihun(120, 10000, 0.1, 0, 1)
+        player.SetTurndebuff(15000, 10, 1)
+        player.SetChihun(120, 5000, 0.1, 0, 1)
         player.SetFrozenImmune(120, 10000)
         // player.SetAvert(120, 10000, 1)
-        player.SetSlant(120, 10000, 0.8)
-        player.SetBlessed(30, 13000)
+        player.SetSlant(120, 8000, 0.8)
+        player.SetBlessed(10, 5000)
 
         // return super.StateAttack(stub, skill, originFunc);
         return true
@@ -125,11 +125,11 @@ class Skill4978 extends BaseHookSkillStub {
         // player.SetIgnoreblessed(120, 10000)
         player.SetChihun(120, 10000, 0.1, 0, 1)
 
-        if (player.GetHp() / player.GetMaxhp() <= 0.78) {
-            player.SetHeal(120, player.GetHp() * 0.3, 0)
-        }
+        // if (player.GetHp() / player.GetMaxhp() <= 0.78) {
+        //     player.SetHeal(120, player.GetHp() * 0.3, 0)
+        // }
 
-        player.SetAvert(120, 6000, 0.85)
+        player.SetAvert(120, 6000, 0.001)
         // player.SetSlant(120, 10000, 0.8)
         super.Calculate2(stub, skill, originFunc);
     }
@@ -216,7 +216,7 @@ class Skill1023 extends BaseHookSkillStub {
 
      StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
         const player = skill.GetPlayerNice()
-        player.SetAvert(120, skill.GetLevel() * 500 + 100, 0.9)
+        player.SetAvert(120, skill.GetLevel() * 500 + 100, 0.001)
         return true
     }
 
@@ -236,7 +236,7 @@ class Skill6549 extends BaseHookSkillStub {
 
      Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
         const player = skill.GetPlayerNice()
-        player.SetIgnoreblessed(120, 5000)
+        player.SetIgnoreblessed(120, 4000)
         player.SetIgnoreinvicible(120, 2000)
         super.Calculate2(stub, skill, originFunc);
     }
@@ -264,7 +264,7 @@ class Skill4042 extends BaseHookSkillStub {
      StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
         super.StateAttack(stub, skill, originFunc);
         const player = skill.GetPlayerNice()
-        player.SetDisguise(120, 5000)
+        player.SetDisguise(120, 4000)
         return true
     }
 
@@ -283,7 +283,7 @@ class Skill3917 extends BaseHookSkillStub {
 
      Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
         const player = skill.GetPlayerNice()
-        player.SetSkillmirror(120, 8000)
+        player.SetSkillmirror(120, 6000)
         player.SetIgnoreblessed(120, 2000)
         player.SetIgnoreinvicible(120, 2000)
         super.Calculate2(stub, skill, originFunc);
@@ -292,7 +292,7 @@ class Skill3917 extends BaseHookSkillStub {
      StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
         const player = skill.GetPlayerNice()
         // player.SetTransform(120, 109912, 1, 1, 30000)
-        player.SetDisarrange(9999, 6000, 6000, 20)
+        player.SetDisarrange(9999, 4000, 4000, 10)
         return true
     }
 }
@@ -309,7 +309,7 @@ class Skill3923 extends BaseHookSkillStub {
      StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
         const player = skill.GetPlayerNice()
         player.SetBlessed(10, 3000)
-        player.SetHeal(120, player.GetHp() * 0.3, 0)
+        player.SetHeal(120, player.GetHp() * 0.05, 0)
         return true
     }
 }
@@ -326,7 +326,7 @@ class Skill3184 extends BaseHookSkillStub {
 
      StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
         const player = skill.GetPlayerNice()
-        player.SetColdinjure(120, 0.2, 13000, 8)
+        player.SetColdinjure(120, 0.2, 10000, 8)
         return true
     }
 
