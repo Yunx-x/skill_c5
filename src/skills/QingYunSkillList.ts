@@ -168,24 +168,14 @@ class Skill222 extends BaseHookSkillStub {
  */
 class Skill231 extends BaseHookSkillStub {
 
+    executetime = [800, 200]
+
     constructor() {
         super(231);
     }
 
     GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
         return 2000
-    }
-
-    GetExecutetime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
-        return 1000
-    }
-
-    GetTime1(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
-        return 800
-    }
-
-    GetTime2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
-        return 200
     }
 
     StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
@@ -743,24 +733,14 @@ class Skill241 extends BaseHookSkillStub {
  */
 class Skill242 extends BaseHookSkillStub {
 
+    executetime = [600, 400]
+
     constructor() {
         super(242);
     }
 
     GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
         return 2000;
-    }
-
-    GetExecutetime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
-        return 1000
-    }
-
-    GetTime1(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
-        return 600
-    }
-
-    GetTime2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
-        return 400
     }
 
     Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
@@ -927,14 +907,126 @@ class Skill540 extends BaseHookSkillStub {
         return true
     }
 
-    // StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
-    //     const player = skill.GetPlayerNice()
-    //     const time = skill.GetLevel() * 2000 + 6100
-    //     player.SetCycsubdefence(120, 64 * skill.GetLevel() + 16, time, 1)
-    //     player.SetFlamecurse(120,time,0.08,1)
-    //     player.SetSubhp()
-    //     return true
-    // }
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice()
+        const time = skill.GetLevel() * 2000 + 6100
+        player.SetCycsubdefence(120, 64 * skill.GetLevel() + 16, time, 1)
+        player.SetFlamecurse(120, time, 0.08, 1)
+        player.SetSubhp(120, player.GetMaxhp() * (0.04 * skill.GetLevel()), time, skill.GetLevel() * 10, 1)
+        player.SetSubmp(120, player.GetMaxmp() * (0.04 * skill.GetLevel()), time, skill.GetLevel() * 10, 1)
+        return true
+    }
+}
+
+/**
+ * 541   天诛剑气    9
+ *
+ * 冷却6秒，施法1秒
+ *
+ * 真气贯穿+4
+ * (真气大于95%时追加本体攻击力16%)
+ *
+ * 攻击目标1次,追加本体攻击力1%/9%，附加2214/2886点攻击力，并额外追加自身真气上限1%/9%的攻击力。
+ * 攻击怪物目标时，追加真气上限相关攻击力翻3倍。
+ * *剑气延伸追加攻击距离0.5/4.5米*
+ */
+class Skill541 extends BaseHookSkillStub {
+
+    executetime = [800, 200]
+
+    constructor() {
+        super(541);
+    }
+
+    GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        return 6000
+    }
+
+    Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice();
+        const skillLevel = skill.GetLevel();
+
+        const mp = player.GetMp();
+        const maxmp = player.GetMaxmp();
+        let r1 = 0
+        if (mp / maxmp > 0.95) {
+            r1 = 0.16
+        }
+
+        skill.SetRatio(1 + r1 + skillLevel * 0.01)
+        const plus1 = 320 * skillLevel + skillLevel
+        const plus2 = maxmp * 0.01 * skillLevel
+        skill.SetPlus(plus1 + plus2)
+
+        skill.SetMobBonusDamage(plus2 * 2)
+        player.SetPerform(1)
+    }
+
+    BlessMe(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        setUniqprompt(stub, skill, originFunc)
+        return true
+    }
+
+}
+
+/**
+ * 542   真元华闪    7
+ * 真气贯穿
+ * (真气大于95%时追加自身真气上限5%的攻击力)
+ *
+ * 冷却90秒
+ * 攻击目标1次，附加本体攻击力15%/105%,目标气血比例越高,攻击力越高,最多不超过施法者气血上限的1.5倍。
+ */
+class Skill542 extends BaseHookSkillStub {
+
+    constructor() {
+        super(542);
+    }
+
+    Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice();
+        skill.SetRatio(1 + 0.15 * skill.GetLevel())
+        const buffcnt = player.GetBuffcnt();
+        player.SetVar1(buffcnt);
+        player.SetPerform(1)
+    }
+
+    BlessMe(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        setUniqprompt(stub, skill, originFunc)
+        return true
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayer();
+
+        let d = skill.GetLevel() * 0.05;
+
+        let v3 = 2 * (player.GetHp() + 50);
+        let da = v3 / (player.GetMaxhp() + 100) + d;
+
+        let v13 = skill.GetT2() * 0.04;
+        let v14 = player.GetVar1() * v13 + 1.0;
+
+        let v12 = skill.GetT2() * 0.04;
+
+        const r = (player.GetDebuffcnt() * v12 + v14) * da;
+
+        player.SetSecondattack(r, 0, 0);
+        return true
+    }
+
+}
+
+/**
+* 543
+*
+*/
+class Skill543 extends BaseHookSkillStub {
+
+    constructor() {
+        super(543);
+    }
+
 }
 
 
