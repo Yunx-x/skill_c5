@@ -2,6 +2,7 @@ import { HookFuncCore } from "../HookFuncCore";
 import { PointerClass } from "../PointerClass";
 import { SPlayer } from "./SPlayer";
 import { SkillStub } from "./SkillStub";
+import {GPlayer} from "../gs/GPlayer";
 
 /**
  * Skill类中常用的函数
@@ -72,7 +73,14 @@ export class Skill extends PointerClass {
 		return new SPlayer(fc(this.pointer));
 	}
 
-	/**
+    /**
+     * 通过技能获取 GPlayer
+     */
+    GetGPlayer() {
+        return new GPlayer(this.pointer.add(0x6b).readPointer().add(4).readPointer());
+    }
+
+    /**
 	 * 获取技能等级
 	 *
 	 * @constructor

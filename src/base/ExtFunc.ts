@@ -1,14 +1,20 @@
-import {Skill} from "base/skill/Skill";
 
 /**
- * 真气贯穿BlessMe通用实现
- *
+ * 天尊法身神通类
  */
-export function setUniqprompt(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
-    const player = skill.GetPlayer();
-    const mp = player.GetMp();
-    const maxmp = player.GetMaxmp();
-    const limitMp = mp / (0.95 - skill.GetT3() * 0.1)
+export const Hiddenmbocdred_ID = 9416;
 
-    player.SetUniqprompt(Math.floor(limitMp / maxmp))
-}
+/**
+ * 逆转
+ */
+export const Turndebuff_ID = 115;
+
+/**
+ * 麻痹
+ */
+export const Paralysis_ID = 4203;
+
+/**
+ * 冰冻
+ */
+export const Frozen_multi = 5410;
