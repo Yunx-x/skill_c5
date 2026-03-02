@@ -11,7 +11,8 @@ import {
     GetTs596Effect,
     GetTs602Effect,
     GetTs606Effect,
-    GetTs607Effect,
+    GetTs607Effect, GetTs617Effect1,
+    GetTs617Effect2,
     setUniqprompt
 } from "../talent/QingYunTalent";
 
@@ -121,7 +122,7 @@ class Skill226 extends BaseHookSkillStub {
         skill.SetPlus(40 + skill.GetLevel() * 6 + ts605 * 4 * skill.GetLevel());
 
         GetTs602Effect(stub, skill, originFunc)
-
+        GetTs617Effect2(stub, skill, originFunc)
         player.SetVar1(ts605)
         player.SetPerform(1);
     }
@@ -301,9 +302,9 @@ class Skill225 extends BaseHookSkillStub {
 
         skill.SetPlus(119 + skill.GetLevel() * 10);
         GetTs606Effect(stub, skill, originFunc)
+        GetTs617Effect2(stub, skill, originFunc)
 
         player.SetVar1(player.GetSkilllevel(610))
-
         player.SetPerform(1);
     }
 
@@ -435,6 +436,7 @@ class Skill230 extends BaseHookSkillStub {
         player.SetVar1(player.GetSkilllevel(571))
 
         GetTs602Effect(stub, skill, originFunc)
+        GetTs617Effect2(stub, skill, originFunc)
         player.SetPerform(1);
     }
 
@@ -694,7 +696,7 @@ class Skill234 extends BaseHookSkillStub {
         skill.SetPlus(280 + skill.GetLevel() * 16);
 
         GetTs607Effect(stub, skill, originFunc)
-
+        GetTs617Effect2(stub, skill, originFunc)
         player.SetVar1(ts611Level)
 
         player.SetPerform(1);
@@ -853,7 +855,7 @@ class Skill238 extends BaseHookSkillStub {
 
         skill.SetPlus(429 + skill.GetLevel() * 21)
         GetTs606Effect(stub, skill, originFunc)
-
+        GetTs617Effect2(stub, skill, originFunc)
         player.SetVar1(ts608)
         player.SetVar2(player.GetSkilllevel(610))
 
@@ -1155,7 +1157,7 @@ class Skill242 extends BaseHookSkillStub {
         skill.SetPlus(attackValue);
 
         GetTs607Effect(stub, skill, originFunc)
-
+        GetTs617Effect2(stub, skill, originFunc)
         player.SetVar1(player.GetSkilllevel(613))
         player.SetVar2(player.GetSkilllevel(611))
         player.SetPerform(1)
@@ -1262,7 +1264,7 @@ class Skill537 extends BaseHookSkillStub {
 
         GetTs602Effect(stub, skill, originFunc)
         GetTs606Effect(stub, skill, originFunc)
-
+        GetTs617Effect2(stub, skill, originFunc)
         player.SetPerform(1)
     }
 
@@ -1572,7 +1574,7 @@ class Skill543 extends BaseHookSkillStub {
         skill.SetPlus(215 * lv + lv)
 
         GetTs607Effect(stub, skill, originFunc)
-
+        GetTs617Effect2(stub, skill, originFunc)
         player.SetVar1(player.GetSkilllevel(611))
         player.SetVar2(player.GetSkilllevel(614))
 
@@ -1587,7 +1589,7 @@ class Skill543 extends BaseHookSkillStub {
         skill.SetPlus(215 * lv + lv)
 
         GetTs607Effect(stub, skill, originFunc)
-
+        GetTs617Effect2(stub, skill, originFunc)
         player.SetVar1(player.GetSkilllevel(611))
         player.SetVar2(player.GetSkilllevel(614))
 
@@ -1603,7 +1605,7 @@ class Skill543 extends BaseHookSkillStub {
 
     StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
         const player = skill.GetPlayerNice();
-        player.SetDrainmagic(6+player.GetVar2()*5, 0.25)
+        player.SetDrainmagic(6 + player.GetVar2() * 5, 0.25)
 
         const ts611 = player.GetVar1()
         if (zrand(100) / (ts611 * -3 + 100) * norm(ts611) > 0) {
@@ -2298,7 +2300,8 @@ class Skill785 extends BaseHookSkillStub {
         skill.SetPlus(plus + p1)
 
         GetTs607Effect(stub, skill, originFunc)
-
+        GetTs617Effect2(stub, skill, originFunc)
+        GetTs617Effect1(stub,skill,originFunc)
         player.SetVar1(player.GetSkilllevel(611))
 
         player.SetPerform(1)
@@ -2326,7 +2329,8 @@ class Skill785 extends BaseHookSkillStub {
         skill.SetPlus(plus + p1)
 
         GetTs607Effect(stub, skill, originFunc)
-
+        GetTs617Effect2(stub, skill, originFunc)
+        GetTs617Effect1(stub,skill,originFunc)
         player.SetVar1(player.GetSkilllevel(611))
 
         player.SetPerform(0)
@@ -2354,7 +2358,8 @@ class Skill785 extends BaseHookSkillStub {
         skill.SetPlus(plus + p1)
 
         GetTs607Effect(stub, skill, originFunc)
-
+        GetTs617Effect2(stub, skill, originFunc)
+        GetTs617Effect1(stub,skill,originFunc)
         player.SetVar1(player.GetSkilllevel(611))
 
         player.SetPerform(0)
@@ -2415,7 +2420,8 @@ class Skill786 extends BaseHookSkillStub {
         skill.SetPlus(v22)
 
         GetTs607Effect(stub, skill, originFunc)
-
+        GetTs617Effect2(stub, skill, originFunc)
+        GetTs617Effect1(stub,skill,originFunc)
         player.SetVar2(player.GetSkilllevel(593))
         player.SetVar3(player.GetSkilllevel(611))
 
@@ -2446,7 +2452,8 @@ class Skill786 extends BaseHookSkillStub {
         skill.SetPlus(v22)
 
         GetTs607Effect(stub, skill, originFunc)
-
+        GetTs617Effect2(stub, skill, originFunc)
+        GetTs617Effect1(stub,skill,originFunc)
         player.SetVar2(player.GetSkilllevel(593))
         player.SetVar3(player.GetSkilllevel(611))
 
@@ -2477,7 +2484,8 @@ class Skill786 extends BaseHookSkillStub {
         skill.SetPlus(v22)
 
         GetTs607Effect(stub, skill, originFunc)
-
+        GetTs617Effect2(stub, skill, originFunc)
+        GetTs617Effect1(stub,skill,originFunc)
         player.SetVar2(player.GetSkilllevel(593))
         player.SetVar3(player.GetSkilllevel(611))
 
@@ -2508,7 +2516,8 @@ class Skill786 extends BaseHookSkillStub {
         skill.SetPlus(v22)
 
         GetTs607Effect(stub, skill, originFunc)
-
+        GetTs617Effect2(stub, skill, originFunc)
+        GetTs617Effect1(stub,skill,originFunc)
         player.SetVar2(player.GetSkilllevel(593))
         player.SetVar3(player.GetSkilllevel(611))
 
@@ -2539,7 +2548,8 @@ class Skill786 extends BaseHookSkillStub {
         skill.SetPlus(v22)
 
         GetTs607Effect(stub, skill, originFunc)
-
+        GetTs617Effect2(stub, skill, originFunc)
+        GetTs617Effect1(stub,skill,originFunc)
         player.SetVar2(player.GetSkilllevel(593))
         player.SetVar3(player.GetSkilllevel(611))
 
@@ -2570,7 +2580,8 @@ class Skill786 extends BaseHookSkillStub {
         skill.SetPlus(v22)
 
         GetTs607Effect(stub, skill, originFunc)
-
+        GetTs617Effect2(stub, skill, originFunc)
+        GetTs617Effect1(stub,skill,originFunc)
         player.SetVar2(player.GetSkilllevel(593))
         player.SetVar3(player.GetSkilllevel(611))
 

@@ -177,3 +177,46 @@ export function GetTs606Effect(stub: NativePointer, skill: Skill, originFunc: Na
     plus = (zrand(15 * tsLevel + 10) - 10) + 100 / 100.0 * plus
     skill.SetPlus(plus)
 }
+
+
+/**
+ * 风雷之怨
+ * 部分技能对怪物额外附加4%真气上限的攻击力。
+ * 影响技能:太极玄天真诀、神剑御雷真诀、太极玄天真诀<玄><煞><禅>、神剑御雷真诀<玄><煞><禅>。
+ */
+export function GetTs617Effect1(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+    const player = skill.GetPlayer();
+    const tsLevel = player.GetSkilllevel(617)
+
+    let mobPlus = skill.GetMobBonusDamage()
+    mobPlus += tsLevel * 0.04 * player.GetMaxmp()
+    skill.SetMobBonusDamage(mobPlus)
+}
+
+/**
+ * 风雷之怨
+ * 所有群体法术追加人物本体攻击力5%。
+ * 影响技能:驭雷术、寒霜剑气、玄冰刺、雷云风暴、五雷轰顶、雷神之锥、霜天雪舞、天地不仁、太极玄天真诀、神剑御雷真诀、太极玄天真诀<玄><煞><禅>、神剑御雷真诀<玄><煞><禅>。
+ */
+export function GetTs617Effect2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+    const player = skill.GetPlayer();
+    const tsLevel = player.GetSkilllevel(617)
+
+    let ratio = skill.GetRatio()
+    ratio += tsLevel * 0.05
+    skill.SetRatio(ratio)
+}
+
+/**
+ * 风雷之怨
+ * 修习任一种以自身为中心的群攻技能,均会对更高级的以自身为中心的群攻技能额外追加5%的本体攻击。
+ * 效果触发条件:雷云风暴、雷神之锥、天地不仁达到9阶、太极玄天真诀达到4阶、神剑御雷真诀达到2阶，太极玄天真诀<玄><煞><禅>、神剑御雷真诀<玄><煞><禅>达到1阶。
+ */
+export function GetTs617Effect3(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+    const player = skill.GetPlayer();
+    const tsLevel = player.GetSkilllevel(617)
+
+    let ratio = skill.GetRatio()
+    ratio += tsLevel * 0.05
+    skill.SetRatio(ratio)
+}

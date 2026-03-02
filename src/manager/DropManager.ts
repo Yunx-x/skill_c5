@@ -330,12 +330,6 @@ export class DropManager extends BaseManager {
             extraCount: 1
         });
 
-        dropManager.registerBoss(chunJieBoss, {
-            dropList: drop_list_cj,
-            extraList: extra_list_cj,
-            extraCount: 1
-        });
-
         //itemdataman::generate_item_from_monster(itemdataman *this, unsigned int, int *, unsigned int)
         const address = HookFuncCore.getFuncAddress("_ZN11itemdataman26generate_item_from_monsterEjPij")
         Interceptor.replace(address,
