@@ -78,6 +78,25 @@ class Skill1740 extends BaseHookSkillStub {
 }
 
 
+/**
+* 221   疗伤
+* 585   岐黄秘术
+ * 被动生效
+ * 疗伤的治疗效果增加40%，
+ * 并使你在天常修元分页上的每个非主动天书技能的本体加点（不计装备加点)，额外为你提供0.5%的致命一击伤害减免。
+ *
+*/
+class Skill221 extends BaseHookSkillStub {
+
+    constructor() {
+        super(221);
+    }
+
+}
+
+
+
+
 export class TongYongSkillList {
 
     /**
