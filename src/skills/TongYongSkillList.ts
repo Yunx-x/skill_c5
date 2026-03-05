@@ -77,7 +77,6 @@ class Skill1740 extends BaseHookSkillStub {
     }
 }
 
-
 /**
 * 221   疗伤
 * 585   岐黄秘术
@@ -93,7 +92,6 @@ class Skill221 extends BaseHookSkillStub {
     }
 
 }
-
 
 
 

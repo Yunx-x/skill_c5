@@ -206,17 +206,3 @@ export function GetTs617Effect2(stub: NativePointer, skill: Skill, originFunc: N
     ratio += tsLevel * 0.05
     skill.SetRatio(ratio)
 }
-
-/**
- * 风雷之怨
- * 修习任一种以自身为中心的群攻技能,均会对更高级的以自身为中心的群攻技能额外追加5%的本体攻击。
- * 效果触发条件:雷云风暴、雷神之锥、天地不仁达到9阶、太极玄天真诀达到4阶、神剑御雷真诀达到2阶，太极玄天真诀<玄><煞><禅>、神剑御雷真诀<玄><煞><禅>达到1阶。
- */
-export function GetTs617Effect3(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
-    const player = skill.GetPlayer();
-    const tsLevel = player.GetSkilllevel(617)
-
-    let ratio = skill.GetRatio()
-    ratio += tsLevel * 0.05
-    skill.SetRatio(ratio)
-}

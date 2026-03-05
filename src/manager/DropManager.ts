@@ -397,10 +397,6 @@ function randomPointInSquare(cx, cy, size) {
     return [x, y];
 }
 
-//DropItemData(world *pPlane, const A3DVECTOR *const pos, item_data *data, const XID *const owner, int owner_team, int seq, int name_id, char battle_faction)
-export const dropItemDataFunc = HookFuncCore.getNativeFunc(
-    "_Z12DropItemDataP5worldRK9A3DVECTORP9item_dataRK3XIDiiicbii",
-    "void", ["pointer", "pointer", "pointer", "pointer", "int32", "int32", "int32", "char", "int32", "int32", "int32"])
 
 // export function dropItem() {
 //     const address = ptr("0x80FA1E8")

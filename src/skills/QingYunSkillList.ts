@@ -11,7 +11,8 @@ import {
     GetTs596Effect,
     GetTs602Effect,
     GetTs606Effect,
-    GetTs607Effect, GetTs617Effect1,
+    GetTs607Effect,
+    GetTs617Effect1,
     GetTs617Effect2,
     setUniqprompt
 } from "../talent/QingYunTalent";
@@ -1153,11 +1154,21 @@ class Skill242 extends BaseHookSkillStub {
 
     Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
         const player = skill.GetPlayerNice();
+
+        const ts617Level = player.GetSkilllevel(617)
+        const skill234Level = player.GetSkilllevel(234)
+
+        let ratio = 1.0;
+        ratio += Math.floor(skill234Level / 9) * 0.05 * ts617Level
+
+        skill.SetRatio(ratio)
+
         const attackValue = Math.floor(609 + (skill.GetLevel() - 1) * 189 / 8);
         skill.SetPlus(attackValue);
 
         GetTs607Effect(stub, skill, originFunc)
         GetTs617Effect2(stub, skill, originFunc)
+
         player.SetVar1(player.GetSkilllevel(613))
         player.SetVar2(player.GetSkilllevel(611))
         player.SetPerform(1)
@@ -1569,7 +1580,16 @@ class Skill543 extends BaseHookSkillStub {
     Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
         const player = skill.GetPlayerNice();
         const lv = skill.GetLevel()
-        skill.SetRatio(1 + 0.02 * lv)
+
+        const ts617Level = player.GetSkilllevel(617)
+        const skill234Level = player.GetSkilllevel(234)
+        const skill242Level = player.GetSkilllevel(242)
+
+        let ratio = 1 + 0.02 * lv;
+        ratio += Math.floor(skill234Level / 9) * 0.05 * ts617Level
+        ratio += Math.floor(skill242Level / 9) * 0.05 * ts617Level
+
+        skill.SetRatio(ratio)
 
         skill.SetPlus(215 * lv + lv)
 
@@ -1584,7 +1604,17 @@ class Skill543 extends BaseHookSkillStub {
     Calculate3(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
         const player = skill.GetPlayerNice();
         const lv = skill.GetLevel()
-        skill.SetRatio(1 + 0.02 * lv)
+
+        const ts617Level = player.GetSkilllevel(617)
+        const skill234Level = player.GetSkilllevel(234)
+        const skill242Level = player.GetSkilllevel(242)
+
+        let ratio = 1 + 0.02 * lv;
+        ratio += Math.floor(skill234Level / 9) * 0.05 * ts617Level
+        ratio += Math.floor(skill242Level / 9) * 0.05 * ts617Level
+
+        skill.SetRatio(ratio)
+
 
         skill.SetPlus(215 * lv + lv)
 
@@ -1622,6 +1652,10 @@ class Skill543 extends BaseHookSkillStub {
  * 自身祝福，施法时间1秒，技能冷却220/120秒。
  * 自身在4/24秒内，TODO:所有真气贯穿效果额外增加10%自身真气上限的攻击力。
  * 天机印持续时间内,单体攻击技能天诛剑气、赤乌·天诛剑气变为群体攻击技能天诛剑气·罚、赤乌·天诛剑气·罚，并获得新技能霜极刑冰错。
+ *
+ * 1537  炼气还神Ⅱ
+ * 被动
+ * 天机印技能冷却时间减少15秒，天机印持续时间增加自身10%的克仙/魔/佛属性。
  */
 class Skill544 extends BaseHookSkillStub {
 
@@ -1630,7 +1664,9 @@ class Skill544 extends BaseHookSkillStub {
     }
 
     GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
-        return 240000 - skill.GetLevel() * 20000
+        const player = skill.GetPlayerNice();
+        const ts1537 = player.GetSkilllevel(1537)
+        return 240000 - skill.GetLevel() * 20000 - norm(ts1537) * 15000
     }
 
     BlessMe(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
@@ -1638,6 +1674,12 @@ class Skill544 extends BaseHookSkillStub {
         const time = 4000 * skill.GetLevel() + 100
         player.SetSkillreplace(120, time, 230, 5040, 1)
         player.SetSkillreplace(120, time, 6814, 5047, 2)
+
+        const ts1537 = player.GetSkilllevel(1537)
+
+        player.SetIncCultAtk(120, time, norm(ts1537) * 0.1, 0, 0)
+        player.SetIncCultAtk(120, time, norm(ts1537) * 0.1, 1, 1)
+        player.SetIncCultAtk(120, time, norm(ts1537) * 0.1, 2, 2)
         return true
     }
 
@@ -2292,7 +2334,17 @@ class Skill785 extends BaseHookSkillStub {
             p1 = maxmp * 0.05
         }
 
-        skill.SetRatio(1 + 0.1 * skill.GetLevel() + r1)
+        const ts617Level = player.GetSkilllevel(617)
+        const skill234Level = player.GetSkilllevel(234)
+        const skill242Level = player.GetSkilllevel(242)
+        const skill543Level = player.GetSkilllevel(543)
+
+        let ratio = 1 + 0.1 * skill.GetLevel() + r1;
+        ratio += Math.floor(skill234Level / 9) * 0.05 * ts617Level
+        ratio += Math.floor(skill242Level / 9) * 0.05 * ts617Level
+        ratio += Math.floor(skill543Level / 9) * 0.05 * ts617Level
+
+        skill.SetRatio(ratio)
 
         const v8 = 22 * lv + 750;
         const v9 = 8 * lv * lv;
@@ -2301,7 +2353,7 @@ class Skill785 extends BaseHookSkillStub {
 
         GetTs607Effect(stub, skill, originFunc)
         GetTs617Effect2(stub, skill, originFunc)
-        GetTs617Effect1(stub,skill,originFunc)
+        GetTs617Effect1(stub, skill, originFunc)
         player.SetVar1(player.GetSkilllevel(611))
 
         player.SetPerform(1)
@@ -2321,7 +2373,18 @@ class Skill785 extends BaseHookSkillStub {
             p1 = maxmp * 0.05
         }
 
-        skill.SetRatio(1 + 0.1 * skill.GetLevel() + r1)
+
+        const ts617Level = player.GetSkilllevel(617)
+        const skill234Level = player.GetSkilllevel(234)
+        const skill242Level = player.GetSkilllevel(242)
+        const skill543Level = player.GetSkilllevel(543)
+
+        let ratio = 1 + 0.1 * skill.GetLevel() + r1;
+        ratio += Math.floor(skill234Level / 9) * 0.05 * ts617Level
+        ratio += Math.floor(skill242Level / 9) * 0.05 * ts617Level
+        ratio += Math.floor(skill543Level / 9) * 0.05 * ts617Level
+
+        skill.SetRatio(ratio)
 
         const v8 = 22 * lv + 750;
         const v9 = 8 * lv * lv;
@@ -2330,7 +2393,7 @@ class Skill785 extends BaseHookSkillStub {
 
         GetTs607Effect(stub, skill, originFunc)
         GetTs617Effect2(stub, skill, originFunc)
-        GetTs617Effect1(stub,skill,originFunc)
+        GetTs617Effect1(stub, skill, originFunc)
         player.SetVar1(player.GetSkilllevel(611))
 
         player.SetPerform(0)
@@ -2350,7 +2413,18 @@ class Skill785 extends BaseHookSkillStub {
             p1 = maxmp * 0.05
         }
 
-        skill.SetRatio(1 + 0.1 * skill.GetLevel() + r1)
+
+        const ts617Level = player.GetSkilllevel(617)
+        const skill234Level = player.GetSkilllevel(234)
+        const skill242Level = player.GetSkilllevel(242)
+        const skill543Level = player.GetSkilllevel(543)
+
+        let ratio = 1 + 0.1 * skill.GetLevel() + r1;
+        ratio += Math.floor(skill234Level / 9) * 0.05 * ts617Level
+        ratio += Math.floor(skill242Level / 9) * 0.05 * ts617Level
+        ratio += Math.floor(skill543Level / 9) * 0.05 * ts617Level
+
+        skill.SetRatio(ratio)
 
         const v8 = 22 * lv + 750;
         const v9 = 8 * lv * lv;
@@ -2359,7 +2433,7 @@ class Skill785 extends BaseHookSkillStub {
 
         GetTs607Effect(stub, skill, originFunc)
         GetTs617Effect2(stub, skill, originFunc)
-        GetTs617Effect1(stub,skill,originFunc)
+        GetTs617Effect1(stub, skill, originFunc)
         player.SetVar1(player.GetSkilllevel(611))
 
         player.SetPerform(0)
@@ -2412,7 +2486,19 @@ class Skill786 extends BaseHookSkillStub {
             r1 = 0.1
         }
 
-        skill.SetRatio(1.2 + 0.2 * lv + r1)
+        const ts617Level = player.GetSkilllevel(617)
+        const skill234Level = player.GetSkilllevel(234)
+        const skill242Level = player.GetSkilllevel(242)
+        const skill543Level = player.GetSkilllevel(543)
+        const skill785Level = player.GetSkilllevel(785)
+
+        let ratio = 1.2 + 0.2 * lv + r1;
+        ratio += Math.floor(skill234Level / 9) * 0.05 * ts617Level
+        ratio += Math.floor(skill242Level / 9) * 0.05 * ts617Level
+        ratio += Math.floor(skill543Level / 9) * 0.05 * ts617Level
+        ratio += Math.floor(skill785Level / 4) * 0.05 * ts617Level
+
+        skill.SetRatio(ratio)
 
         let v11 = 50 * lv + 800;
         let v12 = 15 * lv * lv;
@@ -2421,7 +2507,7 @@ class Skill786 extends BaseHookSkillStub {
 
         GetTs607Effect(stub, skill, originFunc)
         GetTs617Effect2(stub, skill, originFunc)
-        GetTs617Effect1(stub,skill,originFunc)
+        GetTs617Effect1(stub, skill, originFunc)
         player.SetVar2(player.GetSkilllevel(593))
         player.SetVar3(player.GetSkilllevel(611))
 
@@ -2444,7 +2530,20 @@ class Skill786 extends BaseHookSkillStub {
             r1 = 0.1
         }
 
-        skill.SetRatio(1.2 + 0.2 * lv + r1)
+
+        const ts617Level = player.GetSkilllevel(617)
+        const skill234Level = player.GetSkilllevel(234)
+        const skill242Level = player.GetSkilllevel(242)
+        const skill543Level = player.GetSkilllevel(543)
+        const skill785Level = player.GetSkilllevel(785)
+
+        let ratio = 1.2 + 0.2 * lv + r1;
+        ratio += Math.floor(skill234Level / 9) * 0.05 * ts617Level
+        ratio += Math.floor(skill242Level / 9) * 0.05 * ts617Level
+        ratio += Math.floor(skill543Level / 9) * 0.05 * ts617Level
+        ratio += Math.floor(skill785Level / 4) * 0.05 * ts617Level
+
+        skill.SetRatio(ratio)
 
         let v11 = 50 * lv + 800;
         let v12 = 15 * lv * lv;
@@ -2453,7 +2552,7 @@ class Skill786 extends BaseHookSkillStub {
 
         GetTs607Effect(stub, skill, originFunc)
         GetTs617Effect2(stub, skill, originFunc)
-        GetTs617Effect1(stub,skill,originFunc)
+        GetTs617Effect1(stub, skill, originFunc)
         player.SetVar2(player.GetSkilllevel(593))
         player.SetVar3(player.GetSkilllevel(611))
 
@@ -2476,7 +2575,21 @@ class Skill786 extends BaseHookSkillStub {
             r1 = 0.1
         }
 
-        skill.SetRatio(1.2 + 0.2 * lv + r1)
+
+        const ts617Level = player.GetSkilllevel(617)
+        const skill234Level = player.GetSkilllevel(234)
+        const skill242Level = player.GetSkilllevel(242)
+        const skill543Level = player.GetSkilllevel(543)
+        const skill785Level = player.GetSkilllevel(785)
+
+        let ratio = 1.2 + 0.2 * lv + r1;
+        ratio += Math.floor(skill234Level / 9) * 0.05 * ts617Level
+        ratio += Math.floor(skill242Level / 9) * 0.05 * ts617Level
+        ratio += Math.floor(skill543Level / 9) * 0.05 * ts617Level
+        ratio += Math.floor(skill785Level / 4) * 0.05 * ts617Level
+
+        skill.SetRatio(ratio)
+
 
         let v11 = 50 * lv + 800;
         let v12 = 15 * lv * lv;
@@ -2485,7 +2598,7 @@ class Skill786 extends BaseHookSkillStub {
 
         GetTs607Effect(stub, skill, originFunc)
         GetTs617Effect2(stub, skill, originFunc)
-        GetTs617Effect1(stub,skill,originFunc)
+        GetTs617Effect1(stub, skill, originFunc)
         player.SetVar2(player.GetSkilllevel(593))
         player.SetVar3(player.GetSkilllevel(611))
 
@@ -2508,7 +2621,21 @@ class Skill786 extends BaseHookSkillStub {
             r1 = 0.1
         }
 
-        skill.SetRatio(1.2 + 0.2 * lv + r1)
+
+        const ts617Level = player.GetSkilllevel(617)
+        const skill234Level = player.GetSkilllevel(234)
+        const skill242Level = player.GetSkilllevel(242)
+        const skill543Level = player.GetSkilllevel(543)
+        const skill785Level = player.GetSkilllevel(785)
+
+        let ratio = 1.2 + 0.2 * lv + r1;
+        ratio += Math.floor(skill234Level / 9) * 0.05 * ts617Level
+        ratio += Math.floor(skill242Level / 9) * 0.05 * ts617Level
+        ratio += Math.floor(skill543Level / 9) * 0.05 * ts617Level
+        ratio += Math.floor(skill785Level / 4) * 0.05 * ts617Level
+
+        skill.SetRatio(ratio)
+
 
         let v11 = 50 * lv + 800;
         let v12 = 15 * lv * lv;
@@ -2517,7 +2644,7 @@ class Skill786 extends BaseHookSkillStub {
 
         GetTs607Effect(stub, skill, originFunc)
         GetTs617Effect2(stub, skill, originFunc)
-        GetTs617Effect1(stub,skill,originFunc)
+        GetTs617Effect1(stub, skill, originFunc)
         player.SetVar2(player.GetSkilllevel(593))
         player.SetVar3(player.GetSkilllevel(611))
 
@@ -2540,7 +2667,21 @@ class Skill786 extends BaseHookSkillStub {
             r1 = 0.1
         }
 
-        skill.SetRatio(1.2 + 0.2 * lv + r1)
+
+        const ts617Level = player.GetSkilllevel(617)
+        const skill234Level = player.GetSkilllevel(234)
+        const skill242Level = player.GetSkilllevel(242)
+        const skill543Level = player.GetSkilllevel(543)
+        const skill785Level = player.GetSkilllevel(785)
+
+        let ratio = 1.2 + 0.2 * lv + r1;
+        ratio += Math.floor(skill234Level / 9) * 0.05 * ts617Level
+        ratio += Math.floor(skill242Level / 9) * 0.05 * ts617Level
+        ratio += Math.floor(skill543Level / 9) * 0.05 * ts617Level
+        ratio += Math.floor(skill785Level / 4) * 0.05 * ts617Level
+
+        skill.SetRatio(ratio)
+
 
         let v11 = 50 * lv + 800;
         let v12 = 15 * lv * lv;
@@ -2549,7 +2690,7 @@ class Skill786 extends BaseHookSkillStub {
 
         GetTs607Effect(stub, skill, originFunc)
         GetTs617Effect2(stub, skill, originFunc)
-        GetTs617Effect1(stub,skill,originFunc)
+        GetTs617Effect1(stub, skill, originFunc)
         player.SetVar2(player.GetSkilllevel(593))
         player.SetVar3(player.GetSkilllevel(611))
 
@@ -2572,7 +2713,21 @@ class Skill786 extends BaseHookSkillStub {
             r1 = 0.1
         }
 
-        skill.SetRatio(1.2 + 0.2 * lv + r1)
+
+        const ts617Level = player.GetSkilllevel(617)
+        const skill234Level = player.GetSkilllevel(234)
+        const skill242Level = player.GetSkilllevel(242)
+        const skill543Level = player.GetSkilllevel(543)
+        const skill785Level = player.GetSkilllevel(785)
+
+        let ratio = 1.2 + 0.2 * lv + r1;
+        ratio += Math.floor(skill234Level / 9) * 0.05 * ts617Level
+        ratio += Math.floor(skill242Level / 9) * 0.05 * ts617Level
+        ratio += Math.floor(skill543Level / 9) * 0.05 * ts617Level
+        ratio += Math.floor(skill785Level / 4) * 0.05 * ts617Level
+
+        skill.SetRatio(ratio)
+
 
         let v11 = 50 * lv + 800;
         let v12 = 15 * lv * lv;
@@ -2581,7 +2736,7 @@ class Skill786 extends BaseHookSkillStub {
 
         GetTs607Effect(stub, skill, originFunc)
         GetTs617Effect2(stub, skill, originFunc)
-        GetTs617Effect1(stub,skill,originFunc)
+        GetTs617Effect1(stub, skill, originFunc)
         player.SetVar2(player.GetSkilllevel(593))
         player.SetVar3(player.GetSkilllevel(611))
 
@@ -2650,6 +2805,99 @@ class Skill600 extends BaseHookSkillStub {
         player.SetMp(0)
         player.SetHp(1)
         player.SetPerform(1)
+    }
+
+}
+
+/**
+ * 1537  炼气还神II
+ * 祝福技能/自身，1秒施放。
+ * 令自身技能伤害增加2%/20%，持续4/40秒；
+ * 立即在4/40秒内回复自身真气上限4%/40%的真气,回复效果可与炼气还神叠加;
+ * 冷却时间200/20秒。
+ * 被动
+ * 天机印技能冷却时间减少15秒，天机印持续时间增加自身10%的克仙/魔/佛属性。
+ */
+class Skill1537 extends BaseHookSkillStub {
+
+    constructor() {
+        super(1537);
+    }
+
+    GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        return 220000 - 20000 * skill.GetLevel()
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice()
+        const skillLevel = skill.GetLevel()
+        player.SetIncskilldamage(0.02 * skillLevel, skillLevel * 4000, 2)
+        player.SetMpgen(120, skillLevel * 4000, 0, skillLevel * 0.04, 5)
+        return true
+    }
+}
+
+/**
+ * 1538  怒剑狂花II
+ * 目标限制:2/11个，本体攻击追加:5%/50%，
+ * 令目标气血上限降低，数值为自身气血的2%20%，最多降低至目标气血上限的50%，持续8秒。
+ * 有较大概率打断目标攻击，
+ * 同时解除自身所处的流血和燃魔效果。
+ * 冷却时间16秒。
+ */
+class Skill1538 extends BaseHookSkillStub {
+
+    constructor() {
+        super(1538);
+    }
+
+    GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        return 16000
+    }
+
+    Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+        skill.SetRatio(skill.GetLevel() * 0.05 + 1.0)
+        player.SetVar1(player.GetHp())
+        player.SetPerform(1)
+    }
+
+    BlessMe(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice()
+        player.SetExorcism(120, 3, 1, 2)
+        return true
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice()
+        player.SetHpleak(120, 8100, player.GetVar1() * 0.02 * skill.GetLevel(), player.GetMaxhp() * 0.5, 1)
+        player.SetBreakcasting(120)
+        return true
+    }
+}
+
+/**
+ * 1539  天地不仁II
+ * 目标限制:12个
+ * 攻击自身周围20米内的敌人，
+ * 每次攻击有10%/100%几率清除目标身上3个常规有利状态，
+ * 10%/100%几率令目标进入禁食状态，效果持续11/20秒，
+ * 强制定身周围目标8秒，定身能力为自身定身抗性，
+ * 冷却时间240/60秒。
+ * 被动效果
+ * 绝圣弃智额外附加自身气血真气上限和1%/10%的攻击力。
+ */
+class Skill1539 extends BaseHookSkillStub {
+
+    constructor() {
+        super(1539);
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice()
+        player.SetClearbuff(10*skill.GetLevel(), 3)
+        player.SetDiet(10*skill.GetLevel(), 10100+1000*skill.GetLevel())
+        return true
     }
 
 }

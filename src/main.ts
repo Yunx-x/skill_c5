@@ -5,6 +5,7 @@ import {HookModuleBase} from "./base/HookModuleBase";
 import {lingCaiManager} from "./manager/LingCaiManager";
 import {dropManager} from "./manager/DropManager";
 import {skillManager} from "./manager/SkillManager";
+import {raidDropManager} from "./manager/RaidDropManager";
 // 初始化模块基址索引
 HookModuleBase.initializeModuleBaseIndex(Process.enumerateModules());
 
@@ -17,6 +18,8 @@ killBossLastManager.attach()
 lingCaiManager.attach()
 
 dropManager.attach()
+
+raidDropManager.attach()
 
 skillManager.attach()
 
