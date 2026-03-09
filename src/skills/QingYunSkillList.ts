@@ -467,6 +467,10 @@ class Skill230 extends BaseHookSkillStub {
  *
  * 588  护体罡气
  * 真元护体吸收伤害比例提升10%
+ *
+ * 1589  真元护体II
+ * 被动
+ * 令真元护体吸收伤害总量增加自身真气上限的2倍，吸收比例增加10%;
  */
 class Skill235 extends BaseHookSkillStub {
 
@@ -481,9 +485,16 @@ class Skill235 extends BaseHookSkillStub {
     StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
         const player = skill.GetPlayerNice();
         const ts588 = player.GetSkilllevel(588);
-        const tsRatio = ts588 * 0.1
+        const ts1589 = player.GetSkilllevel(1589);
 
-        player.SetMagicshield(0.08 + skill.GetLevel() * 0.01 + tsRatio, 2 * player.GetMaxmp(), 30000)
+        let ratio = 0.08 + skill.GetLevel() * 0.01
+        ratio += ts588 * 0.1
+        ratio += norm(ts1589) * 0.1
+
+        let amount = 2 * player.GetMaxmp()
+        amount += norm(ts1589) * 2
+
+        player.SetMagicshield(ratio, amount, 30000)
         player.SetDecfatalhurt(120, 0.1, 30000, 1)
 
         GetTs592Effect1(stub, skill, originFunc)
@@ -1085,6 +1096,10 @@ class Skill237 extends BaseHookSkillStub {
  * 被动生效
  * 天仙护体增加防御能力提升4倍,并有8%几率产生极效防御增加祝福效果;
  * 天仙护体增加自身全抗5%，效果持续12秒；
+ *
+ * 1590  天仙护体II
+ * 令天仙护体增加防御效果和真气效果提升10%/100%；
+ *
  */
 class Skill241 extends BaseHookSkillStub {
 
@@ -1108,6 +1123,7 @@ class Skill241 extends BaseHookSkillStub {
         const skillLevel = skill.GetLevel();
 
         const ts594 = player.GetSkilllevel(594)
+        const ts1590 = player.GetSkilllevel(1590)
 
         // 防御提升20/60点，持续10/30分钟
         let defenceValue = 20 + (skillLevel - 1) * 10;
@@ -1116,11 +1132,14 @@ class Skill241 extends BaseHookSkillStub {
 
         defenceValue *= tsValue
 
+        defenceValue *= 1 + ts1590 * 0.1
+
         const defenceTime = (10 + (skillLevel - 1) * 5) * 60 * 1000;
         player.SetAdddefence(120, defenceTime, defenceValue, 1);
 
         // 真气上限提升200/1000点，持续10/30分钟
-        const mpValue = 200 * skillLevel;
+        let mpValue = 200 * skillLevel;
+        mpValue *= 1 + ts1590 * 0.1
         const mpTime = (10 + (skillLevel - 1) * 5) * 60 * 1000;
         player.SetAddmp(mpTime, mpValue, 1);
 
@@ -2787,6 +2806,11 @@ class Skill786 extends BaseHookSkillStub {
  * 技能冷却60秒。
  *
  * 攻击目标周围23米内的敌人。附加攻击力为消耗气血和真气的15%。
+ *
+ * 1539  天地不仁II
+ * 被动效果
+ * 绝圣弃智额外附加自身气血真气上限和1%/10%的攻击力。
+ *
  */
 class Skill600 extends BaseHookSkillStub {
 
@@ -2801,7 +2825,9 @@ class Skill600 extends BaseHookSkillStub {
     Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
         const player = skill.GetPlayerNice()
         const plus = player.GetHp() + player.GetMp() * 0.15 * skill.GetLevel()
-        skill.SetPlus(plus)
+        const ts1539 = player.GetSkilllevel(1539)
+        const tsPlus = ts1539 * 0.01 * player.GetMaxHPAndMP()
+        skill.SetPlus(plus + tsPlus)
         player.SetMp(0)
         player.SetHp(1)
         player.SetPerform(1)
@@ -2893,10 +2919,503 @@ class Skill1539 extends BaseHookSkillStub {
         super(1539);
     }
 
+    GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        return 260000 - skill.GetLevel() * 20000
+    }
+
+    BlessMe(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        return true
+    }
+
+    Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+        player.SetVar1(player.GetRes3())
+        super.Calculate2(stub, skill, originFunc);
+    }
+
+
     StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
         const player = skill.GetPlayerNice()
-        player.SetClearbuff(10*skill.GetLevel(), 3)
-        player.SetDiet(10*skill.GetLevel(), 10100+1000*skill.GetLevel())
+        player.SetClearbuff(10 * skill.GetLevel(), 3)
+        player.SetDiet(10 * skill.GetLevel(), 10100 + 1000 * skill.GetLevel())
+
+        player.SetWrap(player.GetVar1(), 8100)
+        return true
+    }
+
+}
+
+/**
+ * 2044  逍遥游II
+ * 12/30秒内移动速度增加1.4/5.0米/秒,普攻躲闪增加30/120点;
+ * 2/20秒内技能躲闪增加15/60点,冷却时间80秒。
+ */
+class Skill2044 extends BaseHookSkillStub {
+
+    constructor() {
+        super(2044);
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice()
+        const skillLevel = skill.GetLevel()
+        const time = 10000 + skillLevel * 2000
+        player.SetAddspeed(120, time, 1.0 + skillLevel * 0.4, 1)
+        player.SetAdddodge(120, time, 20 + skillLevel * 10, 1)
+        player.SetIncskilldodge(120, 0.1 + skillLevel * 0.05, skillLevel * 2000, 1)
+        return true
+    }
+
+}
+
+/**
+ * 2045 天诛剑气II
+ * 真气贯穿
+ * （施法时真气高于75%则追加自身真气上限10%的攻击力)
+ * 目标限制:40个
+ * 攻击自身周围25米内的敌人,每击附加本体攻击力160%/340%，附加攻击力1000点，额外附加自身真气上限20%攻击力。
+ * 攻击怪物目标时，此技能伤害增加2倍。
+ * 第一击令目标被间歇性定身，定身能力为自身定身抗性，效果持续1/10秒。
+ * 每击额外追加一次自身真气上限18%/45%的伤害。冷
+ * 却时间60秒。
+ */
+class Skill2045 extends BaseHookSkillStub {
+
+    constructor() {
+        super(2045);
+    }
+
+    GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        return 60000
+    }
+
+    Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice();
+        const skillLevel = skill.GetLevel();
+
+        const mp = player.GetMp();
+        const maxmp = player.GetMaxmp();
+        let r1 = 0
+        const ts612 = player.GetSkilllevel(612);
+        if (mp / maxmp > 0.75 - ts612 * 0.1) {
+            r1 = 0.1
+        }
+
+        let ratio = 1.4 + skillLevel * 0.2
+        ratio += r1
+
+        skill.SetRatio(ratio)
+
+        const plus = player.GetMp() * 0.2 + 1000
+        skill.SetPlus(plus)
+
+        skill.SetMobBonusDamage(plus * 2 + player.GetMaxatk() * ratio * 2)
+
+        player.SetVar1(player.GetRes3())
+        player.SetVar2(player.GetMaxmp())
+        player.SetPerform(1)
+    }
+
+    BlessMe(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        setUniqprompt(stub, skill, originFunc)
+        return true
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice()
+        player.SetWraptimer(player.GetVar1(), 10000, 3000, 3000)
+        player.SetDirecthurt(120, player.GetVar2() * (skill.GetLevel() * 0.03 + 0.15))
+        return true
+    }
+
+}
+
+/**
+ * 1563  寒霜剑气II
+ * 施法距离:21米，目标限制:25个
+ * 本体攻击力附加:14%/140%
+ * 令目标立即减速20%/65%，持续16秒，并有2%/20%概率冰冻目标6秒，当自身最大攻击力高于目标时则100%冰冻，冷却时间24秒。
+ */
+class Skill1563 extends BaseHookSkillStub {
+
+    constructor() {
+        super(1563);
+    }
+
+    Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+        skill.SetRatio(1 + 0.14 * skill.GetLevel())
+        player.SetVar1(player.GetMaxatk())
+        player.SetPerform(1)
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice()
+        player.SetSlow(99999, 0.15 + 0.05 * skill.GetLevel(), 16000, 1)
+
+        let prob = 2 * skill.GetLevel()
+        if (player.GetVar1() > player.GetMaxatk()) {
+            prob = 120
+        }
+
+        player.SetFrozen(prob, 1, 6000, 1)
+        return true
+    }
+
+}
+
+/**
+ * 1564  天外飞仙II
+ * 施法距离:21米
+ * 当自身真气高于目标时,有10%/100%的概率令目标真气上限减少至2000点,持续6秒;
+ * 眩晕目标6秒，眩晕能力为自身眩晕抗性;
+ * 冷却时间60秒。
+ */
+class Skill1564 extends BaseHookSkillStub {
+
+    constructor() {
+        super(1564);
+    }
+
+    GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        return 60000
+    }
+
+    Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+        player.SetVar1(player.GetMp())
+        player.SetVar2(player.GetRes1())
+
+        player.SetPerform(1)
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice()
+        if (player.GetVar1() > player.GetMp()) {
+            player.SetSubmp(10 * skill.GetLevel(), player.GetMaxmp(), 2000, 6100, 1)
+        }
+
+        player.SetDizzy(player.GetVar2(), 6100)
+        return true
+    }
+}
+
+/**
+ * 1565  真元华闪II
+ * 真气贯穿
+ * (真气大于80%时追加自身真气上限10%的攻击力)
+ * 单体攻击16/25米
+ * 施法时间1秒，技能冷却174/120秒。攻击目标1次，额外附加本体攻击力35%/125%;
+ * 目标气血比例越高额外攻击越高,若自身每增加1个有利状态，或目标每增加1个不利状态,则该效果产生的额外攻击提高8%，最多不超过施法者气血上限的1.5倍。
+ */
+class Skill1565 extends BaseHookSkillStub {
+
+    constructor() {
+        super(1565);
+    }
+
+    GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        return 180000 - 6000 * skill.GetLevel()
+    }
+
+    Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+
+        const mp = player.GetMp();
+        const maxmp = player.GetMaxmp();
+        let r1 = 0
+        const ts612 = player.GetSkilllevel(612);
+        if (mp / maxmp > 0.8 - ts612 * 0.1) {
+            r1 = 0.1
+        }
+
+        let ratio = 1.0
+        ratio += r1
+
+        skill.SetRatio(ratio)
+
+        player.SetVar1(player.GetBuffcnt())
+
+        player.SetPerform(1)
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice()
+
+        let ratio = 1 + 0.25 + 0.1 * skill.GetLevel()
+        ratio += 1 + player.GetHp() / player.GetMaxhp()
+        ratio += player.GetVar1() * 0.08
+        ratio += player.GetDebuffcnt() * 0.08
+
+        player.SetSecondattack(ratio, 0, 0,)
+        return true
+    }
+}
+
+/**
+ * 2054  破魔剑气II
+ * 施法距离:21米
+ * 消耗自身10%/100%的当前真气，以消耗量额外加50%的真气量燃烧对方真气,对方真气不足则损失气血，并令目标持续流失真气，持续时间12/30%秒，
+ * 冷却时间300/120秒。
+ */
+class Skill2054 extends BaseHookSkillStub {
+
+    constructor() {
+        super(2054);
+    }
+
+    GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        return 320000 - skill.GetLevel() * 20000
+    }
+
+    Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+        const useMp = player.GetMp() * 0.1 * skill.GetLevel()
+        player.SetVar1(useMp * 1.5)
+        player.SetPerform(1)
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice()
+
+        player.SetMpdisperse(120, player.GetVar1())
+        player.SetMpleak(120, 10000 + skill.GetLevel() * 2000, player.GetVar1(), 0, 1)
+        return true
+    }
+
+}
+
+/**
+ * 2055  七劫斩龙诀II
+ * 2.5秒施放，施法距离:22米。
+ * 附加本体攻击力32%/320%，
+ * 附加自身真气上限4%/40%的攻击力，
+ * 第一击附加技能命中3/30点,受到的暴伤增加10%/100%，诅咒效果时间持续6秒，
+ * 第二击附加暴率1%/10%，
+ * 冷却时间24秒。
+ * 目标为怪物时,额外附加5段伤害，并且额外附加本体攻击力132%/420%。
+ * 攻击召唤兽目标时，冷却时间1秒。
+ */
+class Skill2055 extends BaseHookSkillStub {
+
+    constructor() {
+        super(2055);
+    }
+
+    Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+        const skillLevel = skill.GetLevel()
+
+        let ratio = 1.0 + 0.32 * skillLevel
+
+        if (player.GetTargetTypeIsMob()) {
+            // 目标为怪物时,额外附加5段伤害，并且额外附加本体攻击力132%/420%。
+            ratio += 1.0 + 0.32 * skillLevel
+        }
+
+        skill.SetRatio(ratio)
+
+        let plus = player.GetMaxmp() * 0.04 * skillLevel
+
+        skill.SetPlus(plus)
+
+        skill.SetSkillaccu(3 * skillLevel)
+
+        player.SetVar1(1)
+        player.SetPerform(1)
+        if (player.GetTargetTypeIsMob()) {
+            player.SetVar1(0)
+            player.SetPerform(0)
+            player.SetPerform(0)
+        }
+    }
+
+    Calculate3(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+        const skillLevel = skill.GetLevel()
+
+        let ratio = 1.0 + 0.32 * skillLevel
+
+        if (player.GetTargetTypeIsMob()) {
+            // 目标为怪物时,额外附加5段伤害，并且额外附加本体攻击力132%/420%。
+            ratio += 1.0 + 0.32 * skillLevel
+        }
+
+        skill.SetRatio(ratio)
+
+        let plus = player.GetMaxmp() * 0.04 * skillLevel
+
+        skill.SetPlus(plus)
+
+        skill.SetCrit(0.01 * skillLevel)
+
+        player.SetVar1(2)
+        player.SetPerform(0)
+        if (player.GetTargetTypeIsMob()) {
+            player.SetVar1(0)
+            player.SetPerform(0)
+            player.SetPerform(0)
+            player.SetPerform(0)
+        }
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice()
+        if (player.GetVar1() == 1) {
+            //受到的暴伤增加10%/100%，诅咒效果时间持续6秒，
+            player.SetIncfatalhurt(120, 0.1 * skill.GetLevel(), 6100, 1)
+        }
+        return true
+    }
+
+}
+
+/**
+ * 1589  真元护体II
+ * 被动
+ * 令真元护体吸收伤害总量增加自身真气上限的2倍，吸收比例增加10%;
+ * 主动
+ * 吸收60%伤害,总量不超过自身真气上限的6倍,效果最多维持3/30秒，
+ * 效果持续期间增加自身减免致命一击几率1%/10%和减免致命一击伤害3%/30%。
+ * 同时令自身30秒内防御提升20%/200%，效果可与冰心诀叠加，
+ * 冷却时间180秒。
+ */
+class Skill1589 extends BaseHookSkillStub {
+
+    constructor() {
+        super(1589);
+    }
+
+    GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        return 180000
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice();
+        const skillLevel = skill.GetLevel()
+
+        let ratio = skillLevel * 0.06
+        let amount = 6 * player.GetMaxmp()
+        player.SetMagicshield(ratio, amount, skillLevel * 3000)
+
+        player.SetDecfatalratio(120, 0.01 * skillLevel, skillLevel * 3000, 1)
+        player.SetDecfatalhurt(120, 0.03 * skillLevel, skillLevel * 3000, 1)
+        player.SetIncdefence(120, 0.2 * skillLevel, skillLevel * 3000, 2)
+        return true
+    }
+
+}
+
+/**
+ * 1590  天仙护体II
+ * 令天仙护体增加防御效果和真气效果提升10%/100%；
+ *
+ * 自身30秒内气血持续恢复，总量为自身最大攻击的3/30倍，技能躲闪提升1/10点，同时令自身减少受到的部分技能的追加伤害2%/20%。
+ * 冷却时间120秒。
+ */
+class Skill1590 extends BaseHookSkillStub {
+
+    constructor() {
+        super(1590);
+    }
+
+    GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        return 120000
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice()
+        player.SetHpgen(120, 30100, player.GetMaxatk() * 3 * skill.GetLevel(), 0, 0, 2)
+        player.SetIncskilldodge(120, 0.01 * skill.GetLevel(), 30100, 1)
+        player.SetSlant(120, 30100, 0.02 * skill.GetLevel())
+        return true
+    }
+
+}
+
+/**
+ * 1591  大道无形II
+ * 令自身及周围18米内队友所有抗性提升60点，效果持续3/30秒;
+ * 30秒内攻击增加，效果相当于自身所有抗性和的5%/50%;
+ * 冷却时间240/60秒。
+ */
+class Skill1591 extends BaseHookSkillStub {
+
+    constructor() {
+        super(1591);
+    }
+
+    GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        return 260000 - 20000 * skill.GetLevel()
+    }
+
+    Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+        player.SetVar1(player.GetRes1() + player.GetRes2() + player.GetRes3() + player.GetRes4() + player.GetRes5())
+        player.SetPerform(1)
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice()
+        const skillLevel = skill.GetLevel()
+        player.SetAddanti(60, skillLevel * 3000, 1)
+        player.SetAddattack(120, skillLevel * 3000, player.GetVar1() * 0.05 * skillLevel, 1)
+        return true
+    }
+
+}
+
+/**
+ * 2064  五气朝元II
+ * 清除自身所处蛊类效果的效果;
+ * 清除自身及周围18米内队友1/10个常规负面状态;
+ * 冷却时间120秒。
+ */
+class Skill2064 extends BaseHookSkillStub {
+
+    constructor() {
+        super(2064);
+    }
+
+    GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        return 120000
+    }
+
+    Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+        player.SetExorcism(120, 8, 7, 9)
+        player.SetPerform(1)
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice()
+        player.SetCleardebuff(120, skill.GetLevel())
+        return true
+    }
+
+}
+
+/**
+ * 2065  天机印II
+ * 目标限制:25个
+ * 禁魔光环,每五秒有28%/100%概率打断周围目标使用技能,打断成功则燃烧目标2%/20%真气,光环影响半径18米。
+ */
+class Skill2065 extends BaseHookSkillStub {
+
+    constructor() {
+        super(2065);
+    }
+
+    BlessMe(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice()
+        player.SetEvilaura(0, 0, 18, 3600000)
+        return true
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice()
+        player.SetBreakcasting(20 + 8 * skill.GetLevel())
+        player.SetMpleak(-1, 200, 0.02 * skill.GetLevel(), 0, 1)
         return true
     }
 
