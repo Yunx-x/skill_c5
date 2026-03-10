@@ -1178,7 +1178,7 @@ class Skill242 extends BaseHookSkillStub {
         const skill234Level = player.GetSkilllevel(234)
 
         let ratio = 1.0;
-        ratio += Math.floor(skill234Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill234Level / 9) * 0.05 * ts617Level
 
         skill.SetRatio(ratio)
 
@@ -1605,8 +1605,8 @@ class Skill543 extends BaseHookSkillStub {
         const skill242Level = player.GetSkilllevel(242)
 
         let ratio = 1 + 0.02 * lv;
-        ratio += Math.floor(skill234Level / 9) * 0.05 * ts617Level
-        ratio += Math.floor(skill242Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill234Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill242Level / 9) * 0.05 * ts617Level
 
         skill.SetRatio(ratio)
 
@@ -1629,8 +1629,8 @@ class Skill543 extends BaseHookSkillStub {
         const skill242Level = player.GetSkilllevel(242)
 
         let ratio = 1 + 0.02 * lv;
-        ratio += Math.floor(skill234Level / 9) * 0.05 * ts617Level
-        ratio += Math.floor(skill242Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill234Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill242Level / 9) * 0.05 * ts617Level
 
         skill.SetRatio(ratio)
 
@@ -1691,7 +1691,7 @@ class Skill544 extends BaseHookSkillStub {
     BlessMe(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
         const player = skill.GetPlayerNice();
         const time = 4000 * skill.GetLevel() + 100
-        player.SetSkillreplace(120, time, 230, 5040, 1)
+        player.SetSkillreplace(120, time, 537, 5051, 1)
         player.SetSkillreplace(120, time, 6814, 5047, 2)
 
         const ts1537 = player.GetSkilllevel(1537)
@@ -1709,7 +1709,7 @@ class Skill544 extends BaseHookSkillStub {
 }
 
 /**
- * 5040 霜极刑冰错7/7
+ * 5051 霜极刑冰错7/7
  * 狱破重重引暴霜,刑冰错错戮骁魔
  *
  * 霜燃之寒+3:
@@ -1728,13 +1728,12 @@ class Skill544 extends BaseHookSkillStub {
  * 攻击怪物目标时,额外附加自身真气上限30%的攻击力;
  * 自身最大攻击力高于目标时冰冻目标6秒。
  */
-class Skill5040 extends BaseHookSkillStub {
+class Skill5051 extends BaseHookSkillStub {
 
     executetime = [300, 300, 300, 300, 300, 300, 300]
 
     constructor() {
-        super(5040);
-        this.SetOccupation(151)
+        super(5051);
     }
 
     GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
@@ -1880,6 +1879,7 @@ class Skill5040 extends BaseHookSkillStub {
     }
 
     BlessMe(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        setUniqprompt(stub, skill, originFunc)
         return true
     }
 
@@ -2359,9 +2359,9 @@ class Skill785 extends BaseHookSkillStub {
         const skill543Level = player.GetSkilllevel(543)
 
         let ratio = 1 + 0.1 * skill.GetLevel() + r1;
-        ratio += Math.floor(skill234Level / 9) * 0.05 * ts617Level
-        ratio += Math.floor(skill242Level / 9) * 0.05 * ts617Level
-        ratio += Math.floor(skill543Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill234Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill242Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill543Level / 9) * 0.05 * ts617Level
 
         skill.SetRatio(ratio)
 
@@ -2399,9 +2399,9 @@ class Skill785 extends BaseHookSkillStub {
         const skill543Level = player.GetSkilllevel(543)
 
         let ratio = 1 + 0.1 * skill.GetLevel() + r1;
-        ratio += Math.floor(skill234Level / 9) * 0.05 * ts617Level
-        ratio += Math.floor(skill242Level / 9) * 0.05 * ts617Level
-        ratio += Math.floor(skill543Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill234Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill242Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill543Level / 9) * 0.05 * ts617Level
 
         skill.SetRatio(ratio)
 
@@ -2439,9 +2439,9 @@ class Skill785 extends BaseHookSkillStub {
         const skill543Level = player.GetSkilllevel(543)
 
         let ratio = 1 + 0.1 * skill.GetLevel() + r1;
-        ratio += Math.floor(skill234Level / 9) * 0.05 * ts617Level
-        ratio += Math.floor(skill242Level / 9) * 0.05 * ts617Level
-        ratio += Math.floor(skill543Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill234Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill242Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill543Level / 9) * 0.05 * ts617Level
 
         skill.SetRatio(ratio)
 
@@ -2512,10 +2512,10 @@ class Skill786 extends BaseHookSkillStub {
         const skill785Level = player.GetSkilllevel(785)
 
         let ratio = 1.2 + 0.2 * lv + r1;
-        ratio += Math.floor(skill234Level / 9) * 0.05 * ts617Level
-        ratio += Math.floor(skill242Level / 9) * 0.05 * ts617Level
-        ratio += Math.floor(skill543Level / 9) * 0.05 * ts617Level
-        ratio += Math.floor(skill785Level / 4) * 0.05 * ts617Level
+        ratio += norm(skill234Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill242Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill543Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill785Level / 4) * 0.05 * ts617Level
 
         skill.SetRatio(ratio)
 
@@ -2529,6 +2529,7 @@ class Skill786 extends BaseHookSkillStub {
         GetTs617Effect1(stub, skill, originFunc)
         player.SetVar2(player.GetSkilllevel(593))
         player.SetVar3(player.GetSkilllevel(611))
+        player.SetVar4(player.GetRes3())
 
         player.SetVar1(1)
         player.SetPerform(1)
@@ -2557,10 +2558,10 @@ class Skill786 extends BaseHookSkillStub {
         const skill785Level = player.GetSkilllevel(785)
 
         let ratio = 1.2 + 0.2 * lv + r1;
-        ratio += Math.floor(skill234Level / 9) * 0.05 * ts617Level
-        ratio += Math.floor(skill242Level / 9) * 0.05 * ts617Level
-        ratio += Math.floor(skill543Level / 9) * 0.05 * ts617Level
-        ratio += Math.floor(skill785Level / 4) * 0.05 * ts617Level
+        ratio += norm(skill234Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill242Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill543Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill785Level / 4) * 0.05 * ts617Level
 
         skill.SetRatio(ratio)
 
@@ -2574,6 +2575,7 @@ class Skill786 extends BaseHookSkillStub {
         GetTs617Effect1(stub, skill, originFunc)
         player.SetVar2(player.GetSkilllevel(593))
         player.SetVar3(player.GetSkilllevel(611))
+        player.SetVar4(player.GetRes3())
 
         player.SetVar1(4)
         player.SetPerform(0)
@@ -2602,10 +2604,10 @@ class Skill786 extends BaseHookSkillStub {
         const skill785Level = player.GetSkilllevel(785)
 
         let ratio = 1.2 + 0.2 * lv + r1;
-        ratio += Math.floor(skill234Level / 9) * 0.05 * ts617Level
-        ratio += Math.floor(skill242Level / 9) * 0.05 * ts617Level
-        ratio += Math.floor(skill543Level / 9) * 0.05 * ts617Level
-        ratio += Math.floor(skill785Level / 4) * 0.05 * ts617Level
+        ratio += norm(skill234Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill242Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill543Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill785Level / 4) * 0.05 * ts617Level
 
         skill.SetRatio(ratio)
 
@@ -2620,6 +2622,7 @@ class Skill786 extends BaseHookSkillStub {
         GetTs617Effect1(stub, skill, originFunc)
         player.SetVar2(player.GetSkilllevel(593))
         player.SetVar3(player.GetSkilllevel(611))
+        player.SetVar4(player.GetRes3())
 
         player.SetVar1(7)
         player.SetPerform(0)
@@ -2648,10 +2651,10 @@ class Skill786 extends BaseHookSkillStub {
         const skill785Level = player.GetSkilllevel(785)
 
         let ratio = 1.2 + 0.2 * lv + r1;
-        ratio += Math.floor(skill234Level / 9) * 0.05 * ts617Level
-        ratio += Math.floor(skill242Level / 9) * 0.05 * ts617Level
-        ratio += Math.floor(skill543Level / 9) * 0.05 * ts617Level
-        ratio += Math.floor(skill785Level / 4) * 0.05 * ts617Level
+        ratio += norm(skill234Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill242Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill543Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill785Level / 4) * 0.05 * ts617Level
 
         skill.SetRatio(ratio)
 
@@ -2666,6 +2669,7 @@ class Skill786 extends BaseHookSkillStub {
         GetTs617Effect1(stub, skill, originFunc)
         player.SetVar2(player.GetSkilllevel(593))
         player.SetVar3(player.GetSkilllevel(611))
+        player.SetVar4(player.GetRes3())
 
         player.SetVar1(10)
         player.SetPerform(0)
@@ -2694,10 +2698,10 @@ class Skill786 extends BaseHookSkillStub {
         const skill785Level = player.GetSkilllevel(785)
 
         let ratio = 1.2 + 0.2 * lv + r1;
-        ratio += Math.floor(skill234Level / 9) * 0.05 * ts617Level
-        ratio += Math.floor(skill242Level / 9) * 0.05 * ts617Level
-        ratio += Math.floor(skill543Level / 9) * 0.05 * ts617Level
-        ratio += Math.floor(skill785Level / 4) * 0.05 * ts617Level
+        ratio += norm(skill234Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill242Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill543Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill785Level / 4) * 0.05 * ts617Level
 
         skill.SetRatio(ratio)
 
@@ -2712,6 +2716,7 @@ class Skill786 extends BaseHookSkillStub {
         GetTs617Effect1(stub, skill, originFunc)
         player.SetVar2(player.GetSkilllevel(593))
         player.SetVar3(player.GetSkilllevel(611))
+        player.SetVar4(player.GetRes3())
 
         player.SetVar1(13)
         player.SetPerform(0)
@@ -2740,10 +2745,10 @@ class Skill786 extends BaseHookSkillStub {
         const skill785Level = player.GetSkilllevel(785)
 
         let ratio = 1.2 + 0.2 * lv + r1;
-        ratio += Math.floor(skill234Level / 9) * 0.05 * ts617Level
-        ratio += Math.floor(skill242Level / 9) * 0.05 * ts617Level
-        ratio += Math.floor(skill543Level / 9) * 0.05 * ts617Level
-        ratio += Math.floor(skill785Level / 4) * 0.05 * ts617Level
+        ratio += norm(skill234Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill242Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill543Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill785Level / 4) * 0.05 * ts617Level
 
         skill.SetRatio(ratio)
 
@@ -2758,6 +2763,7 @@ class Skill786 extends BaseHookSkillStub {
         GetTs617Effect1(stub, skill, originFunc)
         player.SetVar2(player.GetSkilllevel(593))
         player.SetVar3(player.GetSkilllevel(611))
+        player.SetVar4(player.GetRes3())
 
         player.SetVar1(16)
         player.SetPerform(0)
@@ -2786,7 +2792,7 @@ class Skill786 extends BaseHookSkillStub {
     StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
         const player = skill.GetPlayer();
         if (player.GetVar1() % 2 == 1) {
-            const v7 = 17 * skill.GetLevel() + 180;
+            const v7 = player.GetVar4();
             const v8 = 6 * player.GetVar2() * skill.GetLevel();
             const da = v7 + v8;
 
@@ -2978,6 +2984,9 @@ class Skill2044 extends BaseHookSkillStub {
  * 第一击令目标被间歇性定身，定身能力为自身定身抗性，效果持续1/10秒。
  * 每击额外追加一次自身真气上限18%/45%的伤害。冷
  * 却时间60秒。
+ *
+ * 580  天诛真诀    2
+ * 额外降低天诛剑气·罚Ⅱ技能冷却时间3秒。
  */
 class Skill2045 extends BaseHookSkillStub {
 
@@ -2986,7 +2995,9 @@ class Skill2045 extends BaseHookSkillStub {
     }
 
     GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
-        return 60000
+        const player = skill.GetPlayerNice()
+
+        return 60000 - player.GetSkilllevel(580) * 3000
     }
 
     Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
@@ -3107,6 +3118,9 @@ class Skill1564 extends BaseHookSkillStub {
  * 单体攻击16/25米
  * 施法时间1秒，技能冷却174/120秒。攻击目标1次，额外附加本体攻击力35%/125%;
  * 目标气血比例越高额外攻击越高,若自身每增加1个有利状态，或目标每增加1个不利状态,则该效果产生的额外攻击提高8%，最多不超过施法者气血上限的1.5倍。
+ *
+ * 598  华闪之歌
+ * 真元华闪Ⅱ额外附加致命一击伤害30%。
  */
 class Skill1565 extends BaseHookSkillStub {
 
@@ -3120,6 +3134,7 @@ class Skill1565 extends BaseHookSkillStub {
 
     Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
         const player = skill.GetPlayerNice()
+        const ts598 = player.GetSkilllevel(598);
 
         const mp = player.GetMp();
         const maxmp = player.GetMaxmp();
@@ -3133,6 +3148,8 @@ class Skill1565 extends BaseHookSkillStub {
         ratio += r1
 
         skill.SetRatio(ratio)
+
+        skill.SetCrithurt(ts598 * 0.3)
 
         player.SetVar1(player.GetBuffcnt())
 
@@ -3195,6 +3212,14 @@ class Skill2054 extends BaseHookSkillStub {
  * 冷却时间24秒。
  * 目标为怪物时,额外附加5段伤害，并且额外附加本体攻击力132%/420%。
  * 攻击召唤兽目标时，冷却时间1秒。
+ *
+ * 581  斩龙奥义    2
+ * 七劫斩龙诀Ⅱ每击对怪物目标附加自身气血上限10%的攻击力，额外附加自身真气上限10%的攻击力，
+ * 对龙种族的怪物附加一次伤害，数值为自身真气上限5%。
+ *
+ * 583  剑魔宿命
+ * 额外附加致命一击伤害30%;
+ * 影响技能:七劫斩龙诀Ⅱ
  */
 class Skill2055 extends BaseHookSkillStub {
 
@@ -3205,6 +3230,8 @@ class Skill2055 extends BaseHookSkillStub {
     Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
         const player = skill.GetPlayerNice()
         const skillLevel = skill.GetLevel()
+        const ts581 = player.GetSkilllevel(581)
+        const ts583 = player.GetSkilllevel(583)
 
         let ratio = 1.0 + 0.32 * skillLevel
 
@@ -3219,7 +3246,12 @@ class Skill2055 extends BaseHookSkillStub {
 
         skill.SetPlus(plus)
 
+        let mobPlus = ts581 * 0.1 * player.GetMaxHPAndMP()
+        skill.SetMobBonusDamage(mobPlus)
+
         skill.SetSkillaccu(3 * skillLevel)
+
+        skill.SetCrithurt(ts583 * 0.3)
 
         player.SetVar1(1)
         player.SetPerform(1)
@@ -3233,6 +3265,8 @@ class Skill2055 extends BaseHookSkillStub {
     Calculate3(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
         const player = skill.GetPlayerNice()
         const skillLevel = skill.GetLevel()
+        const ts581 = player.GetSkilllevel(581)
+        const ts583 = player.GetSkilllevel(583)
 
         let ratio = 1.0 + 0.32 * skillLevel
 
@@ -3247,7 +3281,12 @@ class Skill2055 extends BaseHookSkillStub {
 
         skill.SetPlus(plus)
 
+        let mobPlus = ts581 * 0.1 * player.GetMaxHPAndMP()
+        skill.SetMobBonusDamage(mobPlus)
+
         skill.SetCrit(0.01 * skillLevel)
+
+        skill.SetCrithurt(ts583 * 0.3)
 
         player.SetVar1(2)
         player.SetPerform(0)
@@ -3422,5 +3461,1791 @@ class Skill2065 extends BaseHookSkillStub {
 }
 
 
+/**
+ * 雷光遁龙诀
+ * 施法时间1秒，技能冷却4.5秒。
+ * 攻击目标3次，每击附加本体攻击力12%/240%，附加攻击力694/3446点，附加自身真气上限10%的攻击力;
+ * 攻击怪物时每击额外附加本体攻击力12%/240%，附加攻击力694/3446点，附加自身气血真气上限和40%的攻击力。
+ *
+ * 582  玄天星芒
+ * 雷光遁龙诀<玄><煞><禅>攻击怪物时额外附加本体攻击力30%
+ *
+ * 583  剑魔宿命
+ * 额外附加致命一击伤害30%;
+ * 影响技能:七劫斩龙诀Ⅱ、雷光遁龙诀<玄><煞><禅>。
+ * 610  玄刹天威
+ * 攻击怪物目标时额外附加30%的本体攻击力。影响技能:雷光遁龙诀<玄><煞><禅>
+ */
+function LeiGuangCalc(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+    const player = skill.GetPlayerNice()
+    const skillLevel = skill.GetLevel()
+    const ts582 = player.GetSkilllevel(582)
+    const ts583 = player.GetSkilllevel(583)
+    const ts610 = player.GetSkilllevel(610)
+
+    let ratio = 1 + skillLevel * 0.12
+    if (player.GetTargetTypeIsMob()) {
+        ratio += skillLevel * 0.12
+    }
+
+    skill.SetRatio(ratio)
+
+    let plus = skillLevel * 7.2 * skillLevel - 6.4 * skillLevel + 694
+    plus += player.GetMaxmp() * 0.1
+    skill.SetPlus(plus)
+
+    let mobPlus = skillLevel * 7.2 * skillLevel - 6.4 * skillLevel + 694
+    mobPlus += player.GetMaxHPAndMP() * 0.4
+    mobPlus += player.GetMaxatk() * 0.3 * ts582
+    mobPlus += player.GetMaxatk() * 0.3 * ts610
+    skill.SetMobBonusDamage(mobPlus)
+
+    skill.SetCrithurt(0.3 * ts583)
+}
+
+/**
+ * 3017  玄
+ * 单体攻击16米，技能达20级时，4.5/14秒内令目标受到伤害加深，增加目标受到的伤害5%。
+ */
+class Skill3017 extends BaseHookSkillStub {
+    executetime = [400, 200, 200]
+
+    constructor() {
+        super(3017);
+    }
+
+    GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        return 4500
+    }
+
+    Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+        LeiGuangCalc(stub, skill, originFunc)
+        player.SetPerform(1)
+    }
+
+    Calculate3(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+        LeiGuangCalc(stub, skill, originFunc)
+        player.SetPerform(0)
+        player.SetPerform(0)
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice()
+        if (skill.GetLevel() > 19) {
+            player.SetInchurt3(120, skill.GetLevel() * 500 + 4100, 0.05, 1)
+        }
+
+        return true
+    }
+
+}
+
+/**
+ * 3065  煞
+ * 单体攻击21米，每击22%概率禁食目标2秒，技能等级达到20级额外增加效果持续时间1秒。
+ */
+class Skill3065 extends BaseHookSkillStub {
+    executetime = [400, 200, 200]
+
+    constructor() {
+        super(3065);
+    }
+
+    GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        return 4500
+    }
+
+    Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+        LeiGuangCalc(stub, skill, originFunc)
+        player.SetPerform(1)
+    }
+
+    Calculate3(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+        LeiGuangCalc(stub, skill, originFunc)
+        player.SetPerform(0)
+        player.SetPerform(0)
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice()
+        let time = 2100
+        if (skill.GetLevel() > 19) {
+            time += 1000
+        }
+
+        player.SetDiet(20 + skill.GetLevel() * 2, time)
+
+        return true
+    }
+}
+
+/**
+ * 3113  禅
+ * 单体攻击16米，若目标被致命一击，则增加目标被致命一击的概率1%/20%，效果持续1/20秒。
+ */
+class Skill3113 extends BaseHookSkillStub {
+    executetime = [400, 200, 200]
+
+    constructor() {
+        super(3113);
+    }
+
+    GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        return 4500
+    }
+
+    Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+        LeiGuangCalc(stub, skill, originFunc)
+        player.SetPerform(1)
+    }
+
+    Calculate3(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+        LeiGuangCalc(stub, skill, originFunc)
+        player.SetPerform(0)
+        player.SetPerform(0)
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice()
+
+        if (skill.GetIscrit() > 0) {
+            player.SetIncfatalratio(120, skill.GetLevel() * 0.01, skill.GetLevel() * 1000, 1)
+        }
+
+        return true
+    }
+}
+
+/**
+ * 天尊法身
+ * 冷却时间:120秒
+ * 20秒内令自身气血上限增加1%/20%，提升致命一击率2%21%。
+ *
+ * 578  天眷有道    2
+ * 天尊法身<玄><煞><禅>增加气血上限能力提升30%。
+ *
+ * 592  返朴归真
+ * 令你的真元类法术在施放之后,15秒内技能伤害增加10%。
+ * 影响技能:炼气还神、天尊法身、天尊法身<玄><煞><禅>;
+ * 令你的真元类法术在施放之后，15秒内回复自身5%的气血。
+ * 影响技能:天尊法身、天尊法身<玄><煞><禅>。
+ *
+ * 594  仙元护体
+ * 天尊法身<玄><煞><禅>额外增加致命一击率2.5%。
+ *
+ * 596  剑心彻悟
+ * 被动生效
+ * 令你的真元类法术冷却时间减少10秒
+ */
+function TianZunFaShen(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+    const player = skill.GetPlayerNice()
+    const skillLevel = skill.GetLevel()
+
+    const ts578 = player.GetSkilllevel(578)
+    const ts594 = player.GetSkilllevel(594)
+
+    const tsRatio = ts578 * 0.3
+    const ts2Ratio = ts594 * 0.025
+
+    player.SetFashen(120, 0.01 + skillLevel * 0.01 + ts2Ratio, skillLevel * 0.01 + tsRatio, 20100, 1)
+
+    GetTs592Effect2(stub, skill, originFunc)
+
+    GetTs592Effect3(stub, skill, originFunc)
+}
+
+/**
+ * 3018  玄
+ * 11/30秒增加自身定身能力5倍的攻击力。
+ * 最初4.3/10秒内，保护自身当前所有有利状态不会被一般类技能清除。
+ */
+class Skill3018 extends BaseHookSkillStub {
+
+    constructor() {
+        super(3018);
+    }
+
+    GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        const player = skill.GetPlayerNice()
+        return 120000 - player.GetSkilllevel(596) * 10000
+    }
+
+    Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+        player.SetVar1(player.GetRes3())
+        player.SetPerform(1)
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        TianZunFaShen(stub, skill, originFunc)
+        const player = skill.GetPlayerNice()
+        const skillLevel = skill.GetLevel()
+
+        player.SetAddattack(120, 10000 + skillLevel * 1000, player.GetVar1(), 1)
+
+        player.SetBuffClearImmune(120, 4000 + skillLevel * 300)
+        return true
+    }
+
+}
+
+/**
+ * 3066  煞
+ * 24%/100%的概率在11/30秒内增加自身技能躲闪2/40点，提升自身真气上限1%/20%。
+ * 最初4.3/10秒内，保护自身当前所有有利状态不会被一般类技能清除。
+ */
+class Skill3066 extends BaseHookSkillStub {
+
+    constructor() {
+        super(3066);
+    }
+
+    GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        const player = skill.GetPlayerNice()
+        return 120000 - player.GetSkilllevel(596) * 10000
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        TianZunFaShen(stub, skill, originFunc)
+        const player = skill.GetPlayerNice()
+        const skillLevel = skill.GetLevel()
+
+        player.SetIncskilldodge(20 + skillLevel * 4, 0.02 * skillLevel, 10000 + skillLevel * 1000, 1)
+        player.SetIncmp(skillLevel * 0.01, 10000 + skillLevel * 1000, 1)
+        player.SetBuffClearImmune(120, 4000 + skillLevel * 300)
+        return true
+    }
+
+}
+
+/**
+ * 3114  禅
+ * 11/30秒内增加所有抗性为5抗平均值的1%20%。
+ * 最初5.5/15秒内，保护自身当前所有有利状态不会被一般类技能清除。
+ */
+class Skill3114 extends BaseHookSkillStub {
+
+    constructor() {
+        super(3114);
+    }
+
+    GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        const player = skill.GetPlayerNice()
+        return 120000 - player.GetSkilllevel(596) * 10000
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        TianZunFaShen(stub, skill, originFunc)
+        const player = skill.GetPlayerNice()
+        const skillLevel = skill.GetLevel()
+
+        let anti = player.GetRes1() + player.GetRes2() + player.GetRes3() + player.GetRes4() + player.GetRes5()
+        anti = anti / 5 * skillLevel * 0.01
+
+        player.SetAddanti(anti, 10000 + skillLevel * 1000, 1)
+        player.SetBuffClearImmune(120, 5000 + skillLevel * 500)
+        return true
+    }
+
+}
+
+/**
+ * 太极玄天真诀
+ * 真气贯穿
+ * (真气大于95%时追加自身攻击力6%/46%的伤害和自身真气上限10%的攻击力)
+ * 冷却时间:无冷却，目标限制:11/30个
+ * 攻击自身周围22米内的敌人，追加本体攻击力7%/140%，每次附加攻击力774/1990点。
+ * 2.5%/12%几率令目标随机进入不利状态3秒。
+ */
+
+function TaiJiCalc(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+    const player = skill.GetPlayerNice();
+    const skillLevel = skill.GetLevel();
+
+    const ts612 = player.GetSkilllevel(612);
+
+    const mp = player.GetMp();
+    const maxmp = player.GetMaxmp();
+    let r1 = 0
+    let p1 = 0
+    if (mp / maxmp > 0.95 - ts612 * 0.1) {
+        r1 = 0.04 + skillLevel * 0.02
+        p1 = player.GetMaxmp() * 0.1
+    }
+
+    let ratio = 1 + 0.07 * skillLevel
+    ratio += r1
+
+    const ts617Level = player.GetSkilllevel(617)
+    const skill234Level = player.GetSkilllevel(234)
+    const skill242Level = player.GetSkilllevel(242)
+    const skill543Level = player.GetSkilllevel(543)
+    const skill785Level = player.GetSkilllevel(785)
+    const skill786Level = player.GetSkilllevel(786)
+
+    ratio += norm(skill234Level / 9) * 0.05 * ts617Level
+    ratio += norm(skill242Level / 9) * 0.05 * ts617Level
+    ratio += norm(skill543Level / 9) * 0.05 * ts617Level
+    ratio += norm(skill785Level / 4) * 0.05 * ts617Level
+    ratio += norm(skill786Level / 2) * 0.05 * ts617Level
+
+    skill.SetRatio(ratio)
+
+    let plus = 0
+    plus += p1
+    skill.SetPlus(plus)
+}
+
+/**
+ * 3019  玄
+ * 19%/95%的概率取消自身定身状态。
+ */
+class Skill3019 extends BaseHookSkillStub {
+
+    executetime = [450, 350, 350, 350]
+
+    constructor() {
+        super(3019);
+    }
+
+    GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        return 0
+    }
+
+    Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        TaiJiCalc(stub, skill, originFunc)
+        const player = skill.GetPlayerNice()
+        player.SetPerform(1)
+    }
+
+    Calculate3(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        TaiJiCalc(stub, skill, originFunc)
+        const player = skill.GetPlayerNice()
+        player.SetPerform(0)
+    }
+
+    Calculate4(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        TaiJiCalc(stub, skill, originFunc)
+        const player = skill.GetPlayerNice()
+        player.SetPerform(0)
+    }
+
+    BlessMe(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice()
+        setUniqprompt(stub, skill, originFunc)
+        //19%/95%的概率取消自身定身状态。
+
+        player.SetClearwrap(15 + skill.GetLevel() * 4)
+        return true
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        // 2.5%/12%几率令目标随机进入不利状态3秒。
+        const player = skill.GetPlayerNice()
+        player.SetRandcurse(2 + 0.5 * skill.GetLevel(), 0.2, 0.2, 3000)
+        return true
+    }
+
+}
+
+/**
+ * 3067  煞
+ * 19%/95%的概率取消自身虚弱状态。
+ */
+class Skill3067 extends BaseHookSkillStub {
+
+    executetime = [450, 350, 350, 350]
+
+    constructor() {
+        super(3067);
+    }
+
+    GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        return 0
+    }
+
+    Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        TaiJiCalc(stub, skill, originFunc)
+        const player = skill.GetPlayerNice()
+        player.SetPerform(1)
+    }
+
+    Calculate3(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        TaiJiCalc(stub, skill, originFunc)
+        const player = skill.GetPlayerNice()
+        player.SetPerform(0)
+    }
+
+    Calculate4(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        TaiJiCalc(stub, skill, originFunc)
+        const player = skill.GetPlayerNice()
+        player.SetPerform(0)
+    }
+
+    BlessMe(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice()
+        setUniqprompt(stub, skill, originFunc)
+        player.SetClearweak(15 + skill.GetLevel() * 4)
+        return true
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        // 2.5%/12%几率令目标随机进入不利状态3秒。
+        const player = skill.GetPlayerNice()
+        player.SetRandcurse(2 + 0.5 * skill.GetLevel(), 0.2, 0.2, 3000)
+        return true
+    }
+
+}
+
+/**
+ * 3115  禅
+ * 19%/95%的概率取消自身缓慢状态。
+ */
+class Skill3115 extends BaseHookSkillStub {
+
+    executetime = [450, 350, 350, 350]
+
+    constructor() {
+        super(3115);
+    }
+
+    GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        return 0
+    }
+
+    Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        TaiJiCalc(stub, skill, originFunc)
+        const player = skill.GetPlayerNice()
+        player.SetPerform(1)
+    }
+
+    Calculate3(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        TaiJiCalc(stub, skill, originFunc)
+        const player = skill.GetPlayerNice()
+        player.SetPerform(0)
+    }
+
+    Calculate4(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        TaiJiCalc(stub, skill, originFunc)
+        const player = skill.GetPlayerNice()
+        player.SetPerform(0)
+    }
+
+    BlessMe(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice()
+        setUniqprompt(stub, skill, originFunc)
+        player.SetClearslow(15 + skill.GetLevel() * 4)
+        return true
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        // 2.5%/12%几率令目标随机进入不利状态3秒。
+        const player = skill.GetPlayerNice()
+        player.SetRandcurse(2 + 0.5 * skill.GetLevel(), 0.2, 0.2, 3000)
+        return true
+    }
+
+}
+
+/**
+ * 神剑御雷真诀
+ * 真气贯穿
+ * (真气大于95%时追加自身真气上限15%的攻击力)
+ * 冷却时间:30秒
+ * 目标限制:11/30个
+ * 攻击自身周围25米内的敌人，追加本体攻击力5%/115%，每次附加攻击力815/2240点。
+ *
+ * 效果一:每一击均可令目标禁食3秒。
+ * 效果二:最后一段攻击附加自身真气上限1.5%/30%的攻击力。
+ * 效果三:第1、3、5、7、9、11、13、15、17段令目标定身6秒，定身能力为自身定身抗性加1/20点。
+ * 效果四:第2、4、6、8、10、12、14、16、18段令玩家目标麻痹6秒，技能施法和移动速度分别降低21%/40%。
+ * 效果五:施法时额外附加致命一击率10%。
+ * 效果六:范围内敌对目标每增加1人，则范围内所有敌对目标伤害额外增加施法者自身气血、真气和的2%与攻击力的20%。
+ * 效果七:每段附加20%致命一击伤害。
+ * 效果八:第一段攻击令自身2秒内处于无敌状态。
+ *
+ * 593  狂雷天怒
+ * 神剑御雷真诀、神剑御雷真诀<玄><煞><禅>每升一级定身能力增加6点，定身效果每升两级增加1秒。
+ */
+
+/**
+ * 3020  玄
+ *
+ */
+class Skill3020 extends BaseHookSkillStub {
+
+    constructor() {
+        super(3020);
+    }
+
+    GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        return 30000
+    }
+
+    Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+
+        const ts612 = player.GetSkilllevel(612);
+        const ts593 = player.GetSkilllevel(593);
+
+        const mp = player.GetMp();
+        const maxmp = player.GetMaxmp();
+        let p1 = 0
+        if (mp / maxmp > 0.95 - ts612 * 0.1) {
+            p1 = player.GetMaxmp() * 0.15
+        }
+
+        let ratio = 1 + 0.0575 * skill.GetLevel()
+
+        const ts617Level = player.GetSkilllevel(617)
+        const skill234Level = player.GetSkilllevel(234)
+        const skill242Level = player.GetSkilllevel(242)
+        const skill543Level = player.GetSkilllevel(543)
+        const skill785Level = player.GetSkilllevel(785)
+        const skill786Level = player.GetSkilllevel(786)
+        const skill3019Level = player.GetSkilllevel(3019)//太极玄
+
+        ratio += norm(skill234Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill242Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill543Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill785Level / 4) * 0.05 * ts617Level
+        ratio += norm(skill786Level / 2) * 0.05 * ts617Level
+        ratio += norm(skill3019Level) * 0.05 * ts617Level
+
+        skill.SetRatio(ratio)
+
+        let plus = 112 * skill.GetLevel()
+        plus += p1
+        skill.SetPlus(plus)
+
+        //效果五:施法时额外附加致命一击率10%。
+        skill.SetCrit(0.1)
+        //效果七:每段附加20%致命一击伤害。
+        skill.SetCrithurt(0.2)
+
+        player.SetVar2(player.GetRes3())
+        player.SetVar3(ts593)
+
+        GetTs617Effect1(stub, skill, originFunc)
+        GetTs617Effect2(stub, skill, originFunc)
+        player.SetVar1(1)
+        player.SetPerform(1)
+        player.SetVar1(2)
+        player.SetPerform(0)
+        player.SetVar1(3)
+        player.SetPerform(0)
+    }
+
+    Calculate3(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+
+        const ts612 = player.GetSkilllevel(612);
+        const ts593 = player.GetSkilllevel(593);
+
+        const mp = player.GetMp();
+        const maxmp = player.GetMaxmp();
+        let p1 = 0
+        if (mp / maxmp > 0.95 - ts612 * 0.1) {
+            p1 = player.GetMaxmp() * 0.15
+        }
+
+        let ratio = 1 + 0.0575 * skill.GetLevel()
+
+        const ts617Level = player.GetSkilllevel(617)
+        const skill234Level = player.GetSkilllevel(234)
+        const skill242Level = player.GetSkilllevel(242)
+        const skill543Level = player.GetSkilllevel(543)
+        const skill785Level = player.GetSkilllevel(785)
+        const skill786Level = player.GetSkilllevel(786)
+        const skill3019Level = player.GetSkilllevel(3019)//太极玄
+
+        ratio += norm(skill234Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill242Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill543Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill785Level / 4) * 0.05 * ts617Level
+        ratio += norm(skill786Level / 2) * 0.05 * ts617Level
+        ratio += norm(skill3019Level) * 0.05 * ts617Level
+
+        skill.SetRatio(ratio)
+
+        let plus = 112 * skill.GetLevel()
+        plus += p1
+        skill.SetPlus(plus)
+
+        //效果五:施法时额外附加致命一击率10%。
+        skill.SetCrit(0.1)
+        //效果七:每段附加20%致命一击伤害。
+        skill.SetCrithurt(0.2)
+
+        player.SetVar2(player.GetRes3())
+        player.SetVar3(ts593)
+
+        GetTs617Effect1(stub, skill, originFunc)
+        GetTs617Effect2(stub, skill, originFunc)
+
+        player.SetVar1(4)
+        player.SetPerform(0)
+        player.SetVar1(5)
+        player.SetPerform(0)
+        player.SetVar1(6)
+        player.SetPerform(0)
+    }
+
+    Calculate4(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+
+        const ts612 = player.GetSkilllevel(612);
+        const ts593 = player.GetSkilllevel(593);
+
+        const mp = player.GetMp();
+        const maxmp = player.GetMaxmp();
+        let p1 = 0
+        if (mp / maxmp > 0.95 - ts612 * 0.1) {
+            p1 = player.GetMaxmp() * 0.15
+        }
+
+        let ratio = 1 + 0.0575 * skill.GetLevel()
+
+        const ts617Level = player.GetSkilllevel(617)
+        const skill234Level = player.GetSkilllevel(234)
+        const skill242Level = player.GetSkilllevel(242)
+        const skill543Level = player.GetSkilllevel(543)
+        const skill785Level = player.GetSkilllevel(785)
+        const skill786Level = player.GetSkilllevel(786)
+        const skill3019Level = player.GetSkilllevel(3019)//太极玄
+
+        ratio += norm(skill234Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill242Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill543Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill785Level / 4) * 0.05 * ts617Level
+        ratio += norm(skill786Level / 2) * 0.05 * ts617Level
+        ratio += norm(skill3019Level) * 0.05 * ts617Level
+
+        skill.SetRatio(ratio)
+
+        let plus = 112 * skill.GetLevel()
+        plus += p1
+        skill.SetPlus(plus)
+
+
+        //效果五:施法时额外附加致命一击率10%。
+        skill.SetCrit(0.1)
+        //效果七:每段附加20%致命一击伤害。
+        skill.SetCrithurt(0.2)
+
+        player.SetVar2(player.GetRes3())
+        player.SetVar3(ts593)
+
+        GetTs617Effect1(stub, skill, originFunc)
+        GetTs617Effect2(stub, skill, originFunc)
+
+
+        player.SetVar1(7)
+        player.SetPerform(0)
+        player.SetVar1(8)
+        player.SetPerform(0)
+        player.SetVar1(9)
+        player.SetPerform(0)
+    }
+
+    Calculate5(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+
+        const ts612 = player.GetSkilllevel(612);
+        const ts593 = player.GetSkilllevel(593);
+
+        const mp = player.GetMp();
+        const maxmp = player.GetMaxmp();
+        let p1 = 0
+        if (mp / maxmp > 0.95 - ts612 * 0.1) {
+            p1 = player.GetMaxmp() * 0.15
+        }
+
+        let ratio = 1 + 0.0575 * skill.GetLevel()
+
+        const ts617Level = player.GetSkilllevel(617)
+        const skill234Level = player.GetSkilllevel(234)
+        const skill242Level = player.GetSkilllevel(242)
+        const skill543Level = player.GetSkilllevel(543)
+        const skill785Level = player.GetSkilllevel(785)
+        const skill786Level = player.GetSkilllevel(786)
+        const skill3019Level = player.GetSkilllevel(3019)//太极玄
+
+        ratio += norm(skill234Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill242Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill543Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill785Level / 4) * 0.05 * ts617Level
+        ratio += norm(skill786Level / 2) * 0.05 * ts617Level
+        ratio += norm(skill3019Level) * 0.05 * ts617Level
+
+        skill.SetRatio(ratio)
+
+        let plus = 112 * skill.GetLevel()
+        plus += p1
+        skill.SetPlus(plus)
+
+        //效果五:施法时额外附加致命一击率10%。
+        skill.SetCrit(0.1)
+        //效果七:每段附加20%致命一击伤害。
+        skill.SetCrithurt(0.2)
+
+        player.SetVar2(player.GetRes3())
+        player.SetVar3(ts593)
+
+        GetTs617Effect1(stub, skill, originFunc)
+        GetTs617Effect2(stub, skill, originFunc)
+
+
+        player.SetVar1(10)
+        player.SetPerform(0)
+        player.SetVar1(11)
+        player.SetPerform(0)
+        player.SetVar1(12)
+        player.SetPerform(0)
+    }
+
+    Calculate6(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+
+        const ts612 = player.GetSkilllevel(612);
+        const ts593 = player.GetSkilllevel(593);
+
+        const mp = player.GetMp();
+        const maxmp = player.GetMaxmp();
+        let p1 = 0
+        if (mp / maxmp > 0.95 - ts612 * 0.1) {
+            p1 = player.GetMaxmp() * 0.15
+        }
+
+        let ratio = 1 + 0.0575 * skill.GetLevel()
+
+        const ts617Level = player.GetSkilllevel(617)
+        const skill234Level = player.GetSkilllevel(234)
+        const skill242Level = player.GetSkilllevel(242)
+        const skill543Level = player.GetSkilllevel(543)
+        const skill785Level = player.GetSkilllevel(785)
+        const skill786Level = player.GetSkilllevel(786)
+        const skill3019Level = player.GetSkilllevel(3019)//太极玄
+
+        ratio += norm(skill234Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill242Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill543Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill785Level / 4) * 0.05 * ts617Level
+        ratio += norm(skill786Level / 2) * 0.05 * ts617Level
+        ratio += norm(skill3019Level) * 0.05 * ts617Level
+
+        skill.SetRatio(ratio)
+
+        let plus = 112 * skill.GetLevel()
+        plus += p1
+        skill.SetPlus(plus)
+
+        //效果五:施法时额外附加致命一击率10%。
+        skill.SetCrit(0.1)
+        //效果七:每段附加20%致命一击伤害。
+        skill.SetCrithurt(0.2)
+
+        player.SetVar2(player.GetRes3())
+        player.SetVar3(ts593)
+
+        GetTs617Effect1(stub, skill, originFunc)
+        GetTs617Effect2(stub, skill, originFunc)
+
+
+        player.SetVar1(13)
+        player.SetPerform(0)
+        player.SetVar1(14)
+        player.SetPerform(0)
+        player.SetVar1(15)
+        player.SetPerform(0)
+    }
+
+    Calculate7(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+
+        const ts612 = player.GetSkilllevel(612);
+        const ts593 = player.GetSkilllevel(593);
+
+        const mp = player.GetMp();
+        const maxmp = player.GetMaxmp();
+        let p1 = 0
+        if (mp / maxmp > 0.95 - ts612 * 0.1) {
+            p1 = player.GetMaxmp() * 0.15
+        }
+
+        let ratio = 1 + 0.0575 * skill.GetLevel()
+
+        const ts617Level = player.GetSkilllevel(617)
+        const skill234Level = player.GetSkilllevel(234)
+        const skill242Level = player.GetSkilllevel(242)
+        const skill543Level = player.GetSkilllevel(543)
+        const skill785Level = player.GetSkilllevel(785)
+        const skill786Level = player.GetSkilllevel(786)
+        const skill3019Level = player.GetSkilllevel(3019)//太极玄
+
+        ratio += norm(skill234Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill242Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill543Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill785Level / 4) * 0.05 * ts617Level
+        ratio += norm(skill786Level / 2) * 0.05 * ts617Level
+        ratio += norm(skill3019Level) * 0.05 * ts617Level
+
+        skill.SetRatio(ratio)
+
+        let plus = 112 * skill.GetLevel()
+        plus += p1
+        skill.SetPlus(plus)
+
+        //效果五:施法时额外附加致命一击率10%。
+        skill.SetCrit(0.1)
+        //效果七:每段附加20%致命一击伤害。
+        skill.SetCrithurt(0.2)
+
+        player.SetVar2(player.GetRes3())
+        player.SetVar3(ts593)
+
+        GetTs617Effect1(stub, skill, originFunc)
+        GetTs617Effect2(stub, skill, originFunc)
+
+
+        player.SetVar1(16)
+        player.SetPerform(0)
+        player.SetVar1(17)
+        player.SetPerform(0)
+
+        //效果二:最后一段攻击附加自身真气上限1.5%/30%的攻击力。
+        skill.SetPlus(plus + player.GetMaxmp() * 0.015 * skill.GetLevel())
+        player.SetVar1(18)
+        player.SetPerform(0)
+    }
+
+    BlessMe(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice()
+        //效果八:第一段攻击令自身2秒内处于无敌状态。
+        if (player.GetVar1() == 1) {
+            player.SetInvincible(2100)
+        }
+
+        setUniqprompt(stub, skill, originFunc)
+
+        //效果六:范围内敌对目标每增加1人，则范围内所有敌对目标伤害额外增加施法者自身气血、真气和的2%与攻击力的20%。
+        let plus = player.GetHp() * 0.02 + player.GetMp() * 0.02 + player.GetMaxatk() * 0.2
+        player.SetScopedamage(120, plus, 0)
+        return true
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice()
+        const skillLevel = skill.GetLevel()
+
+        player.SetDiet(120, 3100)
+
+        // 效果三:第1、3、5、7、9、11、13、15、17段令目标定身6秒，定身能力为自身定身抗性加1/20点。
+        // 效果四:第2、4、6、8、10、12、14、16、18段令玩家目标麻痹6秒，技能施法和移动速度分别降低21%/40%。
+
+        if (player.GetVar1() % 2 == 1) {
+            player.SetWrap(player.GetVar2() + skillLevel + player.GetVar3() * skillLevel * 6, 6100 + player.GetVar3() * skillLevel * 500)
+        }
+
+        if (player.GetVar1() % 2 == 0) {
+            player.SetParalysis(120, 6100, 0.2 + skillLevel * 0.01, 0.2 + skillLevel * 0.01)
+        }
+
+        return true
+    }
+
+}
+
+/**
+ * 3068  煞
+ * 效果九:如果施法者攻击力高于目标攻击力，则令其进入焱阳状态4秒，令目标每次攻击都会丢失自身一个有利状态，且每次攻击目标造成伤害的50%由自身承担。
+ */
+class Skill3068 extends BaseHookSkillStub {
+
+    constructor() {
+        super(3068);
+    }
+
+    GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        return 30000
+    }
+
+    Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+
+        const ts612 = player.GetSkilllevel(612);
+        const ts593 = player.GetSkilllevel(593);
+
+        const mp = player.GetMp();
+        const maxmp = player.GetMaxmp();
+        let p1 = 0
+        if (mp / maxmp > 0.95 - ts612 * 0.1) {
+            p1 = player.GetMaxmp() * 0.15
+        }
+
+        let ratio = 1 + 0.0575 * skill.GetLevel()
+
+        const ts617Level = player.GetSkilllevel(617)
+        const skill234Level = player.GetSkilllevel(234)
+        const skill242Level = player.GetSkilllevel(242)
+        const skill543Level = player.GetSkilllevel(543)
+        const skill785Level = player.GetSkilllevel(785)
+        const skill786Level = player.GetSkilllevel(786)
+        const skill3067Level = player.GetSkilllevel(3067)//太极煞
+
+        ratio += norm(skill234Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill242Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill543Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill785Level / 4) * 0.05 * ts617Level
+        ratio += norm(skill786Level / 2) * 0.05 * ts617Level
+        ratio += norm(skill3067Level) * 0.05 * ts617Level
+
+        skill.SetRatio(ratio)
+
+        let plus = 112 * skill.GetLevel()
+        plus += p1
+        skill.SetPlus(plus)
+
+        //效果五:施法时额外附加致命一击率10%。
+        skill.SetCrit(0.1)
+        //效果七:每段附加20%致命一击伤害。
+        skill.SetCrithurt(0.2)
+
+        player.SetVar2(player.GetRes3())
+        player.SetVar4(ts593)
+
+        player.SetVar3(player.GetMaxatk())
+
+        GetTs617Effect1(stub, skill, originFunc)
+        GetTs617Effect2(stub, skill, originFunc)
+
+
+        player.SetVar1(1)
+        player.SetPerform(1)
+        player.SetVar1(2)
+        player.SetPerform(0)
+        player.SetVar1(3)
+        player.SetPerform(0)
+    }
+
+    Calculate3(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+
+        const ts612 = player.GetSkilllevel(612);
+        const ts593 = player.GetSkilllevel(593);
+
+        const mp = player.GetMp();
+        const maxmp = player.GetMaxmp();
+        let p1 = 0
+        if (mp / maxmp > 0.95 - ts612 * 0.1) {
+            p1 = player.GetMaxmp() * 0.15
+        }
+
+        let ratio = 1 + 0.0575 * skill.GetLevel()
+
+        const ts617Level = player.GetSkilllevel(617)
+        const skill234Level = player.GetSkilllevel(234)
+        const skill242Level = player.GetSkilllevel(242)
+        const skill543Level = player.GetSkilllevel(543)
+        const skill785Level = player.GetSkilllevel(785)
+        const skill786Level = player.GetSkilllevel(786)
+        const skill3067Level = player.GetSkilllevel(3067)//太极煞
+
+        ratio += norm(skill234Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill242Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill543Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill785Level / 4) * 0.05 * ts617Level
+        ratio += norm(skill786Level / 2) * 0.05 * ts617Level
+        ratio += norm(skill3067Level) * 0.05 * ts617Level
+
+
+        skill.SetRatio(ratio)
+
+        let plus = 112 * skill.GetLevel()
+        plus += p1
+        skill.SetPlus(plus)
+
+        //效果五:施法时额外附加致命一击率10%。
+        skill.SetCrit(0.1)
+        //效果七:每段附加20%致命一击伤害。
+        skill.SetCrithurt(0.2)
+
+        player.SetVar2(player.GetRes3())
+        player.SetVar4(ts593)
+
+        player.SetVar3(player.GetMaxatk())
+
+        GetTs617Effect1(stub, skill, originFunc)
+        GetTs617Effect2(stub, skill, originFunc)
+
+
+        player.SetVar1(4)
+        player.SetPerform(0)
+        player.SetVar1(5)
+        player.SetPerform(0)
+        player.SetVar1(6)
+        player.SetPerform(0)
+    }
+
+    Calculate4(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+
+        const ts612 = player.GetSkilllevel(612);
+        const ts593 = player.GetSkilllevel(593);
+
+        const mp = player.GetMp();
+        const maxmp = player.GetMaxmp();
+        let p1 = 0
+        if (mp / maxmp > 0.95 - ts612 * 0.1) {
+            p1 = player.GetMaxmp() * 0.15
+        }
+
+        let ratio = 1 + 0.0575 * skill.GetLevel()
+
+        const ts617Level = player.GetSkilllevel(617)
+        const skill234Level = player.GetSkilllevel(234)
+        const skill242Level = player.GetSkilllevel(242)
+        const skill543Level = player.GetSkilllevel(543)
+        const skill785Level = player.GetSkilllevel(785)
+        const skill786Level = player.GetSkilllevel(786)
+        const skill3067Level = player.GetSkilllevel(3067)//太极煞
+
+        ratio += norm(skill234Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill242Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill543Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill785Level / 4) * 0.05 * ts617Level
+        ratio += norm(skill786Level / 2) * 0.05 * ts617Level
+        ratio += norm(skill3067Level) * 0.05 * ts617Level
+
+
+        skill.SetRatio(ratio)
+
+        let plus = 112 * skill.GetLevel()
+        plus += p1
+        skill.SetPlus(plus)
+
+        //效果五:施法时额外附加致命一击率10%。
+        skill.SetCrit(0.1)
+        //效果七:每段附加20%致命一击伤害。
+        skill.SetCrithurt(0.2)
+
+        player.SetVar2(player.GetRes3())
+        player.SetVar4(ts593)
+
+        player.SetVar3(player.GetMaxatk())
+
+        GetTs617Effect1(stub, skill, originFunc)
+        GetTs617Effect2(stub, skill, originFunc)
+
+
+        player.SetVar1(7)
+        player.SetPerform(0)
+        player.SetVar1(8)
+        player.SetPerform(0)
+        player.SetVar1(9)
+        player.SetPerform(0)
+    }
+
+    Calculate5(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+
+
+        const ts612 = player.GetSkilllevel(612);
+        const ts593 = player.GetSkilllevel(593);
+
+        const mp = player.GetMp();
+        const maxmp = player.GetMaxmp();
+        let p1 = 0
+        if (mp / maxmp > 0.95 - ts612 * 0.1) {
+            p1 = player.GetMaxmp() * 0.15
+        }
+
+        let ratio = 1 + 0.0575 * skill.GetLevel()
+
+        const ts617Level = player.GetSkilllevel(617)
+        const skill234Level = player.GetSkilllevel(234)
+        const skill242Level = player.GetSkilllevel(242)
+        const skill543Level = player.GetSkilllevel(543)
+        const skill785Level = player.GetSkilllevel(785)
+        const skill786Level = player.GetSkilllevel(786)
+        const skill3067Level = player.GetSkilllevel(3067)//太极煞
+
+        ratio += norm(skill234Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill242Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill543Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill785Level / 4) * 0.05 * ts617Level
+        ratio += norm(skill786Level / 2) * 0.05 * ts617Level
+        ratio += norm(skill3067Level) * 0.05 * ts617Level
+
+
+        skill.SetRatio(ratio)
+
+        let plus = 112 * skill.GetLevel()
+        plus += p1
+        skill.SetPlus(plus)
+
+        //效果五:施法时额外附加致命一击率10%。
+        skill.SetCrit(0.1)
+        //效果七:每段附加20%致命一击伤害。
+        skill.SetCrithurt(0.2)
+
+
+        player.SetVar2(player.GetRes3())
+        player.SetVar4(ts593)
+
+        player.SetVar3(player.GetMaxatk())
+
+        GetTs617Effect1(stub, skill, originFunc)
+        GetTs617Effect2(stub, skill, originFunc)
+
+
+        player.SetVar1(10)
+        player.SetPerform(0)
+        player.SetVar1(11)
+        player.SetPerform(0)
+        player.SetVar1(12)
+        player.SetPerform(0)
+    }
+
+    Calculate6(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+
+        const ts612 = player.GetSkilllevel(612);
+        const ts593 = player.GetSkilllevel(593);
+
+        const mp = player.GetMp();
+        const maxmp = player.GetMaxmp();
+        let p1 = 0
+        if (mp / maxmp > 0.95 - ts612 * 0.1) {
+            p1 = player.GetMaxmp() * 0.15
+        }
+
+        let ratio = 1 + 0.0575 * skill.GetLevel()
+
+        const ts617Level = player.GetSkilllevel(617)
+        const skill234Level = player.GetSkilllevel(234)
+        const skill242Level = player.GetSkilllevel(242)
+        const skill543Level = player.GetSkilllevel(543)
+        const skill785Level = player.GetSkilllevel(785)
+        const skill786Level = player.GetSkilllevel(786)
+        const skill3067Level = player.GetSkilllevel(3067)//太极煞
+
+        ratio += norm(skill234Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill242Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill543Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill785Level / 4) * 0.05 * ts617Level
+        ratio += norm(skill786Level / 2) * 0.05 * ts617Level
+        ratio += norm(skill3067Level) * 0.05 * ts617Level
+
+
+        skill.SetRatio(ratio)
+
+        let plus = 112 * skill.GetLevel()
+        plus += p1
+        skill.SetPlus(plus)
+
+        //效果五:施法时额外附加致命一击率10%。
+        skill.SetCrit(0.1)
+        //效果七:每段附加20%致命一击伤害。
+        skill.SetCrithurt(0.2)
+
+        player.SetVar2(player.GetRes3())
+        player.SetVar4(ts593)
+
+        player.SetVar3(player.GetMaxatk())
+
+        GetTs617Effect1(stub, skill, originFunc)
+        GetTs617Effect2(stub, skill, originFunc)
+
+
+        player.SetVar1(13)
+        player.SetPerform(0)
+        player.SetVar1(14)
+        player.SetPerform(0)
+        player.SetVar1(15)
+        player.SetPerform(0)
+    }
+
+    Calculate7(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+
+
+        const ts612 = player.GetSkilllevel(612);
+        const ts593 = player.GetSkilllevel(593);
+
+        const mp = player.GetMp();
+        const maxmp = player.GetMaxmp();
+        let p1 = 0
+        if (mp / maxmp > 0.95 - ts612 * 0.1) {
+            p1 = player.GetMaxmp() * 0.15
+        }
+
+        let ratio = 1 + 0.0575 * skill.GetLevel()
+
+        const ts617Level = player.GetSkilllevel(617)
+        const skill234Level = player.GetSkilllevel(234)
+        const skill242Level = player.GetSkilllevel(242)
+        const skill543Level = player.GetSkilllevel(543)
+        const skill785Level = player.GetSkilllevel(785)
+        const skill786Level = player.GetSkilllevel(786)
+        const skill3067Level = player.GetSkilllevel(3067)//太极煞
+
+        ratio += norm(skill234Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill242Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill543Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill785Level / 4) * 0.05 * ts617Level
+        ratio += norm(skill786Level / 2) * 0.05 * ts617Level
+        ratio += norm(skill3067Level) * 0.05 * ts617Level
+
+
+        skill.SetRatio(ratio)
+
+        let plus = 112 * skill.GetLevel()
+        plus += p1
+        skill.SetPlus(plus)
+
+        //效果五:施法时额外附加致命一击率10%。
+        skill.SetCrit(0.1)
+        //效果七:每段附加20%致命一击伤害。
+        skill.SetCrithurt(0.2)
+
+
+        player.SetVar2(player.GetRes3())
+        player.SetVar4(ts593)
+
+        player.SetVar3(player.GetMaxatk())
+
+        GetTs617Effect1(stub, skill, originFunc)
+        GetTs617Effect2(stub, skill, originFunc)
+
+
+        player.SetVar1(16)
+        player.SetPerform(0)
+        player.SetVar1(17)
+        player.SetPerform(0)
+
+        //效果二:最后一段攻击附加自身真气上限1.5%/30%的攻击力。
+        skill.SetPlus(plus + player.GetMaxmp() * 0.015 * skill.GetLevel())
+        player.SetVar1(18)
+        player.SetPerform(0)
+    }
+
+    BlessMe(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice()
+        //效果八:第一段攻击令自身2秒内处于无敌状态。
+        if (player.GetVar1() == 1) {
+            player.SetInvincible(2100)
+        }
+
+        setUniqprompt(stub, skill, originFunc)
+
+        //效果六:范围内敌对目标每增加1人，则范围内所有敌对目标伤害额外增加施法者自身气血、真气和的2%与攻击力的20%。
+        let plus = player.GetHp() * 0.02 + player.GetMp() * 0.02 + player.GetMaxatk() * 0.2
+        player.SetScopedamage(120, plus, 0)
+        return true
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice()
+        const skillLevel = skill.GetLevel()
+
+        player.SetDiet(120, 3100)
+
+        //效果三:第1、3、5、7、9、11、13、15、17段令目标定身6秒，定身能力为自身定身抗性加1/20点。
+        // 效果四:第2、4、6、8、10、12、14、16、18段令玩家目标麻痹6秒，技能施法和移动速度分别降低21%/40%。
+
+        if (player.GetVar1() % 2 == 1) {
+            player.SetWrap(player.GetVar2() + skillLevel + player.GetVar4() * skillLevel * 6, 6100 + player.GetVar4() * skillLevel * 500)
+        }
+
+        if (player.GetVar1() % 2 == 0) {
+            player.SetParalysis(120, 6100, 0.2 + skillLevel * 0.01, 0.2 + skillLevel * 0.01)
+        }
+
+        //效果九:如果施法者攻击力高于目标攻击力，则令其进入焱阳状态4秒，令目标每次攻击都会丢失自身一个有利状态，且每次攻击目标造成伤害的50%由自身承担。
+        if (player.GetMaxatk() < player.GetVar3()) {
+            player.SetBlazingSun(120, 4100, 0.5, 0)
+        }
+
+        return true
+    }
+
+}
+
+/**
+ * 3116  禅
+ * 效果三:第1、3、5、7、9、11、13、15、17段令目标定身6秒，定身能力为自身定身抗性加2/40点。
+ */
+class Skill3116 extends BaseHookSkillStub {
+
+    constructor() {
+        super(3116);
+    }
+
+    GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
+        return 30000
+    }
+
+    Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+
+
+        const ts612 = player.GetSkilllevel(612);
+        const ts593 = player.GetSkilllevel(593);
+
+        const mp = player.GetMp();
+        const maxmp = player.GetMaxmp();
+        let p1 = 0
+        if (mp / maxmp > 0.95 - ts612 * 0.1) {
+            p1 = player.GetMaxmp() * 0.15
+        }
+
+        let ratio = 1 + 0.0575 * skill.GetLevel()
+
+        const ts617Level = player.GetSkilllevel(617)
+        const skill234Level = player.GetSkilllevel(234)
+        const skill242Level = player.GetSkilllevel(242)
+        const skill543Level = player.GetSkilllevel(543)
+        const skill785Level = player.GetSkilllevel(785)
+        const skill786Level = player.GetSkilllevel(786)
+        const skill3115Level = player.GetSkilllevel(3115)//太极禅
+
+        ratio += norm(skill234Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill242Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill543Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill785Level / 4) * 0.05 * ts617Level
+        ratio += norm(skill786Level / 2) * 0.05 * ts617Level
+        ratio += norm(skill3115Level) * 0.05 * ts617Level
+
+        skill.SetRatio(ratio)
+
+        let plus = 112 * skill.GetLevel()
+        plus += p1
+        skill.SetPlus(plus)
+
+        //效果五:施法时额外附加致命一击率10%。
+        skill.SetCrit(0.1)
+        //效果七:每段附加20%致命一击伤害。
+        skill.SetCrithurt(0.2)
+
+
+        player.SetVar2(player.GetRes3())
+        player.SetVar4(ts593)
+
+        GetTs617Effect1(stub, skill, originFunc)
+        GetTs617Effect2(stub, skill, originFunc)
+
+        player.SetVar1(1)
+        player.SetPerform(1)
+        player.SetVar1(2)
+        player.SetPerform(0)
+        player.SetVar1(3)
+        player.SetPerform(0)
+    }
+
+    Calculate3(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+
+
+        const ts612 = player.GetSkilllevel(612);
+        const ts593 = player.GetSkilllevel(593);
+
+        const mp = player.GetMp();
+        const maxmp = player.GetMaxmp();
+        let p1 = 0
+        if (mp / maxmp > 0.95 - ts612 * 0.1) {
+            p1 = player.GetMaxmp() * 0.15
+        }
+
+        let ratio = 1 + 0.0575 * skill.GetLevel()
+
+        const ts617Level = player.GetSkilllevel(617)
+        const skill234Level = player.GetSkilllevel(234)
+        const skill242Level = player.GetSkilllevel(242)
+        const skill543Level = player.GetSkilllevel(543)
+        const skill785Level = player.GetSkilllevel(785)
+        const skill786Level = player.GetSkilllevel(786)
+        const skill3115Level = player.GetSkilllevel(3115)//太极禅
+
+        ratio += norm(skill234Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill242Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill543Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill785Level / 4) * 0.05 * ts617Level
+        ratio += norm(skill786Level / 2) * 0.05 * ts617Level
+        ratio += norm(skill3115Level) * 0.05 * ts617Level
+
+        skill.SetRatio(ratio)
+
+        let plus = 112 * skill.GetLevel()
+        plus += p1
+        skill.SetPlus(plus)
+
+        //效果五:施法时额外附加致命一击率10%。
+        skill.SetCrit(0.1)
+        //效果七:每段附加20%致命一击伤害。
+        skill.SetCrithurt(0.2)
+
+
+        player.SetVar2(player.GetRes3())
+        player.SetVar4(ts593)
+
+        GetTs617Effect1(stub, skill, originFunc)
+        GetTs617Effect2(stub, skill, originFunc)
+
+        player.SetVar1(4)
+        player.SetPerform(0)
+        player.SetVar1(5)
+        player.SetPerform(0)
+        player.SetVar1(6)
+        player.SetPerform(0)
+    }
+
+    Calculate4(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+
+
+        const ts612 = player.GetSkilllevel(612);
+        const ts593 = player.GetSkilllevel(593);
+
+        const mp = player.GetMp();
+        const maxmp = player.GetMaxmp();
+        let p1 = 0
+        if (mp / maxmp > 0.95 - ts612 * 0.1) {
+            p1 = player.GetMaxmp() * 0.15
+        }
+
+        let ratio = 1 + 0.0575 * skill.GetLevel()
+
+        const ts617Level = player.GetSkilllevel(617)
+        const skill234Level = player.GetSkilllevel(234)
+        const skill242Level = player.GetSkilllevel(242)
+        const skill543Level = player.GetSkilllevel(543)
+        const skill785Level = player.GetSkilllevel(785)
+        const skill786Level = player.GetSkilllevel(786)
+        const skill3115Level = player.GetSkilllevel(3115)//太极禅
+
+        ratio += norm(skill234Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill242Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill543Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill785Level / 4) * 0.05 * ts617Level
+        ratio += norm(skill786Level / 2) * 0.05 * ts617Level
+        ratio += norm(skill3115Level) * 0.05 * ts617Level
+
+        skill.SetRatio(ratio)
+
+        let plus = 112 * skill.GetLevel()
+        plus += p1
+        skill.SetPlus(plus)
+
+        //效果五:施法时额外附加致命一击率10%。
+        skill.SetCrit(0.1)
+        //效果七:每段附加20%致命一击伤害。
+        skill.SetCrithurt(0.2)
+
+
+        player.SetVar2(player.GetRes3())
+        player.SetVar4(ts593)
+
+        GetTs617Effect1(stub, skill, originFunc)
+        GetTs617Effect2(stub, skill, originFunc)
+
+        player.SetVar1(7)
+        player.SetPerform(0)
+        player.SetVar1(8)
+        player.SetPerform(0)
+        player.SetVar1(9)
+        player.SetPerform(0)
+    }
+
+    Calculate5(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+
+
+        const ts612 = player.GetSkilllevel(612);
+        const ts593 = player.GetSkilllevel(593);
+
+        const mp = player.GetMp();
+        const maxmp = player.GetMaxmp();
+        let p1 = 0
+        if (mp / maxmp > 0.95 - ts612 * 0.1) {
+            p1 = player.GetMaxmp() * 0.15
+        }
+
+        let ratio = 1 + 0.0575 * skill.GetLevel()
+
+        const ts617Level = player.GetSkilllevel(617)
+        const skill234Level = player.GetSkilllevel(234)
+        const skill242Level = player.GetSkilllevel(242)
+        const skill543Level = player.GetSkilllevel(543)
+        const skill785Level = player.GetSkilllevel(785)
+        const skill786Level = player.GetSkilllevel(786)
+        const skill3115Level = player.GetSkilllevel(3115)//太极禅
+
+        ratio += norm(skill234Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill242Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill543Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill785Level / 4) * 0.05 * ts617Level
+        ratio += norm(skill786Level / 2) * 0.05 * ts617Level
+        ratio += norm(skill3115Level) * 0.05 * ts617Level
+
+        skill.SetRatio(ratio)
+
+        let plus = 112 * skill.GetLevel()
+        plus += p1
+        skill.SetPlus(plus)
+
+        //效果五:施法时额外附加致命一击率10%。
+        skill.SetCrit(0.1)
+        //效果七:每段附加20%致命一击伤害。
+        skill.SetCrithurt(0.2)
+
+
+        player.SetVar2(player.GetRes3())
+        player.SetVar4(ts593)
+
+        GetTs617Effect1(stub, skill, originFunc)
+        GetTs617Effect2(stub, skill, originFunc)
+
+        player.SetVar1(10)
+        player.SetPerform(0)
+        player.SetVar1(11)
+        player.SetPerform(0)
+        player.SetVar1(12)
+        player.SetPerform(0)
+    }
+
+    Calculate6(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+
+
+        const ts612 = player.GetSkilllevel(612);
+        const ts593 = player.GetSkilllevel(593);
+
+        const mp = player.GetMp();
+        const maxmp = player.GetMaxmp();
+        let p1 = 0
+        if (mp / maxmp > 0.95 - ts612 * 0.1) {
+            p1 = player.GetMaxmp() * 0.15
+        }
+
+        let ratio = 1 + 0.0575 * skill.GetLevel()
+
+        const ts617Level = player.GetSkilllevel(617)
+        const skill234Level = player.GetSkilllevel(234)
+        const skill242Level = player.GetSkilllevel(242)
+        const skill543Level = player.GetSkilllevel(543)
+        const skill785Level = player.GetSkilllevel(785)
+        const skill786Level = player.GetSkilllevel(786)
+        const skill3115Level = player.GetSkilllevel(3115)//太极禅
+
+        ratio += norm(skill234Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill242Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill543Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill785Level / 4) * 0.05 * ts617Level
+        ratio += norm(skill786Level / 2) * 0.05 * ts617Level
+        ratio += norm(skill3115Level) * 0.05 * ts617Level
+
+        skill.SetRatio(ratio)
+
+        let plus = 112 * skill.GetLevel()
+        plus += p1
+        skill.SetPlus(plus)
+
+        //效果五:施法时额外附加致命一击率10%。
+        skill.SetCrit(0.1)
+        //效果七:每段附加20%致命一击伤害。
+        skill.SetCrithurt(0.2)
+
+
+        player.SetVar2(player.GetRes3())
+        player.SetVar4(ts593)
+
+        GetTs617Effect1(stub, skill, originFunc)
+        GetTs617Effect2(stub, skill, originFunc)
+
+        player.SetVar1(13)
+        player.SetPerform(0)
+        player.SetVar1(14)
+        player.SetPerform(0)
+        player.SetVar1(15)
+        player.SetPerform(0)
+    }
+
+    Calculate7(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
+        const player = skill.GetPlayerNice()
+
+        const ts612 = player.GetSkilllevel(612);
+        const ts593 = player.GetSkilllevel(593);
+
+        const mp = player.GetMp();
+        const maxmp = player.GetMaxmp();
+        let p1 = 0
+        if (mp / maxmp > 0.95 - ts612 * 0.1) {
+            p1 = player.GetMaxmp() * 0.15
+        }
+
+        let ratio = 1 + 0.0575 * skill.GetLevel()
+
+        const ts617Level = player.GetSkilllevel(617)
+        const skill234Level = player.GetSkilllevel(234)
+        const skill242Level = player.GetSkilllevel(242)
+        const skill543Level = player.GetSkilllevel(543)
+        const skill785Level = player.GetSkilllevel(785)
+        const skill786Level = player.GetSkilllevel(786)
+        const skill3115Level = player.GetSkilllevel(3115)//太极禅
+
+        ratio += norm(skill234Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill242Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill543Level / 9) * 0.05 * ts617Level
+        ratio += norm(skill785Level / 4) * 0.05 * ts617Level
+        ratio += norm(skill786Level / 2) * 0.05 * ts617Level
+        ratio += norm(skill3115Level) * 0.05 * ts617Level
+
+        skill.SetRatio(ratio)
+
+        let plus = 112 * skill.GetLevel()
+        plus += p1
+        skill.SetPlus(plus)
+
+        //效果五:施法时额外附加致命一击率10%。
+        skill.SetCrit(0.1)
+        //效果七:每段附加20%致命一击伤害。
+        skill.SetCrithurt(0.2)
+
+        player.SetVar2(player.GetRes3())
+        player.SetVar4(ts593)
+
+        GetTs617Effect1(stub, skill, originFunc)
+        GetTs617Effect2(stub, skill, originFunc)
+
+        player.SetVar1(16)
+        player.SetPerform(0)
+        player.SetVar1(17)
+        player.SetPerform(0)
+
+        //效果二:最后一段攻击附加自身真气上限1.5%/30%的攻击力。
+        skill.SetPlus(plus + player.GetMaxmp() * 0.015 * skill.GetLevel())
+        player.SetVar1(18)
+        player.SetPerform(0)
+    }
+
+    BlessMe(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice()
+        //效果八:第一段攻击令自身2秒内处于无敌状态。
+        if (player.GetVar1() == 1) {
+            player.SetInvincible(2100)
+        }
+
+        setUniqprompt(stub, skill, originFunc)
+
+        //效果六:范围内敌对目标每增加1人，则范围内所有敌对目标伤害额外增加施法者自身气血、真气和的2%与攻击力的20%。
+        let plus = player.GetHp() * 0.02 + player.GetMp() * 0.02 + player.GetMaxatk() * 0.2
+        player.SetScopedamage(120, plus, 0)
+        return true
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice()
+        const skillLevel = skill.GetLevel()
+
+        player.SetDiet(120, 3100)
+
+        // 效果三:第1、3、5、7、9、11、13、15、17段令目标定身6秒，定身能力为自身定身抗性加2/40点。
+        // 效果四:第2、4、6、8、10、12、14、16、18段令玩家目标麻痹6秒，技能施法和移动速度分别降低21%/40%。
+
+        if (player.GetVar1() % 2 == 1) {
+            player.SetWrap(player.GetVar2() + skillLevel + player.GetVar4() * skillLevel * 6, 6100 + player.GetVar4() * skillLevel * 500)
+        }
+
+        if (player.GetVar1() % 2 == 0) {
+            player.SetParalysis(120, 6100, 0.2 + skillLevel * 0.01, 0.2 + skillLevel * 0.01)
+        }
+
+        return true
+    }
+
+}
+
+
 class QingYunSkillList {
+    constructor() {
+        new Skill223()
+        new Skill460()
+        new Skill226()
+        new Skill233()
+        new Skill222()
+        new Skill231()
+        new Skill225()
+        new Skill232()
+        new Skill380()
+        new Skill230()
+        new Skill235()
+        new Skill395()
+        new Skill239()
+        new Skill224()
+        new Skill312()
+        new Skill234()
+        new Skill229()
+        new Skill228()
+        new Skill238()
+        new Skill461()
+        new Skill5039()
+        new Skill313()
+        new Skill236()
+        new Skill237()
+        new Skill241()
+        new Skill242()
+        new Skill240()
+        new Skill381()
+        new Skill537()
+        new Skill538()
+        new Skill539()
+        new Skill540()
+        new Skill541()
+        new Skill542()
+        new Skill543()
+        new Skill544()
+        new Skill5051()
+        new Skill5047()
+        new Skill545()
+        new Skill783()
+        new Skill784()
+        new Skill785()
+        new Skill786()
+        new Skill600()
+        new Skill1537()
+        new Skill1538()
+        new Skill1539()
+        new Skill2044()
+        new Skill2045()
+        new Skill1563()
+        new Skill1564()
+        new Skill1565()
+        new Skill2054()
+        new Skill2055()
+        new Skill1589()
+        new Skill1590()
+        new Skill1591()
+        new Skill2064()
+        new Skill2065()
+        new Skill3017()
+        new Skill3065()
+        new Skill3113()
+        new Skill3018()
+        new Skill3066()
+        new Skill3114()
+        new Skill3019()
+        new Skill3067()
+        new Skill3115()
+        new Skill3020()
+        new Skill3068()
+        new Skill3116()
+    }
 }
