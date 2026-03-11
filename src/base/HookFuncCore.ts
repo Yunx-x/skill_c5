@@ -5,6 +5,7 @@ export type FunctionTypes =
 	| "void"
 	| "bool"
 	| "char"
+	| "int8"
 	| "int16"
 	| "int32"
 	| "int64"

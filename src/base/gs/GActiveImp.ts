@@ -17,4 +17,13 @@ export class GActiveImp extends PointerClass {
 		fc(oi, this.pointer, 0);
 		return oi;
 	}
+
+    GetSpeedByMode(mode: number): number {
+        const fc = HookFuncCore.getNativeFunc(
+            "_ZN11gactive_imp14GetSpeedByModeEi",
+            "float",
+            ["pointer", "int32"],
+        );
+        return fc(this.pointer, mode);
+    }
 }

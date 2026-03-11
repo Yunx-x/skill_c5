@@ -10,6 +10,9 @@ import {ObjectInterface} from "../ObjectInterface";
  *
  */
 export class GPlayer extends GActiveImp {
+    // 移动定时器ID，用于取消旧的移动
+    private moveTimerId: any = null;
+
     /**
      * 创建 GPlayer 实例。
      *
@@ -837,6 +840,10 @@ export class GPlayer extends GActiveImp {
         return [x, y, z];
     }
 
+    GetPosPointer(): NativePointer {
+        return this.GetParent().add(4 * 12);
+    }
+
     // toObjectInterface(): NativePointer {
     //     let oi = Memory.alloc(0x08);
     //     oi.add(0).writePointer(this.pointer);
@@ -1427,5 +1434,222 @@ export class GPlayer extends GActiveImp {
             "void", ['pointer', 'int32', 'int32', 'pointer', 'int32', 'int32']);
         const owner = Memory.alloc(0x8)
         func(this.pointer, inv_drop, eq_drop, owner, 0, 0)
+    }
+
+
+    //======控制操作=============
+
+    /**
+     * 充法宝精力
+     */
+    ChargeTalismanStamina(value: number): number {
+        const func = HookFuncCore.getNativeFunc("_ZN11gplayer_imp21ChargeTalismanStaminaEi", "int32", [
+            "pointer",
+            "int32",
+        ]);
+        return func(this.pointer, value);
+    }
+
+    testSay(speaker: number, msg: string, channel: number): number {
+        let len = msg.length * 2;
+        let contentPtr = Memory.allocUtf16String(msg);
+        let data = Memory.alloc(0x24);//分配内存
+        data.add(0).writeInt(speaker)//角色ID
+        data.add(4).writePointer(contentPtr)//内容
+        data.add(8).writeInt(len)//内容长度
+        data.add(12).writeInt(0)
+        data.add(16).writeInt(0)
+        data.add(20).writeInt(channel)//喊话频道
+        data.add(24).writeInt(0)
+
+        const func = HookFuncCore.getNativeFunc("_ZN4GMSV12BroadChatMsgERKNS_8chat_msgE", "bool", [
+            "pointer"
+        ]);
+        return func(data);
+    }
+
+    PlayerStartFly(): number {
+        const func = HookFuncCore.getNativeFunc("_ZN11gplayer_imp14PlayerStartFlyEh", "int32", [
+            "pointer",
+            "int8",
+        ]);
+        return func(this.pointer, 0);
+    }
+
+    PlayerStopFly(): number {
+        const func = HookFuncCore.getNativeFunc("_ZN11gplayer_imp13PlayerStopFlyEv", "int32", [
+            "pointer"
+        ]);
+        return func(this.pointer);
+    }
+
+    StepMove(offSetX: number, offSetY: number, offSetZ: number): number {
+        const func = HookFuncCore.getNativeFunc("_ZN11gplayer_imp8StepMoveERK9A3DVECTOR", "int32", [
+            "pointer",
+            "pointer"
+        ]);
+
+        const posPointer = Memory.alloc(12)
+        posPointer.writeFloat(offSetX)
+        posPointer.add(4).writeFloat(offSetY)
+        posPointer.add(8).writeFloat(offSetZ)
+
+        return func(this.pointer, posPointer);
+    }
+
+    //move(const A3DVECTOR & target, int cost_time,int speed,unsigned char move_mode);
+    move(target: number[], cost_time: number, move_mode: number) {
+        // const func = HookFuncCore.getNativeFunc("_ZN18gplayer_dispatcher4moveERK9A3DVECTORiih", "void", [
+        const func = HookFuncCore.getNativeFunc("_ZN18gplayer_dispatcher9stop_moveERK9A3DVECTORthh", "void", [
+            "pointer",
+            "pointer",
+            "int32",
+            "int32",
+            "char",
+        ]);
+
+        // 如果有旧的移动定时器，先清除它
+        if (this.moveTimerId !== null) {
+            console.log("[移动] 清除旧的移动定时器");
+            clearInterval(this.moveTimerId);
+            this.moveTimerId = null;
+        }
+
+        const currPos = this.GetPos();
+        console.log("[移动] 开始移动 - 当前位置:", `[${currPos[0].toFixed(2)}, ${currPos[1].toFixed(2)}, ${currPos[2].toFixed(2)}]`);
+        console.log("[移动] 目标位置:", `[${target[0].toFixed(2)}, ${target[1].toFixed(2)}, ${target[2].toFixed(2)}]`);
+
+        const speed_x = this.GetSpeedByMode(move_mode)
+        console.log("[移动] 速度:", speed_x, "移动模式:", move_mode)
+        const posList = this.clacMoveList(target, move_mode)
+
+        console.log(`[移动] 生成移动点列表，共 ${posList.length} 个点`);
+        posList.forEach((pos, index) => {
+            console.log(`[移动] 点 ${index}: [${pos[0].toFixed(2)}, ${pos[1].toFixed(2)}, ${pos[2].toFixed(2)}]`);
+        });
+
+        // 当前执行的索引
+        let currentIndex = 0;
+
+        // 每500毫秒执行一个移动点
+        this.moveTimerId = setInterval(() => {
+            if (currentIndex >= posList.length) {
+                // 所有点都执行完毕，清除定时器
+                console.log(`[移动] 所有移动点执行完毕，共执行 ${posList.length} 个点`);
+                // const pos = posList[posList.length-1];
+                // this.stop_move(pos, speed_x, move_mode)
+
+                if (this.moveTimerId !== null) {
+                    clearInterval(this.moveTimerId);
+                    this.moveTimerId = null;
+                }
+                return;
+            }
+
+            const pos = posList[currentIndex];
+            console.log(`[移动] 执行第 ${currentIndex + 1}/${posList.length} 个点: [${pos[0].toFixed(2)}, ${pos[1].toFixed(2)}, ${pos[2].toFixed(2)}]`);
+
+            const posPointer = Memory.alloc(12)
+            posPointer.writeFloat(pos[0])
+            posPointer.add(4).writeFloat(pos[1])
+            posPointer.add(8).writeFloat(pos[2])
+            func(this.getRunner().readPointer(), posPointer, 500, speed_x, move_mode);
+            currentIndex++;
+        }, 500);
+    }
+
+    stop_move(target: number[], speed_x: number, move_mode: number) {
+        const func = HookFuncCore.getNativeFunc("_ZN18gplayer_dispatcher9stop_moveERK9A3DVECTORthh", "void", [
+            "pointer",
+            "pointer",
+            "int32",
+            "int32",
+            "char",
+        ]);
+
+        const posPointer = Memory.alloc(12)
+        posPointer.writeFloat(target[0])
+        posPointer.add(4).writeFloat(target[1])
+        posPointer.add(8).writeFloat(target[2])
+        func(this.getRunner().readPointer(), posPointer, 500, speed_x, move_mode);
+    }
+
+    clacMoveList(target: number[], move_mode: number): number[][] {
+        const currPos = this.GetPos()
+
+        // 计算方向向量
+        const dx = target[0] - currPos[0]
+        const dy = target[1] - currPos[1]
+        const dz = target[2] - currPos[2]
+
+        console.log("[计算移动列表] 当前位置:", `[${currPos[0].toFixed(2)}, ${currPos[1].toFixed(2)}, ${currPos[2].toFixed(2)}]`);
+        console.log("[计算移动列表] 目标位置:", `[${target[0].toFixed(2)}, ${target[1].toFixed(2)}, ${target[2].toFixed(2)}]`);
+        console.log("[计算移动列表] 方向向量:", `[${dx.toFixed(2)}, ${dy.toFixed(2)}, ${dz.toFixed(2)}]`);
+
+        // 计算总距离
+        const totalDistance = Math.sqrt(dx * dx + dy * dy + dz * dz)
+        console.log("[计算移动列表] 总距离:", totalDistance.toFixed(2), "米");
+
+        // 如果距离为0，直接返回目标点
+        if (totalDistance <= 0) {
+            console.log("[计算移动列表] 距离为0，直接返回目标点");
+            return [target]
+        }
+
+        // 获取移动速度（米/秒）
+        const speed = this.GetSpeedByMode(move_mode)
+        console.log("[计算移动列表] 移动速度:", speed, "米/秒");
+
+        // 每100毫秒移动的距离（米）
+        const distancePer500ms = speed * 0.5
+        console.log("[计算移动列表] 每100毫秒移动距离:", distancePer500ms.toFixed(2), "米");
+
+        // 如果速度太慢或距离太短，直接返回目标点
+        if (distancePer500ms <= 0 || totalDistance < distancePer500ms) {
+            console.log("[计算移动列表] 距离太短或速度太慢，直接返回目标点");
+            return [target]
+        }
+
+        // 计算需要多少个中间点
+        const numSteps = Math.ceil(totalDistance / distancePer500ms)
+        console.log("[计算移动列表] 计算步数:", numSteps, "步");
+
+        // 生成移动点列表
+        const moveList: number[][] = []
+
+        for (let i = 0; i <= numSteps; i++) {
+            const t = i / numSteps // 0 到 1 的插值比例
+
+            const x = currPos[0] + dx * t
+            const y = currPos[1] + dy * t
+            const z = currPos[2] + dz * t
+
+            moveList.push([x, y, z])
+        }
+
+        // 确保最后一个点是目标点（避免浮点数误差）
+        moveList[moveList.length - 1] = target
+
+        console.log(`[计算移动列表] 生成移动点列表完成，共 ${moveList.length} 个点`);
+        return moveList
+    }
+
+
+    //(gplayer_imp *this, const A3DVECTOR *a2, int a3, int a4)
+
+    CheckPlayerMove(mod: number, useTime: number, x: number, y: number, z: number): number {
+        const func = HookFuncCore.getNativeFunc("_ZN11gplayer_imp15CheckPlayerMoveERK9A3DVECTORii", "int32", [
+            "pointer",
+            "pointer",
+            "int32",
+            "int32",
+        ]);
+
+        const posPointer = Memory.alloc(12)
+        posPointer.writeFloat(x)
+        posPointer.add(4).writeFloat(y)
+        posPointer.add(8).writeFloat(z)
+
+        return func(this.pointer, posPointer, mod, useTime);
     }
 }

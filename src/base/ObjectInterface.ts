@@ -519,7 +519,7 @@ export class ObjectInterface {
         return fc(obj, id, level);
     }
 
-    static EnhanceProp(obj: NativePointer, type: number, value: number){
+    static EnhanceProp(obj: NativePointer, type: number, value: number) {
         const fc = HookFuncCore.getNativeFunc("_ZN16object_interface11EnhancePropEii",
             "void", [
                 "pointer",
@@ -529,7 +529,7 @@ export class ObjectInterface {
         fc(obj, type, value);
     }
 
-    static ImpairProp(obj: NativePointer, type: number, value: number){
+    static ImpairProp(obj: NativePointer, type: number, value: number) {
         const fc = HookFuncCore.getNativeFunc("_ZN16object_interface10ImpairPropEii",
             "void", [
                 "pointer",
@@ -537,6 +537,21 @@ export class ObjectInterface {
                 "int32"
             ]);
         fc(obj, type, value);
+    }
+
+    static SkillMove(obj: NativePointer, pos: number[]) {
+        const fc = HookFuncCore.getNativeFunc("_ZN16object_interface9SkillMoveERK9A3DVECTOR",
+            "void", [
+                "pointer",
+                "pointer",
+            ]);
+
+        const posPtr = Memory.alloc(12)
+        posPtr.writeFloat(pos[0])
+        posPtr.add(4).writeFloat(pos[1])
+        posPtr.add(8).writeFloat(pos[2])
+
+        fc(obj, posPtr);
     }
 
 }
