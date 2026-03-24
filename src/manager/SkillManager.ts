@@ -3,6 +3,7 @@ import {QuickCoolDownList2} from "../base/skill/QuickSkillUtil";
 import {Skill} from "../base/skill/Skill";
 import {TongYongSkillList} from "../skills/TongYongSkillList";
 import {BossSkillList} from "../skills/BossSkillList";
+import {BaseHookSkillStub} from "../base/skill/BaseHookSkillStub";
 
 
 class DebugTestSkillXuanCooldown extends QuickCoolDownList2 {
@@ -330,14 +331,31 @@ class DebugTestSkillChanCooldown extends QuickCoolDownList2 {
 }
 
 
+class Skill5829 extends BaseHookSkillStub {
+
+    constructor() {
+        super(5829);
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        const player = skill.GetPlayerNice()
+        player.SetBlessed(30, 30000)
+        return true;
+    }
+
+}
+
+
+
 export class SkillManager extends BaseManager {
 
     attach() {
-        new DebugTestSkillXuanCooldown()
-        new DebugTestSkillShaCooldown()
-        new DebugTestSkillChanCooldown()
+        // new DebugTestSkillXuanCooldown()
+        // new DebugTestSkillShaCooldown()
+        // new DebugTestSkillChanCooldown()
         new TongYongSkillList()
-        new BossSkillList()
+        new Skill5829()
+        // new BossSkillList()
     }
 
 }

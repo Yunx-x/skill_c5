@@ -72,6 +72,12 @@ class Skill1740 extends BaseHookSkillStub {
 
     StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
         const player = skill.GetPlayer()
+
+        if (player.GetHasbuff(4119)) {
+            player.SetDispel(120, 4119, 4119, 4119)
+            return true
+        }
+
         player.SetDirecthurt(120, player.GetMaxhp()/2)
         return true
     }
@@ -160,8 +166,8 @@ export class TongYongSkillList {
         // this.RealDmgRatio1_5()
         this.SetInvincible()
 
-        new Skill1970()
-        new Skill1926()
+        // new Skill1970()
+        // new Skill1926()
         new Skill1740()
     }
 }
