@@ -2,7 +2,6 @@ import {BaseManager} from "./base/BaseManager";
 import {HookFuncCore} from "./base/HookFuncCore";
 import {GPlayer} from "./base/gs/GPlayer";
 import {A3DVECTOR} from "./base/gs/A3DVECTOR";
-import {ObjectInterface} from "./base/ObjectInterface";
 
 
 export function buildPlayerMove(cmd: number, seq: number, curPos: number[],

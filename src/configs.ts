@@ -1,4 +1,3 @@
-
 export const badStr = [
     "诛仙",
     "宣传",
@@ -27,18 +26,18 @@ export const badStr = [
 /**
  * 腰带可用的蕴灵符
  */
-export const beltStone=[311000,311001]
+export const beltStone = [311000, 311001]
 
 /**
  * 一键十连蕴灵凭证
  */
-export const ok10UpgradeItem=340058
+export const ok10UpgradeItem = 340058
 
 
 /**
  * 一星Boss
  */
-export const star1Boss=[
+export const star1Boss = [
     632,//蛙王
     633,//悍匪
     634,//神火教长老
@@ -62,7 +61,7 @@ export const star1Boss=[
     10492,//八荒火龙
 ]
 
-export const star2Boss=[
+export const star2Boss = [
     10669,//昆仑奴
     10670,//法莲王
     10671,//归蝶王
@@ -82,7 +81,7 @@ export const star2Boss=[
     13579,//普智
 ]
 
-export const star3Boss=[
+export const star3Boss = [
     22106,//邪恶先锋·涛
     22107,//邪恶先锋·凯
     22251,//背叛者·瞳
@@ -97,7 +96,7 @@ export const star3Boss=[
     35243,//冥界·兽神
 ]
 
-export const star4Boss=[
+export const star4Boss = [
     400019,//镜·朱颜
     400020,//花·绛妃
     400021,//水·鲤仙
@@ -105,20 +104,20 @@ export const star4Boss=[
     400023,//空·铠鬼
 ]
 
-export const star5Boss=[
+export const star5Boss = [
     66999,//烛龙·九阴
     400041,//灵魄·盘古
     400042,//灵魄·女娲
     400043,//混蛋·黑心老G
 ]
 
-export const star6Boss=[
+export const star6Boss = [
     400046,//鸿钧神猴·无支祁
     400047,//混沌主宰
     400048,//异界守护者
 ]
 
-export const starWeek8Boss=[
+export const starWeek8Boss = [
     400002,//万霆
     400003,//川壅
     400005,//月神·望舒
@@ -126,7 +125,7 @@ export const starWeek8Boss=[
     400045,//魔尊
 ]
 
-export const siXiang1Boss=[
+export const siXiang1Boss = [
     53676,
     53681,
     53686,
@@ -134,7 +133,7 @@ export const siXiang1Boss=[
     54017,
 ]
 
-export const siXiang2Boss=[
+export const siXiang2Boss = [
     53677,
     53682,
     53687,
@@ -142,7 +141,7 @@ export const siXiang2Boss=[
     54730,
 ]
 
-export const siXiang3Boss=[
+export const siXiang3Boss = [
     53678,
     53683,
     53688,
@@ -150,7 +149,7 @@ export const siXiang3Boss=[
     54731,
 ]
 
-export const siXiang4Boss=[
+export const siXiang4Boss = [
     53679,
     53684,
     53689,
@@ -158,7 +157,7 @@ export const siXiang4Boss=[
     54732,
 ]
 
-export const siXiang5Boss=[
+export const siXiang5Boss = [
     53680,
     53685,
     53690,
@@ -166,13 +165,31 @@ export const siXiang5Boss=[
     54733,
 ]
 
-export const chunJieBoss=[
+export const chunJieBoss = [
     400055,//相柳
+]
+
+export const kongSangBoss = [
+    100782,
+    100788,
+    100789,
+    100790,
+    100791,
+    100792,
+    100793,
+    100794,
+    100795,
+    100796,
+]
+
+export const kongSangLastBoss=[
+    100797,
+    100798
 ]
 
 //困兽城死亡记录
 type DeathInfo = { time: number; count: number; };
 
 //key-玩家id，value-死亡记录
-export const kongShouCityDeathRecord=new Map<number,DeathInfo>
+export const kongShouCityDeathRecord = new Map<number, DeathInfo>
 

@@ -1,7 +1,6 @@
 import {BaseManager} from "../base/BaseManager";
 import {HookFuncCore} from "../base/HookFuncCore";
 import {
-    chunJieBoss,
     siXiang1Boss,
     siXiang2Boss,
     siXiang3Boss,
@@ -18,7 +17,7 @@ import {
 import {randomInt, zrand} from "../base/ConstFunc";
 
 
-const drop_list_1 = [
+export const drop_list_1 = [
     "340001=2-5",//一星灵珠
     "360111=1-2",//月德（5）
     "360084=1-2",//姚黄（5）
@@ -28,7 +27,7 @@ const drop_list_1 = [
     "360065=1-2",//荧惑星辰5
 ]
 
-const drop_list_2 = [
+export const drop_list_2 = [
     "340002=2-5",//二星灵珠
     "360070=1-2",//月德（10）
     "360085=1-2",//姚黄（姚黄10）
@@ -72,7 +71,7 @@ export const drop_list_5 = [
     "86020=6-8",//混元天符
 ]
 
-const drop_list_6 = [
+export const drop_list_6 = [
     "340006=2-5",//六星灵珠
     "360072=6-8",//月德50
     "360087=6-8",//姚黄50
@@ -86,7 +85,7 @@ const drop_list_6 = [
     "360102=1",//混元天符10
 ]
 
-const drop_list_w = [
+export const drop_list_w = [
     "340006=5-8",//六星灵珠
     "360075=5",//月德200
     "360115=5",//姚黄100
@@ -104,7 +103,7 @@ const drop_list_w = [
 /**
  * 六星Boss额外随机两张至圣符
  */
-const extra_list_6 = [
+export const extra_list_6 = [
     "42894",
     "42895",
     "42896",
@@ -125,7 +124,7 @@ const extra_list_6 = [
 /**
  * 周晚八点Boss额外随机一个混虚玉
  */
-const extra_list_w = [
+export const extra_list_w = [
     "510101",
     "510102",
     "510103",
@@ -157,11 +156,41 @@ export const extra_list_cs = [
     "360098"
 ]
 
+/**
+ * 空桑本Boss掉落
+ */
+export const drop_list_ks = [
+    "360100=1",//彰武碎片5
+    "360072=6-8",//月德50
+    "360089=1-3",//冲天石10
+    "102219=1",//天道血魂
+    "360102=1",//混元天符10
+    "375015=1",//至圣符宝匣（高级）
+    "360119=2",//昭天墨羽小礼包
+]
+/**
+ * 空桑本Boss额外随机鸿运符、16级铁玉
+ */
+export const extra_list_ks = [
+    "330006",//鸿运符
+    "330009",//铁玉16级
+]
+
+/**
+ * 空桑最终Boss
+ */
+export const drop_list_ks_last = [
+    "375003=2",//彰武装备自选1
+    "330009=2",//铁玉16级
+    "360077=1",//月德500
+    "360121=2",//昭天墨羽大礼包
+    "360122=2",//随机混虚玉礼包2
+]
 
 /**
  * 新春Boss掉落
  */
-const drop_list_cj = [
+export const drop_list_cj = [
     "340007=6-10",//七星灵珠
     "360075=8",//月德
     "360115=8",//姚黄
@@ -174,7 +203,7 @@ const drop_list_cj = [
     "375015=5",//至圣符宝匣（高级）
 ]
 
-const extra_list_cj = [
+export const extra_list_cj = [
     "375008",
     "375009",
     "375010",
