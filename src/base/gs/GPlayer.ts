@@ -1483,6 +1483,17 @@ export class GPlayer extends GActiveImp {
         return func(this.pointer);
     }
 
+    StartTalismanBot(): number {
+        //(gplayer_imp *this, bool, bool, unsigned __int8)
+        const func = HookFuncCore.getNativeFunc("_ZN11gplayer_imp16StartTalismanBotEbh", "int32", [
+            "pointer",
+            "bool",
+            "char",
+        ]);
+
+        return func(this.pointer, 1, 0);
+    }
+
     StepMove(offSetX: number, offSetY: number, offSetZ: number): number {
         const func = HookFuncCore.getNativeFunc("_ZN11gplayer_imp8StepMoveERK9A3DVECTOR", "int32", [
             "pointer",
@@ -1499,8 +1510,8 @@ export class GPlayer extends GActiveImp {
 
     //move(const A3DVECTOR & target, int cost_time,int speed,unsigned char move_mode);
     move(target: number[], cost_time: number, move_mode: number) {
-        // const func = HookFuncCore.getNativeFunc("_ZN18gplayer_dispatcher4moveERK9A3DVECTORiih", "void", [
-        const func = HookFuncCore.getNativeFunc("_ZN18gplayer_dispatcher9stop_moveERK9A3DVECTORthh", "void", [
+        const func = HookFuncCore.getNativeFunc("_ZN18gplayer_dispatcher4moveERK9A3DVECTORiih", "void", [
+            //const func = HookFuncCore.getNativeFunc("_ZN18gplayer_dispatcher9stop_moveERK9A3DVECTORthh", "void", [
             "pointer",
             "pointer",
             "int32",
@@ -1508,54 +1519,14 @@ export class GPlayer extends GActiveImp {
             "char",
         ]);
 
-        // 如果有旧的移动定时器，先清除它
-        if (this.moveTimerId !== null) {
-            console.log("[移动] 清除旧的移动定时器");
-            clearInterval(this.moveTimerId);
-            this.moveTimerId = null;
-        }
+        const posPointer = Memory.alloc(12)
+        posPointer.writeFloat(target[0])
+        posPointer.add(4).writeFloat(target[1])
+        posPointer.add(8).writeFloat(target[2])
+        // const speed_x = this.GetSpeedByMode(move_mode)
+        const speed_x = 1
 
-        const currPos = this.GetPos();
-        console.log("[移动] 开始移动 - 当前位置:", `[${currPos[0].toFixed(2)}, ${currPos[1].toFixed(2)}, ${currPos[2].toFixed(2)}]`);
-        console.log("[移动] 目标位置:", `[${target[0].toFixed(2)}, ${target[1].toFixed(2)}, ${target[2].toFixed(2)}]`);
-
-        const speed_x = this.GetSpeedByMode(move_mode)
-        console.log("[移动] 速度:", speed_x, "移动模式:", move_mode)
-        const posList = this.clacMoveList(target, move_mode)
-
-        console.log(`[移动] 生成移动点列表，共 ${posList.length} 个点`);
-        posList.forEach((pos, index) => {
-            console.log(`[移动] 点 ${index}: [${pos[0].toFixed(2)}, ${pos[1].toFixed(2)}, ${pos[2].toFixed(2)}]`);
-        });
-
-        // 当前执行的索引
-        let currentIndex = 0;
-
-        // 每500毫秒执行一个移动点
-        this.moveTimerId = setInterval(() => {
-            if (currentIndex >= posList.length) {
-                // 所有点都执行完毕，清除定时器
-                console.log(`[移动] 所有移动点执行完毕，共执行 ${posList.length} 个点`);
-                // const pos = posList[posList.length-1];
-                // this.stop_move(pos, speed_x, move_mode)
-
-                if (this.moveTimerId !== null) {
-                    clearInterval(this.moveTimerId);
-                    this.moveTimerId = null;
-                }
-                return;
-            }
-
-            const pos = posList[currentIndex];
-            console.log(`[移动] 执行第 ${currentIndex + 1}/${posList.length} 个点: [${pos[0].toFixed(2)}, ${pos[1].toFixed(2)}, ${pos[2].toFixed(2)}]`);
-
-            const posPointer = Memory.alloc(12)
-            posPointer.writeFloat(pos[0])
-            posPointer.add(4).writeFloat(pos[1])
-            posPointer.add(8).writeFloat(pos[2])
-            func(this.getRunner().readPointer(), posPointer, 500, speed_x, move_mode);
-            currentIndex++;
-        }, 500);
+        func(this.getRunner().readPointer(), posPointer, 5000, speed_x, move_mode);
     }
 
     stop_move(target: number[], speed_x: number, move_mode: number) {
@@ -1571,7 +1542,7 @@ export class GPlayer extends GActiveImp {
         posPointer.writeFloat(target[0])
         posPointer.add(4).writeFloat(target[1])
         posPointer.add(8).writeFloat(target[2])
-        func(this.getRunner().readPointer(), posPointer, 500, speed_x, move_mode);
+        func(this.getRunner().readPointer(), posPointer, speed_x, 1, move_mode);
     }
 
     clacMoveList(target: number[], move_mode: number): number[][] {

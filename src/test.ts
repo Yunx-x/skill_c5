@@ -1,7 +1,6 @@
 import {BaseManager} from "./base/BaseManager";
 import {HookFuncCore} from "./base/HookFuncCore";
 import {GPlayer} from "./base/gs/GPlayer";
-import {A3DVECTOR} from "./base/gs/A3DVECTOR";
 
 
 export function buildPlayerMove(cmd: number, seq: number, curPos: number[],
@@ -50,6 +49,48 @@ export function buildPlayerMove(cmd: number, seq: number, curPos: number[],
     return buf;
 }
 
+export function buildPlayerStopMove(cmd: number, seq: number, curPos: number[],
+                                    offsetX: number, offsetY: number, offsetZ: number,
+                                    use_time: number, speed: number, move_mode: number) {
+    const size = 22;
+    const buf = Memory.alloc(size);
+
+    let off = 0;
+
+    // cmd
+    buf.add(off).writeU16(cmd);
+    off += 2;
+
+    // next_pos
+    buf.add(off).writeFloat(curPos[0] + offsetX);
+    off += 4;
+    buf.add(off).writeFloat(curPos[1] + offsetY);
+    off += 4;
+    buf.add(off).writeFloat(curPos[2] + offsetZ);
+    off += 4;
+
+    // speed
+    buf.add(off).writeU16(speed);
+    off += 2;
+
+    // dir
+    buf.add(off).writeU8(0);
+    off += 1;
+
+    // move_mode
+    buf.add(off).writeU8(move_mode);
+    off += 1;
+
+    // cmd_seq
+    buf.add(off).writeU16(seq);
+    off += 2;
+    // use_time
+    buf.add(off).writeU16(use_time);
+
+    return buf;
+}
+
+
 export function t2(player: GPlayer) {
     const func = HookFuncCore.getNativeFunc(
         "_ZN11gplayer_imp15DispatchCommandEiPKvj",
@@ -61,9 +102,17 @@ export function t2(player: GPlayer) {
 
     const pos = player.GetPos()
 
-    const buf = buildPlayerMove(0, controller.add(19 * 2).readU16(), pos, 3, 0, 0, 500, 10, 0x61)
+    const buf2 = buildPlayerStopMove(0, controller.add(19 * 2).readU16() + 2, pos, 3, 0, 0, 500, 8, 0x61)
+    const buf = buildPlayerMove(0, controller.add(19 * 2).readU16() + 1, pos, 3, 0, 0, 500, 8, 0x61)
 
-    func(player.pointer, 0, buf, 33)
+    func(player.pointer, 0x70, buf, 2)
+    func(player.pointer, 0x7, buf2, 22)
+    const buf3 = buildPlayerMove(0, controller.add(19 * 2).readU16() + 4, pos, 3, 0, 0, 500, 8, 0x61)
+    func(player.pointer, 0x0, buf3, 33)
+    const buf4 = buildPlayerMove(0, controller.add(19 * 2).readU16() + 5, pos, 3, 0, 0, 500, 8, 0x61)
+    func(player.pointer, 0x0, buf4, 33)
+    const buf5 = buildPlayerMove(0, controller.add(19 * 2).readU16() + 6, pos, 3, 0, 0, 500, 8, 0x61)
+    func(player.pointer, 0x0, buf5, 33)
 }
 
 
@@ -73,7 +122,7 @@ class TestManager extends BaseManager {
     attach() {
         this.attachHeart();
         this.attachMsg();
-        this.test();
+        // this.test();
     }
 
     /**
@@ -119,9 +168,15 @@ class TestManager extends BaseManager {
                             break;
                         case "1":
                             console.log("1", demoPlayer.getPlayerID())
-                            const pos = player.GetPos()
-                            demoPlayer.move(pos, 500, 0x21)
-                            // demoPlayer.testSay(1057, "狗G，我往上飞了一点，你看到了吗？", 0)
+                            // const pos = player.GetPos()
+                            demoPlayer.ChargeTalismanStamina(30000)
+                            demoPlayer.testSay(1057, "已充满精力", 0)
+                           const result=demoPlayer.StartTalismanBot()
+
+                            // t2(demoPlayer)
+                            // demoPlayer.move(pos, 500, 0x21)
+                            // demoPlayer.stop_move(pos, 1, 0x21)
+                            demoPlayer.testSay(1057, "狗G，"+result, 0)
                             break;
                         case "下飞剑":
                             demoPlayer.PlayerStopFly()
@@ -134,15 +189,25 @@ class TestManager extends BaseManager {
     }
 
     private test() {
+        //  "_ZN11gplayer_imp15DispatchCommandEiPKvj",
+        //         "int32",
+        //         ["pointer", "int32", "pointer", "int32"],
+
+        //(int cs_index,int sid,int uid,const void * buf, size_t size)
+
         Interceptor.attach(
-            HookFuncCore.getFuncAddress("_ZN11gplayer_imp15CheckPlayerMoveERK9A3DVECTORii"),
+            HookFuncCore.getFuncAddress("_Z15handle_user_cmdiiiPKvj"),
             {
                 onEnter(args) {
-                    const player = new GPlayer(args[0]);
-                    const pos = new A3DVECTOR(args[1])
-                    const p2 = args[2];
-                    const p3 = args[3].toInt32();
-                    console.log("checkMove", player.getPlayerID(), p2, p3, pos.x(), pos.y(), pos.z())
+                    const func = HookFuncCore.getNativeFunc(
+                        "_Z15handle_user_cmdiiiPKvj",
+                        "void",
+                        ["int32", "int32", "int32", "pointer", "int32"],
+                    );
+
+                    // const demoPlayer: GPlayer = testManager.allPlayer.get(1057)
+                    console.log("args", args[0], args[1], args[2], args[3], args[4])
+                    func(args[0].toInt32(), args[1].toInt32(), 1057, args[3], args[4].toInt32())
                 },
             },
         );
