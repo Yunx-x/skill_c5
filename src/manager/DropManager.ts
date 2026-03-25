@@ -1,6 +1,8 @@
 import {BaseManager} from "../base/BaseManager";
 import {HookFuncCore} from "../base/HookFuncCore";
 import {
+    kongSangBoss,
+    kongSangLastBoss,
     siXiang1Boss,
     siXiang2Boss,
     siXiang3Boss,
@@ -357,6 +359,18 @@ export class DropManager extends BaseManager {
             dropList: drop_list_w,
             extraList: extra_list_w,
             extraCount: 1
+        });
+
+        dropManager.registerBoss(kongSangBoss, {
+            dropList: drop_list_ks,
+            extraList: extra_list_ks,
+            extraCount: 1
+        });
+
+        dropManager.registerBoss(kongSangLastBoss, {
+            dropList: drop_list_ks_last,
+            extraList: [],
+            extraCount: 0
         });
 
         //itemdataman::generate_item_from_monster(itemdataman *this, unsigned int, int *, unsigned int)
