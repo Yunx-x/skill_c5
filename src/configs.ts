@@ -182,7 +182,7 @@ export const kongSangBoss = [
     100796,
 ]
 
-export const kongSangLastBoss=[
+export const kongSangLastBoss = [
     100797,
     100798
 ]
@@ -193,3 +193,16 @@ type DeathInfo = { time: number; count: number; };
 //key-玩家id，value-死亡记录
 export const kongShouCityDeathRecord = new Map<number, DeathInfo>
 
+
+//检测控制任务
+export const cashTaskId = 61047
+//发放任务完成物品
+export const cashTaskItem = 340067
+//map。元宝数量，任务id
+export const cashTaskMap = new Map<number, number>
+cashTaskMap.set(100000, 61048)
+cashTaskMap.set(300000, 61049)
+cashTaskMap.set(500000, 61050)
+cashTaskMap.set(1000000, 61051)
+cashTaskMap.set(1500000, 61052)
+cashTaskMap.set(3000000, 61053)

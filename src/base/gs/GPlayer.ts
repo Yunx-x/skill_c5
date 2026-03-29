@@ -558,6 +558,18 @@ export class GPlayer extends GActiveImp {
     }
 
     /**
+     * 获取商城信息
+     */
+    getMallInfo(): NativePointer {
+        const func = HookFuncCore.getNativeFunc(
+            "_ZN11gplayer_imp8MallInfoEv",
+            "pointer",
+            ["pointer"],
+        );
+        return func(this.pointer);
+    }
+
+    /**
      * 退出师门
      *
      * @param reason 理由（值未知）
@@ -1623,4 +1635,18 @@ export class GPlayer extends GActiveImp {
 
         return func(this.pointer, posPointer, mod, useTime);
     }
+
+    GetTaskInterface(): NativePointer {
+        const ti = Memory.alloc(0x04);
+        const fc = HookFuncCore.getNativeFunc(
+            "_ZN19PlayerTaskInterfaceC2EP11gplayer_imp",
+            "pointer",
+            ["pointer", "pointer"],
+        );
+        fc(ti, this.pointer);
+        return ti;
+    }
+
+
+
 }

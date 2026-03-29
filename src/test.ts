@@ -122,7 +122,7 @@ class TestManager extends BaseManager {
     attach() {
         this.attachHeart();
         this.attachMsg();
-        // this.test();
+        this.test();
     }
 
     /**
@@ -171,12 +171,12 @@ class TestManager extends BaseManager {
                             // const pos = player.GetPos()
                             demoPlayer.ChargeTalismanStamina(30000)
                             demoPlayer.testSay(1057, "已充满精力", 0)
-                           const result=demoPlayer.StartTalismanBot()
+                            const result = demoPlayer.StartTalismanBot()
 
                             // t2(demoPlayer)
                             // demoPlayer.move(pos, 500, 0x21)
                             // demoPlayer.stop_move(pos, 1, 0x21)
-                            demoPlayer.testSay(1057, "狗G，"+result, 0)
+                            demoPlayer.testSay(1057, "狗G，" + result, 0)
                             break;
                         case "下飞剑":
                             demoPlayer.PlayerStopFly()
@@ -189,25 +189,13 @@ class TestManager extends BaseManager {
     }
 
     private test() {
-        //  "_ZN11gplayer_imp15DispatchCommandEiPKvj",
-        //         "int32",
-        //         ["pointer", "int32", "pointer", "int32"],
-
-        //(int cs_index,int sid,int uid,const void * buf, size_t size)
-
         Interceptor.attach(
-            HookFuncCore.getFuncAddress("_Z15handle_user_cmdiiiPKvj"),
+            HookFuncCore.getFuncAddress("_Z18player_cash_notifyii"),
             {
                 onEnter(args) {
-                    const func = HookFuncCore.getNativeFunc(
-                        "_Z15handle_user_cmdiiiPKvj",
-                        "void",
-                        ["int32", "int32", "int32", "pointer", "int32"],
-                    );
-
-                    // const demoPlayer: GPlayer = testManager.allPlayer.get(1057)
-                    console.log("args", args[0], args[1], args[2], args[3], args[4])
-                    func(args[0].toInt32(), args[1].toInt32(), 1057, args[3], args[4].toInt32())
+                    const roleid = args[0].toInt32()
+                    const cash_plus_used = args[1].toInt32()
+                    console.log(roleid, cash_plus_used)
                 },
             },
         );
