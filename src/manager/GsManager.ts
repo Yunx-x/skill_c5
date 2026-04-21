@@ -158,7 +158,7 @@ class GsManager extends BaseManager {
                 );
                 if (player !== undefined) {
                     if (input_msg.indexOf("11") !== -1) {
-                        player.DeliverTaskItem(340066, 1)
+                        gsManager.test(player)
                         return;
                     }
 
@@ -793,12 +793,32 @@ class GsManager extends BaseManager {
         );
     }
 
-    private test(player: NativePointer) {
-        const funcName = "_ZN11gplayer_imp19PlayerClearStarSoulEv";
-        const address = HookFuncCore.getFuncAddress(funcName);
-        const originFunc = HookFuncCore.getNativeFunc(funcName, "int32", ["pointer"]);
-        originFunc(player)
+    //清除星魂数据
+    // private test(player: NativePointer) {
+    //     const funcName = "_ZN11gplayer_imp19PlayerClearStarSoulEv";
+    //     const address = HookFuncCore.getFuncAddress(funcName);
+    //     const originFunc = HookFuncCore.getNativeFunc(funcName, "int32", ["pointer"]);
+    //     originFunc(player)
+    // }
+
+    private test(player:GPlayer){
+
+
+
+
+
+        // const address = HookFuncCore.getFuncAddress(
+        //     "_ZN11gplayer_imp19EventUpdateLivenessEii",
+        // );
+        //
+        // Interceptor.attach(address, {
+        //     onEnter(args) {
+        //         const input_player_id = args[2].toInt32();
+        //
+        //     },
+        // });
     }
+
 }
 
 export const gsManager = new GsManager();

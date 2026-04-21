@@ -1,119 +1,41 @@
 import {BaseManager} from "./base/BaseManager";
 import {HookFuncCore} from "./base/HookFuncCore";
 import {GPlayer} from "./base/gs/GPlayer";
+import {StdMapIntIntDump, StdMapIntIntGet} from "./utils/StdMapIntInt";
 
 
-export function buildPlayerMove(cmd: number, seq: number, curPos: number[],
-                                offsetX: number, offsetY: number, offsetZ: number,
-                                use_time: number, speed: number, move_mode: number) {
-    const size = 33;
-    const buf = Memory.alloc(size);
-
-    let off = 0;
-
-    // cmd
-    buf.add(off).writeU16(cmd);
-    off += 2;
-
-    // cur_pos
-    buf.add(off).writeFloat(curPos[0]);
-    off += 4;
-    buf.add(off).writeFloat(curPos[1]);
-    off += 4;
-    buf.add(off).writeFloat(curPos[2]);
-    off += 4;
-
-    // next_pos
-    buf.add(off).writeFloat(curPos[0] + offsetX);
-    off += 4;
-    buf.add(off).writeFloat(curPos[1] + offsetY);
-    off += 4;
-    buf.add(off).writeFloat(curPos[2] + offsetZ);
-    off += 4;
-
-    // use_time
-    buf.add(off).writeU16(use_time);
-    off += 2;
-
-    // speed
-    buf.add(off).writeU16(speed);
-    off += 2;
-
-    // move_mode
-    buf.add(off).writeU8(move_mode);
-    off += 1;
-
-    // cmd_seq
-    buf.add(off).writeU16(seq);
-
-    return buf;
-}
-
-export function buildPlayerStopMove(cmd: number, seq: number, curPos: number[],
-                                    offsetX: number, offsetY: number, offsetZ: number,
-                                    use_time: number, speed: number, move_mode: number) {
-    const size = 22;
-    const buf = Memory.alloc(size);
-
-    let off = 0;
-
-    // cmd
-    buf.add(off).writeU16(cmd);
-    off += 2;
-
-    // next_pos
-    buf.add(off).writeFloat(curPos[0] + offsetX);
-    off += 4;
-    buf.add(off).writeFloat(curPos[1] + offsetY);
-    off += 4;
-    buf.add(off).writeFloat(curPos[2] + offsetZ);
-    off += 4;
-
-    // speed
-    buf.add(off).writeU16(speed);
-    off += 2;
-
-    // dir
-    buf.add(off).writeU8(0);
-    off += 1;
-
-    // move_mode
-    buf.add(off).writeU8(move_mode);
-    off += 1;
-
-    // cmd_seq
-    buf.add(off).writeU16(seq);
-    off += 2;
-    // use_time
-    buf.add(off).writeU16(use_time);
-
-    return buf;
-}
-
-
-export function t2(player: GPlayer) {
+export function GetLivenessCfg(): NativePointer {
     const func = HookFuncCore.getNativeFunc(
-        "_ZN11gplayer_imp15DispatchCommandEiPKvj",
-        "int32",
-        ["pointer", "int32", "pointer", "int32"],
+        "_ZN15player_template14GetLivenessCfgEv",
+        "pointer",
+        [],
     );
-
-    const controller = player.pointer.add(3 * 4).readPointer()
-
-    const pos = player.GetPos()
-
-    const buf2 = buildPlayerStopMove(0, controller.add(19 * 2).readU16() + 2, pos, 3, 0, 0, 500, 8, 0x61)
-    const buf = buildPlayerMove(0, controller.add(19 * 2).readU16() + 1, pos, 3, 0, 0, 500, 8, 0x61)
-
-    func(player.pointer, 0x70, buf, 2)
-    func(player.pointer, 0x7, buf2, 22)
-    const buf3 = buildPlayerMove(0, controller.add(19 * 2).readU16() + 4, pos, 3, 0, 0, 500, 8, 0x61)
-    func(player.pointer, 0x0, buf3, 33)
-    const buf4 = buildPlayerMove(0, controller.add(19 * 2).readU16() + 5, pos, 3, 0, 0, 500, 8, 0x61)
-    func(player.pointer, 0x0, buf4, 33)
-    const buf5 = buildPlayerMove(0, controller.add(19 * 2).readU16() + 6, pos, 3, 0, 0, 500, 8, 0x61)
-    func(player.pointer, 0x0, buf5, 33)
+    return func();
 }
+
+export function MapFindIntKey(map: NativePointer, key: number): NativePointer {
+    // 已验证：该项目目标进程使用 sret-first 形态：find(outIter, this, &key)
+    const addr = HookFuncCore.getFuncAddress("_ZNSt3mapIiiSt4lessIiESaISt4pairIKiiEEE4findERS3_");
+    const outIter = Memory.alloc(0x20);
+    for (let i = 0; i < 0x20; i++) outIter.add(i).writeU8(0);
+    const keyPtr = Memory.alloc(4);
+    keyPtr.writeS32(key);
+    const f = new NativeFunction(addr, "pointer", ["pointer", "pointer", "pointer"], "default");
+    f(outIter, map, keyPtr);
+    return outIter;
+}
+
+export function MapEnd(map: NativePointer): NativePointer {
+    // 已验证：end(outIter, this)
+    const addr = HookFuncCore.getFuncAddress("_ZNSt3mapIiiSt4lessIiESaISt4pairIKiiEEE3endEv");
+    const outIter = Memory.alloc(0x20);
+    for (let i = 0; i < 0x20; i++) outIter.add(i).writeU8(0);
+    const f = new NativeFunction(addr, "pointer", ["pointer", "pointer"], "default");
+    f(outIter, map);
+    return outIter;
+}
+
+
 
 
 class TestManager extends BaseManager {
@@ -155,34 +77,20 @@ class TestManager extends BaseManager {
                     `player_id:${input_player_id} msg:${input_msg} channel:${input_channel}`,
                 );
 
-                if (player !== undefined && input_player_id == 1025) {
-                    const demoPlayer: GPlayer = testManager.allPlayer.get(1057);
-                    const cmd = input_msg.trim().replace("\n", "").replace("", "").replace("\t", "")
-                    switch (cmd) {
-                        case "上飞剑":
-                            console.log("开始飞剑", demoPlayer.getPlayerID())
-                            demoPlayer.ChargeTalismanStamina(30000)
-                            demoPlayer.testSay(1057, "已充满精力", 0)
-                            demoPlayer.PlayerStartFly()
-                            demoPlayer.testSay(1057, "狗G，我飞起来了", 0)
-                            break;
-                        case "1":
-                            console.log("1", demoPlayer.getPlayerID())
-                            // const pos = player.GetPos()
-                            demoPlayer.ChargeTalismanStamina(30000)
-                            demoPlayer.testSay(1057, "已充满精力", 0)
-                            const result = demoPlayer.StartTalismanBot()
+                if (player !== undefined) {
+                    const cfg = GetLivenessCfg();
 
-                            // t2(demoPlayer)
-                            // demoPlayer.move(pos, 500, 0x21)
-                            // demoPlayer.stop_move(pos, 1, 0x21)
-                            demoPlayer.testSay(1057, "狗G，" + result, 0)
-                            break;
-                        case "下飞剑":
-                            demoPlayer.PlayerStopFly()
-                            demoPlayer.testSay(1057, "狗G，我落下来了", 0)
-                            break;
-                    }
+                    // 已验证：这里用 byte offset 的 cfg+460 是正确的 std::map<int,int>
+                    const mapField = cfg.add(436);
+                    const asPtr = mapField.readPointer();
+                    const mapObj =Process.findRangeByAddress(asPtr) !== null ? asPtr : mapField;
+
+                    // const testKey = 12844; // 改成你想测的 key
+                    // const value = StdMapIntIntGet(mapObj, testKey);
+                    // console.log("[map<int,int>]", "mapObj=", mapObj, "key=", testKey, "value=", value);
+
+                    StdMapIntIntDump(mapObj, 50);
+
                 }
             },
         });
