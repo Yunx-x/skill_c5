@@ -27,6 +27,7 @@ class GsManager extends BaseManager {
         this.fixCaoMiaoBug();
         this.CatchPetSuccess();
         this.TransferEquipmentAttr2();
+        this.test()
     }
 
     /**
@@ -158,7 +159,6 @@ class GsManager extends BaseManager {
                 );
                 if (player !== undefined) {
                     if (input_msg.indexOf("11") !== -1) {
-                        gsManager.test(player)
                         return;
                     }
 
@@ -801,22 +801,19 @@ class GsManager extends BaseManager {
     //     originFunc(player)
     // }
 
-    private test(player:GPlayer){
+    private test(){
+        const address = HookFuncCore.getFuncAddress(
+            "_ZN11gplayer_imp19EventUpdateLivenessEii",
+        );
 
-
-
-
-
-        // const address = HookFuncCore.getFuncAddress(
-        //     "_ZN11gplayer_imp19EventUpdateLivenessEii",
-        // );
-        //
-        // Interceptor.attach(address, {
-        //     onEnter(args) {
-        //         const input_player_id = args[2].toInt32();
-        //
-        //     },
-        // });
+        Interceptor.attach(address, {
+            onEnter(args) {
+                const playerPointer = args[0];
+                const liveness_type = args[1].toInt32();
+                const param = args[2].toInt32();
+                console.log(liveness_type, param);
+            },
+        });
     }
 
 }
