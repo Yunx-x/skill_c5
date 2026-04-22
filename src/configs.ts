@@ -206,3 +206,52 @@ cashTaskMap.set(500000, 61050)
 cashTaskMap.set(1000000, 61051)
 cashTaskMap.set(1500000, 61052)
 cashTaskMap.set(3000000, 61053)
+
+
+//任务活跃度table
+export const taskLivenessTable = new Map<number, string>
+taskLivenessTable.set(61003,"2-1")//每日一挂
+taskLivenessTable.set(61022,"3-1")//手可摘星辰
+taskLivenessTable.set(61023,"3-1")//化气为豆
+taskLivenessTable.set(61024,"3-1")//天书奇谭
+taskLivenessTable.set(61040,"3-3")//雪浪宝藏
+taskLivenessTable.set(61070,"2-2")//一星挑战
+taskLivenessTable.set(61110,"3-2")//二星挑战
+taskLivenessTable.set(61150,"4-2")//三星挑战
+taskLivenessTable.set(61200,"5-2")//四星挑战
+taskLivenessTable.set(61220,"6-2")//五星挑战
+taskLivenessTable.set(11264,"5-1")//钓鱼
+taskLivenessTable.set(61250,"5-1")//征讨·无支祁
+taskLivenessTable.set(61251,"5-1")//征讨·混沌主宰
+taskLivenessTable.set(61252,"5-1")//征讨·异界守护者
+taskLivenessTable.set(38880,"3-1")//青云
+taskLivenessTable.set(38878,"3-1")//天墟
+taskLivenessTable.set(29736,"3-1")//十神
+taskLivenessTable.set(36902,"3-1")//五毒
+taskLivenessTable.set(61253,"5-1")//周常·万霆
+taskLivenessTable.set(61254,"5-1")//周常·川壅
+taskLivenessTable.set(61255,"5-1")//周常·蚩尤
+taskLivenessTable.set(61256,"5-1")//周常·月神
+taskLivenessTable.set(61257,"5-1")//周常·魔尊
+taskLivenessTable.set(61258,"5-1")//周常·困兽城主
+
+//地图活跃度table
+export const mapLivenessTable = new Map<number, string>
+mapLivenessTable.set(536,"3-1")//四象
+mapLivenessTable.set(542,"4-5")//财神
+mapLivenessTable.set(528,"3-1")//云渺
+mapLivenessTable.set(443,"3-1")//南土
+mapLivenessTable.set(599,"3-1")//空桑
+mapLivenessTable.set(500,"3-1")//兽神
+
+//特殊活跃度table
+export const specialLivenessTable = new Map<number, string>
+specialLivenessTable.set(5001,"2-1")
+specialLivenessTable.set(5002,"3-1")
+specialLivenessTable.set(5003,"4-1")
+specialLivenessTable.set(5004,"5-1")
+specialLivenessTable.set(5005,"6-1")
+specialLivenessTable.set(5006,"3-5")
+specialLivenessTable.set(5007,"2-5")
+specialLivenessTable.set(5008,"5-1")
+specialLivenessTable.set(5009,"2-1")

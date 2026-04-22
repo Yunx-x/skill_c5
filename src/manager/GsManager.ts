@@ -1,7 +1,15 @@
 import {BaseManager} from "../base/BaseManager";
 import {HookFuncCore} from "../base/HookFuncCore";
 import {GPlayer} from "../base/gs/GPlayer";
-import {badStr, beltStone, kongShouCityDeathRecord, ok10UpgradeItem} from "../configs";
+import {
+    badStr,
+    beltStone,
+    kongShouCityDeathRecord,
+    mapLivenessTable,
+    ok10UpgradeItem,
+    specialLivenessTable,
+    taskLivenessTable
+} from "../configs";
 import {dataMan} from "../main";
 import {ItemBody} from "../base/gs/ItemBody";
 import {EquipItem} from "../base/gs/EquipItem";
@@ -10,9 +18,12 @@ import {GNpcImp} from "../base/gs/GNpcImp";
 import {XID} from "../base/gs/XID";
 import {getCurrentDate2Seconds} from "../utils/DateUtil";
 import {Item} from "../base/gs/Item";
+import {StdMapIntIntDump, StdMapIntIntForEach, StdMapIntIntGet, StdMultiMapIntIntInsert} from "../utils/StdMapIntInt";
+import {LivenessCfg} from "../base/gs/LivenessCfg";
 
 class GsManager extends BaseManager {
     allPlayer = new Map<number, any>();
+    livenessPlayerMap = new Map<number, Map<string, number>>();
 
     attach() {
         this.attachHeart();
@@ -27,7 +38,7 @@ class GsManager extends BaseManager {
         this.fixCaoMiaoBug();
         this.CatchPetSuccess();
         this.TransferEquipmentAttr2();
-        this.test()
+        this.EventUpdateLiveness()
     }
 
     /**
@@ -159,6 +170,17 @@ class GsManager extends BaseManager {
                 );
                 if (player !== undefined) {
                     if (input_msg.indexOf("11") !== -1) {
+                        StdMapIntIntDump(LivenessCfg.getTaskindexs(), 100);
+                        console.log("=======================")
+                        StdMapIntIntDump(LivenessCfg.getMapindexs(), 100);
+                        console.log("=======================")
+                        StdMapIntIntDump(LivenessCfg.getSpecialindexs(), 100);
+                        console.log("=======================")
+                        StdMapIntIntDump(LivenessCfg.getIndex2typeid(), 100);
+                        console.log("=======================")
+                        console.log("当前活跃度分数", player.getTodayLivenessScore())
+                        console.log("当前已完成活跃度列表")
+                        StdMapIntIntDump(player.getTodayLiveness(), 100);
                         return;
                     }
 
@@ -801,19 +823,86 @@ class GsManager extends BaseManager {
     //     originFunc(player)
     // }
 
-    private test(){
+    private EventUpdateLiveness() {
         const address = HookFuncCore.getFuncAddress(
             "_ZN11gplayer_imp19EventUpdateLivenessEii",
         );
 
-        Interceptor.attach(address, {
-            onEnter(args) {
-                const playerPointer = args[0];
-                const liveness_type = args[1].toInt32();
-                const param = args[2].toInt32();
-                console.log(liveness_type, param);
-            },
-        });
+        Interceptor.replace(
+            address,
+            new NativeCallback(
+                (playerPointer, liveness_type, param) => {
+                    let scoreTable: Map<number, string> = null
+                    let liveness_id: number | null = null
+                    if (liveness_type == 0) {
+                        scoreTable = taskLivenessTable
+                        liveness_id = StdMapIntIntGet(LivenessCfg.getTaskindexs(), param)
+                    } else if (liveness_type == 1) {
+                        scoreTable = mapLivenessTable
+                        liveness_id = StdMapIntIntGet(LivenessCfg.getMapindexs(), param)
+                    } else if (liveness_type == 2) {
+                        scoreTable = specialLivenessTable
+                        liveness_id = StdMapIntIntGet(LivenessCfg.getSpecialindexs(), param)
+                    }
+
+                    console.log("111", liveness_id, scoreTable)
+
+                    if (liveness_id != null && liveness_id != -1 && scoreTable != null) {
+                        const liveness_type_id = StdMapIntIntGet(LivenessCfg.getIndex2typeid(), liveness_id)
+                        console.log("liveness_type_id",liveness_type_id)
+                        if (liveness_type_id > -1 && liveness_type_id < 15 && scoreTable.has(param)) {
+                            const scoreData = scoreTable.get(param).split("-")
+                            const score = Number.parseInt(scoreData[0].trim())
+                            const maxCount = Number.parseInt(scoreData[1].trim())
+                            const player = new GPlayer(playerPointer)
+                            const playerId = player.getPlayerID()
+                            let livenessInfo = gsManager.livenessPlayerMap.get(playerId)
+
+                            if (livenessInfo == null) {
+                                gsManager.livenessPlayerMap.set(playerId, new Map())
+                                livenessInfo = gsManager.livenessPlayerMap.get(playerId)
+                            }
+
+                            const k = liveness_type + "|" + param
+                            let count = livenessInfo.get(k)
+                            count = count == null ? 0 : count
+                            console.log("info", count, score, maxCount)
+                            if (count < maxCount) {
+                                player.setTodayLivenessScore(player.getTodayLivenessScore() + score)
+
+                                livenessInfo.set(k, count + 1)
+                                gsManager.livenessPlayerMap.set(playerId, livenessInfo)
+
+                                if (count + 1 >= maxCount) {
+                                    //插入到完成列表内
+                                    const currentLiveness = player.getTodayLiveness()
+                                    let hasLiveness = false
+                                    StdMapIntIntForEach(currentLiveness, (key, value, node) => {
+                                        if (key == liveness_type_id && value == liveness_id) {
+                                            hasLiveness = true
+                                            console.log("查到", hasLiveness)
+                                            return
+                                        }
+                                    })
+
+                                    if (!hasLiveness) {
+                                        console.log("插入", liveness_type_id, liveness_id)
+                                        StdMultiMapIntIntInsert(currentLiveness, liveness_type_id, liveness_id)
+                                    }
+                                }
+
+                                //通知客户端更新
+                                console.log("通知")
+                                player.liveness_notify()
+                            }
+                        }
+                    }
+
+                    return 1
+                },
+                "bool", ["pointer", "int32", "int32"]
+            ),
+        );
     }
 
 }

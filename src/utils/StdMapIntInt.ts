@@ -166,3 +166,32 @@ export function StdMapIntIntDump(mapObj: NativePointer, maxItems = 30): void {
     );
 }
 
+const MULTIMAP_INSERT =
+    "_ZNSt8multimapIiiSt4lessIiESaISt4pairIKiiEEE6insertERKS4_";
+
+export function StdMultiMapIntIntInsert(
+    mapObj: NativePointer,
+    key: number,
+    value: number
+): NativePointer {
+    const outIter = Memory.alloc(ITER_SIZE);
+    zeroMem(outIter, ITER_SIZE);
+
+    // 构造 pair<const int,int>
+    const pair = Memory.alloc(8);
+    pair.writeS32(key);
+    pair.add(4).writeS32(value);
+
+    const addr = HookFuncCore.getFuncAddress(MULTIMAP_INSERT);
+
+    const insertFunc = new NativeFunction(
+        addr,
+        "pointer",
+        ["pointer", "pointer", "pointer"], // sret-first
+        "default"
+    );
+
+    insertFunc(outIter, mapObj, pair);
+
+    return outIter.readPointer();
+}

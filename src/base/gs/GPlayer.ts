@@ -1647,6 +1647,31 @@ export class GPlayer extends GActiveImp {
         return ti;
     }
 
+    /**
+     * 当前已完成的活跃度列表
+     * multimap
+     */
+    getTodayLiveness(): NativePointer {
+        return this.pointer.add(28452)
+    }
 
+    /**
+     * 获取当前活跃度分数
+     */
+    getTodayLivenessScore(): number {
+        return this.pointer.add(7112 * 4).readInt()
+    }
+
+    /**
+     * 设置当前活跃度分数
+     */
+    setTodayLivenessScore(score: number) {
+        this.pointer.add(7112 * 4).writeInt(score)
+    }
+
+    liveness_notify() {
+        const func = HookFuncCore.getNativeFunc("_ZN18gplayer_dispatcher15liveness_notifyEv", "void", ["pointer"]);
+        func(this.getRunner().readPointer());
+    }
 
 }
