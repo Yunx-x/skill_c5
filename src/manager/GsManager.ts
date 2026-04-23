@@ -824,14 +824,21 @@ class GsManager extends BaseManager {
     // }
 
     private EventUpdateLiveness() {
-        const address = HookFuncCore.getFuncAddress(
-            "_ZN11gplayer_imp19EventUpdateLivenessEii",
-        );
-
+        const address = HookFuncCore.getFuncAddress("_ZN11gplayer_imp19EventUpdateLivenessEii");
         Interceptor.replace(
             address,
             new NativeCallback(
                 (playerPointer, liveness_type, param) => {
+                    if (liveness_type == 2) {
+                        if (param == 1) {//拍卖
+                            param = 5008
+                        }
+
+                        if (param == 7) {//彩票
+                            param = 5007
+                        }
+                    }
+
                     let scoreTable: Map<number, string> = null
                     let liveness_id: number | null = null
                     if (liveness_type == 0) {
@@ -849,7 +856,7 @@ class GsManager extends BaseManager {
 
                     if (liveness_id != null && liveness_id != -1 && scoreTable != null) {
                         const liveness_type_id = StdMapIntIntGet(LivenessCfg.getIndex2typeid(), liveness_id)
-                        console.log("liveness_type_id",liveness_type_id)
+                        console.log("liveness_type_id", liveness_type_id)
                         if (liveness_type_id > -1 && liveness_type_id < 15 && scoreTable.has(param)) {
                             const scoreData = scoreTable.get(param).split("-")
                             const score = Number.parseInt(scoreData[0].trim())
@@ -901,6 +908,48 @@ class GsManager extends BaseManager {
                     return 1
                 },
                 "bool", ["pointer", "int32", "int32"]
+            ),
+        );
+
+        //使用各种召唤令的时候
+        //(item::LOCATION ,size_t index, gactive_imp* obj,item * parent)
+        const address2 = HookFuncCore.getFuncAddress("_ZNK10item_skill5OnUseEN4item8LOCATIONEjP11gactive_impPS0_");
+        Interceptor.replace(
+            address2,
+            new NativeCallback(
+                (item_skill, location, index, obj, item) => {
+                    const originFunc = HookFuncCore.getNativeFunc("_ZNK10item_skill5OnUseEN4item8LOCATIONEjP11gactive_impPS0_", "int32", ["pointer", "int32", "pointer", "pointer"]);
+                    const result = originFunc(location, index, obj, item)
+                    if (result == 1) {
+                        const EventUpdateLivenessFunc = HookFuncCore.getNativeFunc("_ZN11gplayer_imp19EventUpdateLivenessEii", "bool", ["pointer", "int32", "int32"]);
+                        const itemBody = new ItemBody(item_skill)
+                        const itemId = itemBody.GetTID()
+
+                        let param = -1
+                        switch (itemId) {
+                            case 370011:
+                                param = 5001
+                                break
+                            case 370012:
+                                param = 5002
+                                break
+                            case 370013:
+                                param = 5003
+                                break
+                            case 370014:
+                                param = 5004
+                                break
+                            case 370015:
+                                param = 5005
+                                break
+                        }
+
+                        EventUpdateLivenessFunc(obj, 2, param)
+                    }
+
+                    return result
+                },
+                "int32", ["pointer", "pointer", "int32", "pointer", "pointer"]
             ),
         );
     }
