@@ -28,6 +28,13 @@ void SkillStub::WriteU8(std::size_t offset, uint8_t value) const {
     *reinterpret_cast<uint8_t*>(reinterpret_cast<std::uint8_t*>(ptr_) + offset) = value;
 }
 
+void SkillStub::WriteByte(std::size_t offset, int8_t value) const {
+    if (!ptr_) {
+        return;
+    }
+    *reinterpret_cast<int8_t*>(reinterpret_cast<std::uint8_t*>(ptr_) + offset) = value;
+}
+
 void SkillStub::SetIcon(const char* icon) const {
     char* p = jd::core::Memory::AllocAnsiString(icon);
     if (!p) {

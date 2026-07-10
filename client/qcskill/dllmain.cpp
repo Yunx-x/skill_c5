@@ -1,126 +1,177 @@
-﻿#define MYLIBRARY_EXPORTS  // 在编译 DLL 时定义
+#define MYLIBRARY_EXPORTS
 
 #include <windows.h>
 #include "dllmain.h"
 #include <MinHook.h>
-#include <iostream>
-#include <cstring>  // for memcpy
-#include <vector>   // for std::vector
+#include <cstring>
+#include <vector>
 #include "StringMemoryPool.h"
-#include "QcSkillExt.cpp"
+#include "QcSkillExt.h"
+
+namespace {
+
+constexpr char kTargetModuleName[] = "elementskill.dll";
+constexpr uintptr_t kTargetFuncRva = 0x1630;
+constexpr DWORD kModuleWaitTimeoutMs = 60000;
+
+typedef void* (__cdecl* SkillFuncType)(int);
+SkillFuncType g_originalFunc = nullptr;
+void* g_targetFunc = nullptr;
+bool g_hookInstalled = false;
+HANDLE g_initThread = nullptr;
+
+std::vector<void*> g_copiedStructs;
+
+void LogDebug(const char* msg) {
+    OutputDebugStringA("[qcskill] ");
+    OutputDebugStringA(msg);
+    OutputDebugStringA("\n");
+}
+
+#ifdef _DEBUG
+void NotifyUser(const char* text, const char* title) {
+    MessageBoxA(NULL, text, title, MB_OK | MB_ICONINFORMATION);
+}
+#else
+void NotifyUser(const char* text, const char* /*title*/) {
+    LogDebug(text);
+}
+#endif
+
+HMODULE WaitForModule(const char* name, DWORD timeoutMs) {
+    for (DWORD elapsed = 0; elapsed < timeoutMs; elapsed += 100) {
+        if (HMODULE mod = GetModuleHandleA(name)) {
+            return mod;
+        }
+        Sleep(100);
+    }
+    return nullptr;
+}
+
+void* CopyAndPatch(void* src, void (*patchFn)(void*)) {
+    const size_t structSize = QcSkillExt::GetStructCopySize();
+    void* copy = VirtualAlloc(nullptr, structSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    if (!copy) {
+        LogDebug("VirtualAlloc failed for struct copy");
+        return nullptr;
+    }
+    memcpy(copy, src, structSize);
+    patchFn(copy);
+    g_copiedStructs.push_back(copy);
+    return copy;
+}
+
+void* __cdecl MySkillHook(int id) {
+    void* result = g_originalFunc(id);
+    if (!result) {
+        return nullptr;
+    }
+
+    switch (id) {
+    case 220: {
+        void* patched = CopyAndPatch(result, QcSkillExt::patch220);
+        if (patched) {
+            return patched;
+        }
+        LogDebug("skill 220: copy failed, returning unmodified original");
+        return result;
+    }
+    default:
+        return result;
+    }
+}
+
+bool HookFunction(HMODULE hTargetModule) {
+    g_targetFunc = reinterpret_cast<void*>((uintptr_t)hTargetModule + kTargetFuncRva);
+
+    if (MH_Initialize() != MH_OK) {
+        LogDebug("MH_Initialize failed");
+        return false;
+    }
+
+    if (MH_CreateHook(g_targetFunc, &MySkillHook, reinterpret_cast<void**>(&g_originalFunc)) != MH_OK) {
+        LogDebug("MH_CreateHook failed");
+        MH_Uninitialize();
+        g_targetFunc = nullptr;
+        return false;
+    }
+
+    if (MH_EnableHook(g_targetFunc) != MH_OK) {
+        LogDebug("MH_EnableHook failed");
+        MH_RemoveHook(g_targetFunc);
+        MH_Uninitialize();
+        g_targetFunc = nullptr;
+        g_originalFunc = nullptr;
+        return false;
+    }
+
+    g_hookInstalled = true;
+    NotifyUser("Hook 安装成功", "qcskill");
+    return true;
+}
+
+void UnhookFunction() {
+    if (g_hookInstalled && g_targetFunc) {
+        MH_DisableHook(g_targetFunc);
+        MH_RemoveHook(g_targetFunc);
+        g_hookInstalled = false;
+    }
+
+    for (void* p : g_copiedStructs) {
+        VirtualFree(p, 0, MEM_RELEASE);
+    }
+    g_copiedStructs.clear();
+
+    if (g_targetFunc) {
+        MH_Uninitialize();
+        g_targetFunc = nullptr;
+    }
+
+    StringMemoryPool::FreeAll();
+    g_originalFunc = nullptr;
+}
+
+DWORD WINAPI InitThread(LPVOID /*param*/) {
+    HMODULE hTarget = WaitForModule(kTargetModuleName, kModuleWaitTimeoutMs);
+    if (!hTarget) {
+        LogDebug("等待 elementskill.dll 超时");
+        return 1;
+    }
+
+    LogDebug("已加载 elementskill.dll，开始安装 Hook");
+    if (!HookFunction(hTarget)) {
+        return 1;
+    }
+    return 0;
+}
+
+} // namespace
 
 void MyExportedFunction() {
     MessageBoxA(NULL, "测试弹窗！", "完成", MB_OK | MB_ICONINFORMATION);
 }
 
-typedef void* (__cdecl* SkillFuncType)(int id);
-SkillFuncType g_originalFunc = nullptr;
-
-// 存储复制的结构体指针，用于后续释放
-static std::vector<void*> g_copiedStructs;
-
-void* __cdecl MySkillHook(int id)
-{
-    void* result = g_originalFunc(id);
-    if (!result) {
-        return result;
-    }
-
-    switch (id)
-    {
-        case 220: // 你可以根据需要改成别的 ID
-        {
-            // 估算结构体大小：patch220 修改了索引 95 的字段，所以至少需要 96 个指针大小
-            // 为了安全，我们分配 200 个指针大小的空间
-            const size_t structSize = 200 * sizeof(void*);
-
-            // 分配新内存用于复制结构体
-            void* copiedResult = VirtualAlloc(NULL, structSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-            if (copiedResult) {
-                // 复制原始结构体数据
-                memcpy(copiedResult, result, structSize);
-
-                // 在副本上应用修改
-                QcSkillExt::patch220(copiedResult);
-
-                // 保存副本指针以便后续释放（如果需要）
-                //g_copiedStructs.push_back(copiedResult);
-
-                // 返回修改后的副本给 hook 程序使用
-                return copiedResult;
-            }
-            // 如果分配失败，回退到直接修改原始 result
-            QcSkillExt::patch220(result);
-            break;
-        }
-    }
-
-    return result;
-}
-
-
-// 安装 Hook（由 DllMain 调用）
-void HookFunction(HMODULE hTargetModule)
-{
-    void* targetFunc = reinterpret_cast<void*>((uintptr_t)hTargetModule + 0x1630);
-
-    if (MH_Initialize() != MH_OK) {
-        MessageBoxA(NULL, "MH_Initialize 失败！", "错误", MB_ICONERROR);
-        return;
-    }
-
-    if (MH_CreateHook(targetFunc, &MySkillHook, reinterpret_cast<void**>(&g_originalFunc)) != MH_OK) {
-        MessageBoxA(NULL, "MH_CreateHook 失败！", "错误", MB_ICONERROR);
-        return;
-    }
-
-    if (MH_EnableHook(targetFunc) != MH_OK) {
-        MessageBoxA(NULL, "MH_EnableHook 失败！", "错误", MB_ICONERROR);
-        return;
-    }
-
-    MessageBoxA(NULL, "Hook 安装成功！", "成功", MB_OK | MB_ICONINFORMATION);
-}
-
-
-void UnhookFunction()
-{
-    // 禁用钩子
-    if (MH_DisableHook(&MessageBoxW) != MH_OK) {
-        // 错误处理
-        return;
-    }
-
-    // 释放所有复制的结构体
-    for (size_t i = 0; i < g_copiedStructs.size(); ++i) {
-        VirtualFree(g_copiedStructs[i], 0, MEM_RELEASE);
-    }
-    g_copiedStructs.clear();
-
-    // 清理 MinHook
-    MH_Uninitialize();
-    // 清理字符串池内存
-    StringMemoryPool::FreeAll();
-}
-
-
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved) {
-    if (reason == DLL_PROCESS_ATTACH) {
-        MessageBoxA(NULL, "qcskill.dll 注入成功！", "DLL 注入", MB_OK | MB_ICONINFORMATION);
-
-        // 等待目标模块加载（比如 user32.dll，实际你可以改成你目标 DLL）
-        HMODULE hTarget = NULL;
-        while (!(hTarget = GetModuleHandleA("elementskill.dll"))) {
-            Sleep(100);
+    switch (reason) {
+    case DLL_PROCESS_ATTACH:
+        DisableThreadLibraryCalls(hModule);
+        g_initThread = CreateThread(nullptr, 0, InitThread, nullptr, 0, nullptr);
+        if (!g_initThread) {
+            LogDebug("CreateThread 失败");
         }
+        break;
 
-        MessageBoxA(NULL, "找到 elementskill.dll，准备 Hook", "注入进展", MB_OK | MB_ICONINFORMATION);
-        HookFunction(hTarget);
+    case DLL_PROCESS_DETACH:
+        // lpReserved != NULL 表示进程正在退出，跳过清理
+        if (lpReserved == nullptr) {
+            if (g_initThread) {
+                WaitForSingleObject(g_initThread, 5000);
+                CloseHandle(g_initThread);
+                g_initThread = nullptr;
+            }
+            UnhookFunction();
+        }
+        break;
     }
-
-    if (reason == DLL_PROCESS_DETACH) {
-        UnhookFunction();
-    }
-
     return TRUE;
 }

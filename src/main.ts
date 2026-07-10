@@ -6,8 +6,6 @@ import {lingCaiManager} from "./manager/LingCaiManager";
 import {dropManager} from "./manager/DropManager";
 import {raidDropManager} from "./manager/RaidDropManager";
 // 技能逻辑（预打包脚本），与入口一并打进 dist/main.js
-import "./skill.js";
-import {skillManager} from "./manager/SkillManager";
 import {cashAddManager} from "./manager/CashAddManager";
 
 // 初始化模块基址索引
@@ -25,7 +23,7 @@ dropManager.attach()
 
 raidDropManager.attach()
 
-skillManager.attach()
+// skillManager.attach()
 
 cashAddManager.attach()
 

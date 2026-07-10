@@ -16,14 +16,20 @@ public:
 
     void WriteI32(std::size_t offset, int32_t value) const;
     void WriteU8(std::size_t offset, uint8_t value) const;
+    void WriteByte(std::size_t offset, int8_t value) const;
+
+    void SetType(int8_t v) const { WriteByte(0x38, v); }
+    void SetRangeType(uint8_t v) const { WriteU8(0x3B, v); }
+    
+    void SetOccupation(int32_t v) const { WriteI32(0x08, v); }
+    void SetSkillClass(int32_t v) const { WriteI32(0x156, v); }
+
+    void SetMaxLevel(int32_t v) const { WriteI32(0x0C, v); }
+    void SetMaxLearn(int32_t v) const { WriteI32(0x10, v); }
+
     void SetIcon(const char* icon) const;
     void SetAction(std::size_t index, const char* actionName) const;
 
-    void SetOccupation(int32_t v) const { WriteI32(0x08, v); }
-    void SetMaxLevel(int32_t v) const { WriteI32(0x0C, v); }
-    void SetMaxLearn(int32_t v) const { WriteI32(0x10, v); }
-    void SetSkillClass(int32_t v) const { WriteI32(0x156, v); }
-    void SetRangeType(uint8_t v) const { WriteU8(0x3B, v); }
 
 private:
     void* ptr_;
