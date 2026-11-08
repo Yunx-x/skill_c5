@@ -918,8 +918,8 @@ class GsManager extends BaseManager {
             address2,
             new NativeCallback(
                 (item_skill, location, index, obj, item) => {
-                    const originFunc = HookFuncCore.getNativeFunc("_ZNK10item_skill5OnUseEN4item8LOCATIONEjP11gactive_impPS0_", "int32", ["pointer", "int32", "pointer", "pointer"]);
-                    const result = originFunc(location, index, obj, item)
+                    const originFunc = HookFuncCore.getNativeFunc("_ZNK10item_skill5OnUseEN4item8LOCATIONEjP11gactive_impPS0_", "int32", ["pointer","pointer", "int32", "pointer", "pointer"]);
+                    const result = originFunc(item_skill,location, index, obj, item)
                     if (result == 1) {
                         const EventUpdateLivenessFunc = HookFuncCore.getNativeFunc("_ZN11gplayer_imp19EventUpdateLivenessEii", "bool", ["pointer", "int32", "int32"]);
                         const itemBody = new ItemBody(item_skill)

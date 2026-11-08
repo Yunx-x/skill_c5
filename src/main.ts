@@ -7,6 +7,7 @@ import {dropManager} from "./manager/DropManager";
 import {raidDropManager} from "./manager/RaidDropManager";
 // 技能逻辑（预打包脚本），与入口一并打进 dist/main.js
 import {cashAddManager} from "./manager/CashAddManager";
+import {skillManager} from "./osk/manager/SkillManager";
 
 // 初始化模块基址索引
 HookModuleBase.initializeModuleBaseIndex(Process.enumerateModules());
@@ -23,7 +24,7 @@ dropManager.attach()
 
 raidDropManager.attach()
 
-// skillManager.attach()
+skillManager.attach()
 
 cashAddManager.attach()
 
