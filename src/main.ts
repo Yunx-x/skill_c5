@@ -1,31 +1,27 @@
-import {DataMan} from "./base/gs/DataMan";
-import {killBossLastManager} from "./manager/KillBossLastManager";
-import {gsManager} from "./manager/GsManager";
 import {HookModuleBase} from "./base/HookModuleBase";
-import {lingCaiManager} from "./manager/LingCaiManager";
-import {dropManager} from "./manager/DropManager";
-import {raidDropManager} from "./manager/RaidDropManager";
 // 技能逻辑（预打包脚本），与入口一并打进 dist/main.js
-import {cashAddManager} from "./manager/CashAddManager";
-import {skillManager} from "./osk/manager/SkillManager";
+import {uniqFactionPkManager} from "./uniqfactionpk/UniqFactionPkManager";
 
 // 初始化模块基址索引
 HookModuleBase.initializeModuleBaseIndex(Process.enumerateModules());
 
-export const dataMan = new DataMan();
+// export const dataMan = new DataMan();
+export const dataMan = undefined
 
-gsManager.attach()
+// gsManager.attach()
+//
+// killBossLastManager.attach()
+//
+// lingCaiManager.attach()
+//
+// dropManager.attach()
+//
+// raidDropManager.attach()
+//
+// skillManager.attach()
+//
+// cashAddManager.attach()
 
-killBossLastManager.attach()
-
-lingCaiManager.attach()
-
-dropManager.attach()
-
-raidDropManager.attach()
-
-skillManager.attach()
-
-cashAddManager.attach()
+uniqFactionPkManager.attach()
 
 console.log(`已挂载到进程：${Process.id}`);
