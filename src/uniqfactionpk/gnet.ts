@@ -1,18 +1,18 @@
 import {HookFuncCore} from "../base/HookFuncCore";
 import {attachRaid} from "./raid";
-import {intAt} from "./wire";
-import {askMissBody, beginForFaction, handle, inviteLocalsid, onInviteAsk, onInviteResult, REPLIES, REQUESTS, roleOf, setLinkSend, setPushRole, setRelay, takeRegister, T} from "./logic";
+import {intAt, u16Name, W} from "./wire";
+import {askMissBody, beginForFaction, handle, inviteLocalsid, noteLeave, onInviteAsk, onInviteResult, onItemReply, REPLIES, REQUESTS, roleOf, setAnnounce, setAskItem, setCentral, setFactionLevel, setGate, setLinkSend, setLocalWar, setMemberSend, setPushRole, setRelay, setRoster, takeRegister, T} from "./logic";
 import {attachCentral, canReachCentral, forwardRequest, isCentralServer, onResend, shouldForward, shouldRouteReply} from "./central";
 
 const IDA_BASE = 0x8048000;
 
 function trackedTypes(): number[] {
-    return REQUESTS.concat(REPLIES).concat([T.fight, T.register, T.resend, T.inviteAsk, T.inviteResult]);
+    return REQUESTS.concat(REPLIES).concat([T.fight, T.register, T.resend, T.inviteAsk, T.inviteResult, T.roomSync, T.item, T.itemRe]);
 }
 const bodies = new Map<string, number[]>();
 const sessions = new Map<number, {manager: NativePointer; sid: number}>();
 
-let mode: "glink" | "delivery" = "glink";
+let mode: "glink" | "delivery" | "gs" = "glink";
 let vt: NativePointer = ptr(0);
 let nw: NativeFunction<NativePointer, [number]> | null = null;
 let delFn: NativeFunction<void, [NativePointer]> | null = null;
@@ -126,6 +126,15 @@ function onProcess(self: NativePointer, manager: NativePointer, sid: number) {
     const type = self.add(8).readU32();
     const body = bodies.get(self.toString()) || [];
     const role = roleOf(type, body);
+    if (mode === "gs" && type === T.item) {
+        answerItem(body);
+        return;
+    }
+    if (mode === "delivery" && type === T.itemRe) {
+        onItemReply(body);
+        return;
+    }
+    if (type === T.item || type === T.itemRe) return;
     if (REQUESTS.indexOf(type) >= 0 && role) {
         sessions.set(role, {manager, sid});
     }
@@ -250,17 +259,20 @@ function installCallbacks() {
     for (let i = 0; i < slots.length; i++) vt.add(i * 4).writePointer(slots[i]);
 }
 
-function skipUnknownPolicy(addr: NativePointer) {
-    const stolen = 6;
-    const raw = new Uint8Array(addr.readByteArray(stolen) as ArrayBuffer);
-    const prologue = raw[0] === 0x55 && raw[1] === 0x89 && raw[2] === 0xe5
-        && raw[3] === 0x57 && raw[4] === 0x56 && raw[5] === 0x53;
-    if (!prologue) {
-        const hex = Array.from(raw).map((b) => b.toString(16)).join(' ');
-        console.log('[UniqFactionPk] CheckPolicy prologue mismatch ' + addr + ' ' + hex);
+function skipUnknownPolicy(addr: NativePointer, only?: number[]) {
+    const head = new Uint8Array(addr.readByteArray(7) as ArrayBuffer);
+    const six = head[0] === 0x55 && head[1] === 0x89 && head[2] === 0xe5
+        && head[3] === 0x57 && head[4] === 0x56 && head[5] === 0x53;
+    const seven = head[0] === 0x55 && head[1] === 0x57 && head[2] === 0x56 && head[3] === 0x53
+        && head[4] === 0x83 && head[5] === 0xec && head[6] === 0x2c;
+    const stolen = six ? 6 : seven ? 7 : 0;
+    if (!stolen) {
+        const hex = Array.from(head).map((b) => b.toString(16)).join(" ");
+        console.log("[UniqFactionPk] CheckPolicy prologue mismatch " + addr + " " + hex);
         return;
     }
-    const types = trackedTypes();
+    const raw = head.subarray(0, stolen);
+    const types = only && only.length ? only : trackedTypes();
     const list = Memory.alloc(4 * (types.length + 1));
     for (let i = 0; i < types.length; i++) list.add(i * 4).writeU32(types[i] >>> 0);
     list.add(types.length * 4).writeU32(0);
@@ -318,9 +330,9 @@ function skipUnknownPolicy(addr: NativePointer) {
     console.log('[UniqFactionPk] CheckPolicy cave ' + cave + ' entry ' + addr);
 }
 
-function registerTypes(ctorAddr: NativePointer) {
+function registerTypes(ctorAddr: NativePointer, only?: number[]) {
     const ctor = new NativeFunction(ctorAddr, "pointer", ["pointer", "uint32"]);
-    const types = trackedTypes();
+    const types = only && only.length ? only : trackedTypes();
     for (let i = 0; i < types.length; i++) {
         const obj = nw!(32);
         ctor(obj, types[i]);
@@ -365,6 +377,237 @@ function restoreOnEnter(addr: NativePointer) {
             }
         },
     });
+}
+
+
+const ITEM_ID = 71560;
+let findPlayerFn: NativeFunction<number, [number]> | null = null;
+let playerOfFn: NativeFunction<NativePointer, [number]> | null = null;
+let aliveFn: NativeFunction<number, [NativePointer]> | null = null;
+let countFn: NativeFunction<number, [NativePointer, number]> | null = null;
+let takeFn: NativeFunction<number, [NativePointer, number, number]> | null = null;
+let gsClientSend: NativeFunction<number, [number, NativePointer]> | null = null;
+
+function answerItem(body: number[]) {
+    const role = intAt(body, 0);
+    const item = intAt(body, 1);
+    const count = intAt(body, 2);
+    const action = intAt(body, 3);
+    const token = intAt(body, 4);
+    let ok = 0;
+    try {
+        if (findPlayerFn && playerOfFn && aliveFn && countFn && takeFn) {
+            const index = findPlayerFn(role);
+            if (index >= 0) {
+                const player = playerOfFn(index);
+                if (!player.isNull() && aliveFn(player) !== 0) {
+                    const imp = player.add(0x44).readPointer();
+                    if (!imp.isNull()) {
+                        const have = countFn(imp.add(0x7e0), item);
+                        if (have >= count && count > 0) {
+                            if (action === 2) {
+                                takeFn(imp, item, count);
+                                ok = countFn(imp.add(0x7e0), item) < have ? 1 : 0;
+                            } else {
+                                ok = 1;
+                            }
+                        }
+                        console.log("[UniqFactionPk] gs\u7269\u54c1 role=" + role + " have=" + have + " action=" + action + " ok=" + ok);
+                    }
+                }
+            }
+        }
+    } catch (e) {
+        console.log("[UniqFactionPk] gs\u7269\u54c1\u5931\u8d25 " + e);
+    }
+    if (!gsClientSend) return;
+    const reply = new W().i32(token).i32(ok).i32(action).i32(role).b;
+    const obj = allocProto(T.itemRe);
+    bodies.set(obj.toString(), reply);
+    try {
+        gsClientSend(0, obj);
+    } finally {
+        bodies.delete(obj.toString());
+        if (delFn) delFn(obj);
+    }
+}
+
+function installDeliveryExtras() {
+    const findRole = new NativeFunction(rebase(0x82ed0b0), "pointer", ["pointer", "int"]);
+    const users = rebase(0x866eff8);
+    const facFn = new NativeFunction(rebase(0x82ed67c), "pointer", []);
+    const levelFn = new NativeFunction(rebase(0x8436f0a), "int", ["pointer", "uint32"]);
+    const raidFn = new NativeFunction(rebase(0x82f077e), "pointer", []);
+    const warFn = new NativeFunction(rebase(0x849cbf0), "int", ["pointer", "int", "int"]);
+    const findFac = new NativeFunction(rebase(0x838027a), "pointer", ["pointer", "uint32"]);
+    const gsSend = new NativeFunction(rebase(0x82fe44e), "int", ["pointer", "int", "pointer"]);
+    const provider = rebase(0x8670430);
+    const chatCtor = new NativeFunction(rebase(0x83590de), "void", ["pointer"]);
+    const replaceOctets = new NativeFunction(rebase(0x832ffce), "pointer", ["pointer", "pointer", "uint32"]);
+    const broadcast = new NativeFunction(rebase(0x82dde2e), "void", ["pointer", "pointer"]);
+    const chatDtor = new NativeFunction(rebase(0x83b3884), "void", ["pointer"]);
+    const link = rebase(0x866f098);
+    setGate((role, faction, defLevel) => {
+        try {
+            const info = findRole(users, role);
+            if (info.isNull()) return 5;
+            const fac = info.add(0x28).readS32();
+            const title = info.add(0x38).readU8();
+            if (!fac || fac !== faction || (title !== 2 && title !== 3)) {
+                console.log("[UniqFactionPk] \u804c\u4f4d title=" + title + " fac=" + fac + " want=" + faction);
+                return 41;
+            }
+            const mgr = facFn();
+            let level = 0;
+            if (!mgr.isNull()) level = levelFn(mgr, faction) | 0;
+            console.log("[UniqFactionPk] \u5e2e\u6d3e\u7b49\u7ea7 faction=" + faction + " level=" + level + " brief=" + defLevel);
+            if (level <= 0) return 45;
+            const raid = raidFn();
+            let war = 0;
+            if (!raid.isNull()) war = warFn(raid, faction, faction) | 0;
+            if (war === 47) {
+                console.log("[UniqFactionPk] \u5df2\u5728\u672c\u670d\u5e2e\u6218 faction=" + faction);
+                return 47;
+            }
+            return 0;
+        } catch (e) {
+            console.log("[UniqFactionPk] \u8d44\u683c\u5931\u8d25 " + e);
+            return 5;
+        }
+    });
+    setFactionLevel((faction) => {
+        try {
+            const mgr = facFn();
+            if (mgr.isNull()) return 0;
+            return levelFn(mgr, faction) | 0;
+        } catch (e) {
+            return 0;
+        }
+    });
+    setLocalWar((faction) => {
+        try {
+            const raid = raidFn();
+            if (raid.isNull()) return 0;
+            return warFn(raid, faction, faction) | 0;
+        } catch (e) {
+            return 0;
+        }
+    });
+    setRoster((faction) => {
+        const people: {role: number; linksid: number; localsid: number}[] = [];
+        try {
+            const mgr = facFn();
+            if (mgr.isNull()) return people;
+            const detail = findFac(mgr, faction);
+            if (detail.isNull()) {
+                console.log("[UniqFactionPk] \u5e2e\u6d3e\u6ca1\u88c5\u8f7d faction=" + faction);
+                return people;
+            }
+            const head = detail.add(0xfc);
+            let node = head.readPointer();
+            let guard = 0;
+            while (!node.isNull() && !node.equals(head) && guard < 400) {
+                const roleInfo = node.add(8).readPointer();
+                if (!roleInfo.isNull()) {
+                    const linksid = roleInfo.add(4).readU32();
+                    const roleid = roleInfo.add(0x30).readS32();
+                    if (linksid && roleid) people.push({role: roleid, linksid, localsid: 0});
+                }
+                node = node.readPointer();
+                guard++;
+            }
+        } catch (e) {
+            console.log("[UniqFactionPk] \u6210\u5458\u540d\u5355\u5931\u8d25 " + e);
+        }
+        console.log("[UniqFactionPk] \u5728\u7ebf\u6210\u5458 faction=" + faction + " n=" + people.length);
+        return people;
+    });
+    setAskItem((role, action, token) => {
+        try {
+            const info = findRole(users, role);
+            if (info.isNull()) return false;
+            const line = info.add(0x18).readS32();
+            if (line <= 0) return false;
+            const body = new W().i32(role).i32(ITEM_ID).i32(1).i32(action).i32(token).b;
+            const obj = allocProto(T.item);
+            bodies.set(obj.toString(), body);
+            try {
+                const ret = gsSend(provider, line, obj);
+                console.log("[UniqFactionPk] \u7269\u54c1 action=" + action + " role=" + role + " line=" + line + " ret=" + ret);
+                return ret !== 0;
+            } finally {
+                bodies.delete(obj.toString());
+                if (delFn) delFn(obj);
+            }
+        } catch (e) {
+            console.log("[UniqFactionPk] \u7269\u54c1\u5931\u8d25 " + e);
+            return false;
+        }
+    });
+    setMemberSend((linksid, body) => {
+        sendOn(deliveryServer(), linksid, T.begin, body);
+    });
+    const sendWorldChat = (text: string) => {
+        try {
+            const bytes = u16Name(text);
+            const mem = Memory.alloc(Math.max(2, bytes.length));
+            mem.writeByteArray(bytes);
+            const obj = Memory.alloc(0x40);
+            chatCtor(obj);
+            obj.add(0xc).writeU8(1);
+            obj.add(0xd).writeU8(0);
+            obj.add(0x10).writeS32(0);
+            replaceOctets(obj.add(0x14), mem, bytes.length);
+            broadcast(link, obj);
+            chatDtor(obj);
+        } catch (e) {
+            console.log("[UniqFactionPk] \u5e7f\u64ad\u5931\u8d25 " + e);
+        }
+    };
+    setAnnounce(sendWorldChat);
+    try {
+        const logout = findFn("_ZN4GNET12PlayerLogout7ProcessEPNS_8Protocol7ManagerEj", 0x8338f0c);
+        Interceptor.attach(logout, {
+            onEnter(args) {
+                try {
+                    noteLeave(args[0].add(0x10).readS32());
+                } catch (e) {
+                    console.log("[UniqFactionPk] \u79bb\u573a\u5931\u8d25 " + e);
+                }
+            },
+        });
+    } catch (e) {
+        console.log("[UniqFactionPk] \u79bb\u573a\u6ca1\u6302\u4e0a " + e);
+    }
+}
+
+export function installGsProto() {
+    mode = "gs";
+    const newAddr = findFn("_Znwj", 0);
+    const delAddr = findFn("_ZdlPv", 0);
+    if (newAddr.isNull() || delAddr.isNull()) {
+        console.log("[UniqFactionPk] gs operator new missing");
+        return;
+    }
+    nw = new NativeFunction(newAddr, "pointer", ["uint32"]);
+    delFn = new NativeFunction(delAddr, "void", ["pointer"]);
+    installCallbacks();
+    const ctorAddr = findFn("_ZN4GNET8ProtocolC2Ej", 0);
+    let policy = findFn("_ZN4GNET8Protocol11CheckPolicyEjjRKNS0_7Manager7Session6StreamE", 0);
+    if (policy.isNull()) policy = rebase(0x8c66310);
+    if (ctorAddr.isNull()) {
+        console.log("[UniqFactionPk] gs protocol ctor missing");
+        return;
+    }
+    skipUnknownPolicy(policy, [T.item, T.itemRe]);
+    registerTypes(ctorAddr, [T.item, T.itemRe]);
+    findPlayerFn = new NativeFunction(findFn("_ZN7gmatrix10FindPlayerEi", 0x86a0668), "int", ["int"]);
+    playerOfFn = new NativeFunction(rebase(0x86b0158), "pointer", ["int"]);
+    aliveFn = new NativeFunction(rebase(0x86a0506), "int", ["pointer"]);
+    countFn = new NativeFunction(findFn("_ZN9item_list13CountItemByIDEi", 0x8753b5a), "int", ["pointer", "int"]);
+    takeFn = new NativeFunction(findFn("_ZN11gplayer_imp11TakeOutItemEii", 0x86d706c), "int", ["pointer", "int", "int"]);
+    gsClientSend = new NativeFunction(findFn("_ZN4GNET15GProviderClient16DispatchProtocolEiRKNS_8ProtocolE", 0x8bd1ad0), "int", ["int", "pointer"]);
+    console.log("[UniqFactionPk] gs item protocol ready");
 }
 
 export function installGnet(which: "glink" | "delivery") {
@@ -426,6 +669,7 @@ export function installGnet(which: "glink" | "delivery") {
         }
         sendOn(sess.manager, sess.sid, type, body);
     });
+    setCentral(isCentralServer);
     setRelay((zone, type, body) => {
         if (isCentralServer()) return dispatchZone(zone, type, body);
         const centralClient = rebase(0x8680300);
@@ -455,5 +699,5 @@ export function installGnet(which: "glink" | "delivery") {
             }
         },
     });
-
+    installDeliveryExtras();
 }

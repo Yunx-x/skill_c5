@@ -1,7 +1,7 @@
 import {BaseManager} from "../base/BaseManager";
 import {HookFuncCore} from "../base/HookFuncCore";
 import {HookModuleBase} from "../base/HookModuleBase";
-import {installGnet} from "./gnet";
+import {installGnet, installGsProto} from "./gnet";
 
 /**
  * 18 职业跨服帮战。
@@ -35,6 +35,11 @@ export class UniqFactionPkManager extends BaseManager {
     }
 
     private attachGs() {
+        try {
+            installGsProto();
+        } catch (e) {
+            console.log("[UniqFactionPk] gs item proto " + e);
+        }
         const onCreate = this.resolve("_ZN36uniq_mafia_battle_raid_world_manager8OnCreateEv", 0x8b5a3e6);
         const onClose = this.resolve("_ZN36uniq_mafia_battle_raid_world_manager7OnCloseEv", 0x8b5a3ec);
         const getRoomId = this.resolve("_ZN18raid_world_manager13GetRaidRoomIDEv", 0);

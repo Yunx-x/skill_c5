@@ -78,6 +78,13 @@ export class R {
         return this.b[this.p++];
     }
 
+    i16(): number {
+        if (this.p + 2 > this.b.length) return 0;
+        const v = (this.b[this.p] << 8) | this.b[this.p + 1];
+        this.p += 2;
+        return (v << 16) >> 16;
+    }
+
     compact(): number {
         if (this.p >= this.b.length) return 0;
         const b0 = this.b[this.p];
@@ -109,6 +116,10 @@ export class R {
         const out: number[] = [];
         for (let i = 0; i < n; i++) out.push(this.u8());
         return out;
+    }
+
+    rest(): number {
+        return this.b.length - this.p;
     }
 }
 

@@ -1,3 +1,4 @@
+import {bindInstance, noteEnter, noteKill} from "./logic";
 const IDA_BASE = 0x8048000;
 
 const SEND_RAID_START = 0x19ac;
@@ -135,6 +136,7 @@ function noteStart(roomId: number, gs: number, index: number, retcode: number) {
         return true;
     }
     worlds.set(roomId, {mapId: pending.mapId, gs, index, templateId: pending.templateId, mapInfo: pending.mapInfo});
+    bindInstance(roomId, index);
     console.log("[UniqFactionPk] \u526f\u672c\u5df2\u5f00 room=" + roomId + " gs=" + gs + " index=" + index);
     flushEnter(roomId);
     return true;
@@ -154,6 +156,19 @@ function isCentral(): boolean {
 
 function centralLinked(): boolean {
     return rebase(0x8680334).readU8() !== 0;
+}
+
+
+function roleName(role: number): number[] {
+    const info = findRole(role);
+    if (!info) return [];
+    const data = info.add(0x10).readPointer();
+    if (data.isNull()) return [];
+    const n = data.sub(8).readU32();
+    if (n < 2 || n > 64 || (n & 1) !== 0) return [];
+    const out: number[] = [];
+    for (let i = 0; i < n; i++) out.push(data.add(i).readU8());
+    return out;
 }
 
 function findRole(role: number): NativePointer | null {
@@ -264,6 +279,27 @@ function pullHome(zone: number, role: number, mapId: number, world: World, side:
 }
 
 export function attachRaid() {
+    const kill = rebase(0x8384220);
+    Interceptor.attach(kill, {
+        onEnter(args) {
+            try {
+                const proto = args[0];
+                const killer = proto.add(0x14).readS32();
+                const victim = proto.add(0x18).readS32();
+                noteKill(
+                    proto.add(0xc).readS32(),
+                    proto.add(0x10).readS32(),
+                    killer,
+                    victim,
+                    proto.add(0x1c).readS32(),
+                    roleName(killer),
+                    roleName(victim),
+                );
+            } catch (e) {
+                console.log("[UniqFactionPk] \u51fb\u6740\u8bb0\u5206\u5931\u8d25 " + e);
+            }
+        },
+    });
     const re = rebase(0x8383916);
     Interceptor.attach(re, {
         onEnter(args) {
@@ -420,6 +456,7 @@ export function attachRaid() {
                 proto.add(0x3c).writeS32(0);
                 proto.add(0x44).writeU8(spot.side & 0xff);
                 proto.add(0x46).writeU8(1);
+                noteEnter(spot.index, role, spot.side);
                 arrivals.delete(role);
                 alias.forEach((remote, src) => {
                     if (role === src || role === remote) {

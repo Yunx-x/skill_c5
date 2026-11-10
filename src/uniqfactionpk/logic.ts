@@ -1,5 +1,6 @@
 import {openRaid} from "./raid";
 import {intAt, lastInt, R, u16Name, W} from "./wire";
+import {WarPeriod, warBroadcastText} from "./broadcast";
 
 /** 和 18 客户端、16 服务端对过的协议号。 */
 export const T = {
@@ -30,6 +31,9 @@ export const T = {
     resend: 6903,
     inviteAsk: 6910,
     inviteResult: 6911,
+    roomSync: 6912,
+    item: 6913,
+    itemRe: 6914,
 };
 
 export const REQUESTS = [
@@ -43,7 +47,7 @@ export const REPLIES = [
 ];
 
 /** 服与服之间的名单同步，不走客户端。 */
-export const SERVER = [T.register, T.resend, T.inviteAsk, T.inviteResult];
+export const SERVER = [T.register, T.resend, T.inviteAsk, T.inviteResult, T.roomSync, T.item, T.itemRe];
 
 export interface Brief {
     zone: number;
@@ -64,6 +68,15 @@ interface Decl {
     zoneId: number;
 }
 
+interface ScoreRow {
+    role: number;
+    kills: number;
+    deaths: number;
+    faction: number;
+    side: number;
+    name: number[];
+}
+
 interface Room {
     id: number;
     mapId: number;
@@ -80,6 +93,12 @@ interface Room {
     atkName: number[];
     defName: number[];
     token: number;
+    worldIndex: number;
+    trusted: boolean;
+    rows: ScoreRow[];
+    atkCount: number;
+    defCount: number;
+    broadcasted: WarPeriod[];
 }
 
 export interface Leader {
@@ -108,6 +127,44 @@ export function setRelay(fn: (zone: number, type: number, body: number[]) => boo
 
 export function setPushRole(fn: (role: number, type: number, body: number[]) => void) {
     pushRole = fn;
+}
+
+const HOUR_FROM = 12;
+const HOUR_TO_MIN = 21 * 60 + 45;
+let gate: (role: number, faction: number, defLevel: number) => number = () => 0;
+let factionLevel: (faction: number) => number = () => 1;
+let localWar: (faction: number) => number = () => 0;
+let roster: (faction: number) => Leader[] = () => [];
+let askItem: (role: number, action: number, token: number) => boolean = () => false;
+let announce: (text: string) => void = () => {};
+let memberSend: (linksid: number, body: number[]) => void = () => {};
+
+export function setGate(fn: (role: number, faction: number, defLevel: number) => number) {
+    gate = fn;
+}
+
+export function setFactionLevel(fn: (faction: number) => number) {
+    factionLevel = fn;
+}
+
+export function setLocalWar(fn: (faction: number) => number) {
+    localWar = fn;
+}
+
+export function setRoster(fn: (faction: number) => Leader[] ) {
+    roster = fn;
+}
+
+export function setAskItem(fn: (role: number, action: number, token: number) => boolean) {
+    askItem = fn;
+}
+
+export function setAnnounce(fn: (text: string) => void) {
+    announce = fn;
+}
+
+export function setMemberSend(fn: (linksid: number, body: number[]) => void) {
+    memberSend = fn;
 }
 
 const rooms = new Map<number, Room>();
@@ -319,6 +376,12 @@ function openRoom(atkRole: number, atkFaction: number, atkZone: number, def: Dec
         atkName: [],
         defName: [],
         token: 0,
+        worldIndex: 0,
+        trusted: false,
+        rows: [],
+        atkCount: 0,
+        defCount: 0,
+        broadcasted: [],
     };
     rooms.set(room.id, room);
     return room;
@@ -348,6 +411,9 @@ export function handle(type: number, body: number[]): Out[] {
             return onScore(body);
         case T.fight:
             return onFight(body);
+        case T.roomSync:
+            applyRoomSync(body);
+            return [];
         default:
             return [];
     }
@@ -552,6 +618,12 @@ function holdRoom(id: number, mapId: number, role: number, atkFaction: number, a
         atkName,
         defName,
         token: roomToken++,
+        worldIndex: 0,
+        trusted: false,
+        rows: [],
+        atkCount: 0,
+        defCount: 0,
+        broadcasted: [],
     };
     rooms.set(room.id, room);
     return room;
@@ -561,6 +633,72 @@ function namesOf(zone: number, faction: number, fallback: number[]): number[] {
     const brief = listedFaction(zone, faction);
     if (brief && brief.name.length) return brief.name;
     return fallback;
+}
+
+interface ItemWait {
+    role: number;
+    srcZone: number;
+    faction: number;
+    mapId: number;
+    dstZone: number;
+    dstFaction: number;
+    timer: ReturnType<typeof setTimeout>;
+}
+
+const itemWaits = new Map<number, ItemWait>();
+let itemToken = 1;
+const inside = new Map<number, {atk: number[]; def: number[]}>();
+
+function hourCode(): number {
+    const now = new Date();
+    const minutes = now.getHours() * 60 + now.getMinutes();
+    if (minutes < HOUR_FROM * 60 || minutes >= HOUR_TO_MIN) {
+        console.log("[UniqFactionPk] \u4e0d\u5728\u7533\u8bf7\u65f6\u6bb5 " + now.getHours() + ":" + now.getMinutes());
+        return 93;
+    }
+    return 0;
+}
+
+function failChallenge(ret: number, srcZone: number, role: number, faction: number, mapId: number, dstZone: number, dstFaction: number): Out[] {
+    return [{type: T.challengeRe, body: challengeAnswer(ret, srcZone, role, faction, mapId, dstZone, dstFaction)}];
+}
+
+function launchChallenge(srcZone: number, role: number, faction: number, mapId: number, dstZone: number, dstFaction: number) {
+    const brief = listedFaction(dstZone, dstFaction);
+    if (!brief) {
+        pushRole(role, T.challengeRe, challengeAnswer(5, srcZone, role, faction, mapId, dstZone, dstFaction));
+        return;
+    }
+    const atkName = namesOf(serverZone, faction, u16Name(String(faction || srcZone)));
+    const defName = brief.name.length ? brief.name : u16Name(String(brief.faction));
+    const targetZone = brief.zone || dstZone;
+    const room = holdRoom(nextRoom++, mapId, role, faction, serverZone, brief.faction, targetZone, atkName, defName, []);
+    if (!relay(targetZone, T.inviteAsk, askBody(room, role))) {
+        rooms.delete(room.id);
+        console.log("[UniqFactionPk] \u8de8\u533a\u9080\u8bf7\u6ca1\u6709\u9001\u51fa dst=" + targetZone);
+        pushRole(role, T.challengeRe, challengeAnswer(5, srcZone, role, faction, mapId, targetZone, brief.faction));
+        return;
+    }
+    armWait(room, role);
+}
+
+export function onItemReply(body: number[]) {
+    const token = intAt(body, 0);
+    const ok = intAt(body, 1) !== 0;
+    const action = intAt(body, 2);
+    const wait = itemWaits.get(token);
+    if (action !== 1 || !wait) {
+        console.log("[UniqFactionPk] \u6263\u7269\u54c1 token=" + token + " ok=" + (ok ? 1 : 0));
+        return;
+    }
+    clearTimeout(wait.timer);
+    itemWaits.delete(token);
+    if (!ok) {
+        console.log("[UniqFactionPk] \u6ca1\u6709\u6311\u6218\u4ee4 role=" + wait.role);
+        pushRole(wait.role, T.challengeRe, challengeAnswer(16, wait.srcZone, wait.role, wait.faction, wait.mapId, wait.dstZone, wait.dstFaction));
+        return;
+    }
+    launchChallenge(wait.srcZone, wait.role, wait.faction, wait.mapId, wait.dstZone, wait.dstFaction);
 }
 
 function onChallenge(body: number[]): Out[] {
@@ -573,22 +711,33 @@ function onChallenge(body: number[]): Out[] {
     const brief = listedFaction(dstZone, dstFaction);
     console.log("[UniqFactionPk] \u7533\u8bf7\u5e2e\u6218 role=" + role + " src=" + srcZone + "/" + faction + " dst=" + dstZone + "/" + dstFaction + " map=" + mapId + " listed=" + (brief ? 1 : 0));
     if (!brief) {
-        return [{type: T.challengeRe, body: challengeAnswer(5, srcZone, role, faction, mapId, dstZone, dstFaction)}];
+        return failChallenge(5, srcZone, role, faction, mapId, dstZone, dstFaction);
     }
-    const atkName = namesOf(serverZone, faction, u16Name(String(faction || srcZone)));
-    const defName = brief.name.length ? brief.name : u16Name(String(brief.faction));
     const targetZone = brief.zone || dstZone;
     if (targetZone === serverZone) {
         console.log("[UniqFactionPk] \u540c\u533a\u4e0d\u5141\u8bb8 faction=" + brief.faction);
-        return [{type: T.challengeRe, body: challengeAnswer(70, srcZone, role, faction, mapId, targetZone, brief.faction)}];
+        return failChallenge(70, srcZone, role, faction, mapId, targetZone, brief.faction);
     }
-    const room = holdRoom(nextRoom++, mapId, role, faction, serverZone, brief.faction, targetZone, atkName, defName, []);
-    if (!relay(targetZone, T.inviteAsk, askBody(room, role))) {
-        rooms.delete(room.id);
-        console.log("[UniqFactionPk] \u8de8\u533a\u9080\u8bf7\u6ca1\u6709\u9001\u51fa dst=" + targetZone);
-        return [{type: T.challengeRe, body: challengeAnswer(5, srcZone, role, faction, mapId, targetZone, brief.faction)}];
+    const when = hourCode();
+    if (when) return failChallenge(when, srcZone, role, faction, mapId, targetZone, brief.faction);
+    const blocked = gate(role, faction, brief.level);
+    if (blocked) {
+        console.log("[UniqFactionPk] \u7533\u8bf7\u88ab\u62e6 code=" + blocked + " role=" + role);
+        return failChallenge(blocked, srcZone, role, faction, mapId, targetZone, brief.faction);
     }
-    armWait(room, role);
+    const token = itemToken++;
+    if (!askItem(role, 1, token)) {
+        console.log("[UniqFactionPk] \u67e5\u7269\u54c1\u6ca1\u9001\u51fa role=" + role);
+        return failChallenge(5, srcZone, role, faction, mapId, targetZone, brief.faction);
+    }
+    const timer = setTimeout(() => {
+        const wait = itemWaits.get(token);
+        if (!wait) return;
+        itemWaits.delete(token);
+        console.log("[UniqFactionPk] \u67e5\u7269\u54c1\u8d85\u65f6 role=" + role);
+        pushRole(role, T.challengeRe, challengeAnswer(5, srcZone, role, faction, mapId, targetZone, brief.faction));
+    }, 4000);
+    itemWaits.set(token, {role, srcZone, faction, mapId, dstZone: targetZone, dstFaction: brief.faction, timer});
     return [];
 }
 
@@ -627,12 +776,15 @@ function onInviteRe(body: number[]): Out[] {
     if (result !== 0) {
         room.waiting = false;
         room.running = true;
+        shareRoom(room);
         openRaid(room.id, room.mapId);
         room.defRole = leader;
         room.left = [];
         const outs = [beginOf(room, roleKey)];
         if (room.atkZone !== serverZone) relay(room.atkZone, T.inviteResult, resultBody(room, 1, roleKey));
         else outs.push(beginOf(room, room.atkRole));
+        tellMembers(room, room.defFaction, [roleKey]);
+        if (room.atkZone === serverZone) tellMembers(room, room.atkFaction, [room.atkRole]);
         return outs;
     }
     room.left = room.left.filter((id) => id !== leader);
@@ -663,6 +815,16 @@ export function onInviteAsk(body: number[]): void {
         rooms.delete(room.id);
         relay(atkZone, T.inviteResult, resultBody(room, 2, 0));
         console.log("[UniqFactionPk] \u76ee\u6807\u533a\u5e2e\u4e3b\u526f\u5e2e\u4e3b\u90fd\u4e0d\u5728\u7ebf faction=" + defFaction);
+        return;
+    }
+    const level = factionLevel(defFaction);
+    const war = localWar(defFaction);
+    if (level <= 0 || war === 47) {
+        room.waiting = false;
+        rooms.delete(room.id);
+        const code = war === 47 ? 4 : 5;
+        relay(atkZone, T.inviteResult, resultBody(room, code, 0));
+        console.log("[UniqFactionPk] \u5b88\u65b9\u4e0d\u7b26\u5408 level=" + level + " war=" + war + " faction=" + defFaction);
         return;
     }
     sendInvites(room, leaders);
@@ -698,12 +860,21 @@ export function onInviteResult(body: number[]): void {
         answerTo(room.atkRole, 48, room);
         return;
     }
+    if (code === 4 || code === 5 || code === 6) {
+        room.waiting = false;
+        rooms.delete(room.id);
+        answerTo(room.atkRole, code === 4 ? 47 : code === 6 ? 93 : 45, room);
+        return;
+    }
     if (code === 1) {
         room.waiting = false;
         room.running = true;
+        shareRoom(room);
         openRaid(room.id, room.mapId);
         room.defRole = replyRole;
         pushRole(room.atkRole, T.begin, beginOf(room, room.atkRole).body);
+        tellMembers(room, room.atkFaction, [room.atkRole]);
+        askItem(room.atkRole, 2, itemToken++);
         return;
     }
     room.waiting = false;
@@ -728,6 +899,232 @@ function onList(body: number[]): Out[] {
     }];
 }
 
+
+let centralNow: () => boolean = () => false;
+const pendingFight = new Map<number, {mapId: number; endTime: number; started: number}>();
+const pendingKills: {mapId: number; index: number; killer: number; victim: number; victimFaction: number; killerName: number[]; victimName: number[]}[] = [];
+
+export function setCentral(fn: () => boolean) {
+    centralNow = fn;
+}
+
+function shareRoom(room: Room) {
+    const body = packRoom(room);
+    if (!centralNow()) {
+        relay(0, T.roomSync, body);
+        return;
+    }
+    if (room.atkZone && room.atkZone !== serverZone) relay(room.atkZone, T.roomSync, body);
+    if (room.defZone && room.defZone !== serverZone && room.defZone !== room.atkZone) relay(room.defZone, T.roomSync, body);
+}
+
+function packRoom(room: Room): number[] {
+    const w = new W()
+        .i32(room.id)
+        .i32(room.mapId)
+        .i32(room.endTime)
+        .i32(room.trusted ? 1 : 0)
+        .i32(room.running ? 1 : 0)
+        .i32(room.atkRole)
+        .i32(room.atkFaction)
+        .i32(room.atkZone)
+        .bytes(room.atkName)
+        .i32(room.defRole)
+        .i32(room.defFaction)
+        .i32(room.defZone)
+        .bytes(room.defName)
+        .i32(room.worldIndex)
+        .compact(room.rows.length);
+    for (let i = 0; i < room.rows.length; i++) {
+        const row = room.rows[i];
+        w.i32(row.role).i16(row.kills).i16(row.deaths).i32(row.faction).i32(row.side).bytes(row.name);
+    }
+    w.i16(room.atkCount).i16(room.defCount);
+    return w.b;
+}
+
+function blankRoom(id: number): Room {
+    return {
+        id, mapId: 0, atkRole: 0, atkFaction: 0, atkZone: 0, defRole: 0, defFaction: 0, defZone: 0,
+        endTime: 0, running: false, waiting: false, left: [], atkName: [], defName: [], token: 0,
+        worldIndex: 0, trusted: false, rows: [], atkCount: 0, defCount: 0, broadcasted: [],
+    };
+}
+
+export function applyRoomSync(body: number[]) {
+    const r = new R(body);
+    const id = r.i32();
+    if (!id) return;
+    const mapId = r.i32();
+    const endTime = r.i32();
+    const trusted = r.i32() === 1;
+    const running = r.i32() === 1;
+    const atkRole = r.i32();
+    const atkFaction = r.i32();
+    const atkZone = r.i32();
+    const atkName = r.bytes();
+    const defRole = r.i32();
+    const defFaction = r.i32();
+    const defZone = r.i32();
+    const defName = r.bytes();
+    const worldIndex = r.i32();
+    const count = r.compact();
+    const rows: ScoreRow[] = [];
+    for (let i = 0; i < count; i++) {
+        rows.push({
+            role: r.i32(),
+            kills: r.i16(),
+            deaths: r.i16(),
+            faction: r.i32(),
+            side: r.i32(),
+            name: r.bytes(),
+        });
+    }
+    let atkCount = -1;
+    let defCount = -1;
+    if (r.rest() >= 4) {
+        atkCount = r.i16();
+        defCount = r.i16();
+    }
+    let room = rooms.get(id);
+    const created = !room;
+    if (!room) {
+        room = blankRoom(id);
+        rooms.set(id, room);
+        if (id >= nextRoom) nextRoom = id + 1;
+    }
+    if (mapId) room.mapId = mapId;
+    if (atkName.length) room.atkName = atkName;
+    if (defName.length) room.defName = defName;
+    if (atkFaction) room.atkFaction = atkFaction;
+    if (defFaction) room.defFaction = defFaction;
+    if (atkZone) room.atkZone = atkZone;
+    if (defZone) room.defZone = defZone;
+    if (atkRole) room.atkRole = atkRole;
+    if (defRole) room.defRole = defRole;
+    if (worldIndex) room.worldIndex = worldIndex;
+    if (trusted || !room.trusted) {
+        if (endTime) room.endTime = endTime;
+        if (trusted) room.trusted = true;
+    }
+    const wasRunning = room.running;
+    if (trusted) room.running = running;
+    else if (running) room.running = true;
+    const justStopped = wasRunning && !room.running;
+    if (justStopped) {
+        pushRole(room.atkRole, T.stop, stopOf(room, room.atkRole).body);
+        pushRole(room.defRole, T.stop, stopOf(room, room.defRole).body);
+    }
+    if (count > 0) room.rows = rows;
+    if (atkCount >= 0) {
+        room.atkCount = atkCount;
+        room.defCount = defCount;
+    }
+    if (justStopped) broadcastWar(room, "end");
+    const pending = pendingFight.get(id);
+    if (pending && pending.endTime && !room.trusted) {
+        room.endTime = pending.endTime;
+        room.trusted = true;
+        room.mapId = pending.mapId || room.mapId;
+        room.running = pending.started !== 0;
+        pendingFight.delete(id);
+        shareRoom(room);
+    }
+    if (created) flushKills();
+    console.log("[UniqFactionPk] \u8ba1\u5206\u540c\u6b65 room=" + id + " end=" + room.endTime + " rows=" + room.rows.length + " run=" + (room.running ? 1 : 0));
+}
+
+function scoreRows(room: Room, side: number): number[] {
+    const rows = room.rows.filter((row) => row.side === side);
+    const w = new W().compact(rows.length);
+    for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        w.i32(row.role).i16(row.kills).i16(row.deaths).i32(row.faction).bytes(row.name);
+    }
+    return w.b;
+}
+
+function findScoreRoom(mapId: number, index: number): Room | undefined {
+    if (index) {
+        for (const room of rooms.values()) {
+            if (room.worldIndex === index) return room;
+        }
+    }
+    const hits: Room[] = [];
+    for (const room of rooms.values()) {
+        if (room.running && mapId && room.mapId === mapId) hits.push(room);
+    }
+    return hits.length === 1 ? hits[0] : undefined;
+}
+
+function bump(room: Room, role: number, side: number, faction: number, name: number[], kills: number, deaths: number) {
+    let row: ScoreRow | undefined;
+    for (let i = 0; i < room.rows.length; i++) {
+        if (room.rows[i].role === role) row = room.rows[i];
+    }
+    if (!row) {
+        row = {role, side, faction, name, kills: 0, deaths: 0};
+        room.rows.push(row);
+    }
+    if (name.length) row.name = name;
+    row.side = side;
+    row.faction = faction || row.faction;
+    row.kills += kills;
+    row.deaths += deaths;
+}
+
+function addKill(room: Room, killer: number, victim: number, victimFaction: number, killerName: number[], victimName: number[]) {
+    let victimSide = 0;
+    if (victimFaction && victimFaction === room.defFaction && victimFaction !== room.atkFaction) victimSide = 2;
+    else if (victimFaction && victimFaction === room.atkFaction && victimFaction !== room.defFaction) victimSide = 1;
+    if (!victimSide) return false;
+    const killerSide = victimSide === 1 ? 2 : 1;
+    const killerFaction = killerSide === 1 ? room.atkFaction : room.defFaction;
+    bump(room, killer, killerSide, killerFaction, killerName, 1, 0);
+    bump(room, victim, victimSide, victimFaction, victimName, 0, 1);
+    return true;
+}
+
+function flushKills() {
+    const left: typeof pendingKills = [];
+    for (let i = 0; i < pendingKills.length; i++) {
+        const hit = pendingKills[i];
+        const room = findScoreRoom(hit.mapId, hit.index);
+        if (!room || !addKill(room, hit.killer, hit.victim, hit.victimFaction, hit.killerName, hit.victimName)) {
+            left.push(hit);
+            continue;
+        }
+        shareRoom(room);
+        console.log("[UniqFactionPk] \u51fb\u6740 room=" + room.id + " killer=" + hit.killer + " victim=" + hit.victim);
+    }
+    pendingKills.length = 0;
+    for (let i = 0; i < left.length; i++) pendingKills.push(left[i]);
+}
+
+export function bindInstance(roomId: number, index: number) {
+    const room = rooms.get(roomId);
+    if (!room || !index) return;
+    room.worldIndex = index;
+    flushKills();
+}
+
+export function noteKill(mapId: number, index: number, killer: number, victim: number, victimFaction: number, killerName: number[], victimName: number[]) {
+    if (!killer || killer === victim) return;
+    const room = findScoreRoom(mapId, index);
+    if (!room) {
+        if (mapId === 525 && pendingKills.length < 40) {
+            pendingKills.push({mapId, index, killer, victim, victimFaction, killerName, victimName});
+        }
+        return;
+    }
+    if (!addKill(room, killer, victim, victimFaction, killerName, victimName)) {
+        console.log("[UniqFactionPk] \u51fb\u6740\u5bf9\u4e0d\u4e0a\u5e2e\u6d3e room=" + room.id + " victimFaction=" + victimFaction);
+        return;
+    }
+    shareRoom(room);
+    console.log("[UniqFactionPk] \u51fb\u6740 room=" + room.id + " killer=" + killer + " victim=" + victim);
+}
+
 function onScore(body: number[]): Out[] {
     const mapId = intAt(body, 0);
     const roomId = intAt(body, 1);
@@ -747,11 +1144,11 @@ function onScore(body: number[]): Out[] {
         .i32(room ? room.defFaction : 0)
         .i32(room ? room.defZone : 0)
         .bytes(room ? factionName(room, "def") : [])
-        .raw(empty)
-        .raw(empty)
+        .raw(room ? scoreRows(room, 1) : empty)
+        .raw(room ? scoreRows(room, 2) : empty)
         .i32(room ? Math.max(0, room.endTime - (Date.now() / 1000 | 0)) : 0)
-        .i16(0)
-        .i16(0)
+        .i16(room ? room.atkCount : 0)
+        .i16(room ? room.defCount : 0)
         .i16(0)
         .i32(0)
         .i32(role);
@@ -763,18 +1160,117 @@ function onFight(body: number[]): Out[] {
     const roomId = intAt(body, 1);
     const endTime = intAt(body, 2);
     const started = body.length > 12 ? body[12] : 0;
-    const room = rooms.get(roomId);
+    let room = rooms.get(roomId);
     if (!room) {
-        console.log(`[UniqFactionPk] 6900 没有房间 room=${roomId} map=${mapId} start=${started}`);
+        pendingFight.set(roomId, {mapId, endTime, started});
+        console.log("[UniqFactionPk] 6900 \u6ca1\u6709\u623f\u95f4 room=" + roomId + " map=" + mapId + " start=" + started + " end=" + endTime);
         return [];
     }
-    room.mapId = mapId || room.mapId;
-    room.endTime = endTime || room.endTime;
+    if (mapId) room.mapId = mapId;
+    if (endTime) {
+        room.endTime = endTime;
+        room.trusted = true;
+    }
     room.running = started !== 0;
+    shareRoom(room);
+    if (centralNow()) {
+        if (started === 0) {
+            broadcastWar(room, "end");
+            rooms.delete(room.id);
+        }
+        return [];
+    }
     if (started !== 0) {
         return [beginOf(room, room.atkRole), beginOf(room, room.defRole)];
     }
+    broadcastWar(room, "end");
     const outs = [stopOf(room, room.atkRole), stopOf(room, room.defRole)];
     rooms.delete(room.id);
     return outs;
+}
+
+function textOf(bytes: number[]): string {
+    let text = "";
+    for (let i = 0; i + 1 < bytes.length; i += 2) text += String.fromCharCode(bytes[i] | (bytes[i + 1] << 8));
+    return text;
+}
+
+function sideKills(room: Room, side: number): number {
+    let n = 0;
+    for (let i = 0; i < room.rows.length; i++) if (room.rows[i].side === side) n += room.rows[i].kills;
+    return n;
+}
+
+function factsOf(room: Room) {
+    return {
+        atkName: textOf(room.atkName) || String(room.atkFaction),
+        defName: textOf(room.defName) || String(room.defFaction),
+        atkKills: sideKills(room, 1),
+        defKills: sideKills(room, 2),
+        atkCount: room.atkCount,
+        defCount: room.defCount,
+    };
+}
+
+function broadcastWar(room: Room, period: WarPeriod) {
+    if (room.broadcasted.indexOf(period) >= 0) return;
+    room.broadcasted.push(period);
+    const text = warBroadcastText(period, factsOf(room));
+    if (!text) return;
+    announce(text);
+    console.log("[UniqFactionPk] " + period + " " + text);
+}
+
+function tellMembers(room: Room, faction: number, skip: number[]) {
+    const people = roster(faction);
+    for (let i = 0; i < people.length; i++) {
+        const one = people[i];
+        if (skip.indexOf(one.role) >= 0 || !one.linksid) continue;
+        memberSend(one.linksid, beginOf(room, one.role).body);
+    }
+}
+
+export function noteEnter(index: number, role: number, side: number) {
+    if (!centralNow() || !role) return;
+    let room: Room | undefined;
+    for (const item of rooms.values()) {
+        if (item.worldIndex === index) {
+            room = item;
+            break;
+        }
+    }
+    if (!room) {
+        const running: Room[] = [];
+        for (const item of rooms.values()) if (item.running) running.push(item);
+        if (running.length === 1) room = running[0];
+    }
+    if (!room) {
+        console.log("[UniqFactionPk] \u8fdb\u573a\u6ca1\u5bf9\u4e0a\u623f\u95f4 index=" + index + " role=" + role + " side=" + side);
+        return;
+    }
+    const bag = inside.get(room.id) || {atk: [], def: []};
+    const list = side === 2 ? bag.def : bag.atk;
+    if (list.indexOf(role) < 0) list.push(role);
+    inside.set(room.id, bag);
+    room.atkCount = bag.atk.length;
+    room.defCount = bag.def.length;
+    shareRoom(room);
+    console.log("[UniqFactionPk] \u8fdb\u573a room=" + room.id + " role=" + role + " side=" + side + " atk=" + room.atkCount + " def=" + room.defCount);
+}
+
+export function noteLeave(role: number) {
+    if (!centralNow() || !role) return;
+    for (const room of rooms.values()) {
+        const bag = inside.get(room.id);
+        if (!bag) continue;
+        const atk = bag.atk.indexOf(role);
+        const def = bag.def.indexOf(role);
+        if (atk < 0 && def < 0) continue;
+        if (atk >= 0) bag.atk.splice(atk, 1);
+        if (def >= 0) bag.def.splice(def, 1);
+        room.atkCount = bag.atk.length;
+        room.defCount = bag.def.length;
+        shareRoom(room);
+        console.log("[UniqFactionPk] \u79bb\u573a room=" + room.id + " role=" + role + " atk=" + room.atkCount + " def=" + room.defCount);
+    }
 }
