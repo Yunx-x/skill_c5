@@ -1,0 +1,18 @@
+{
+  "factions": [
+    {
+      "zone": 1,
+      "faction": 0,
+      "name": "\u5e2e\u6d3e\u540d",
+      "level": 0,
+      "activity": 10000
+    },
+    {
+      "zone": 2,
+      "faction": 0,
+      "name": "\u5e2e\u6d3e\u540d",
+      "level": 0,
+      "activity": 10000
+    }
+  ]
+}

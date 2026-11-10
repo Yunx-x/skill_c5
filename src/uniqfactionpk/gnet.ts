@@ -1,7 +1,14 @@
 import {HookFuncCore} from "../base/HookFuncCore";
-import {handle, REPLIES, REQUESTS, roleOf, T} from "./logic";
+import {attachRaid} from "./raid";
+import {intAt} from "./wire";
+import {askMissBody, beginForFaction, handle, inviteLocalsid, onInviteAsk, onInviteResult, REPLIES, REQUESTS, roleOf, setLinkSend, setPushRole, setRelay, takeRegister, T} from "./logic";
+import {attachCentral, canReachCentral, forwardRequest, isCentralServer, onResend, shouldForward, shouldRouteReply} from "./central";
 
 const IDA_BASE = 0x8048000;
+
+function trackedTypes(): number[] {
+    return REQUESTS.concat(REPLIES).concat([T.fight, T.register, T.resend, T.inviteAsk, T.inviteResult]);
+}
 const bodies = new Map<string, number[]>();
 const sessions = new Map<number, {manager: NativePointer; sid: number}>();
 
@@ -79,6 +86,29 @@ function sendOn(manager: NativePointer, sid: number, type: number, body: number[
     }
 }
 
+function deliveryServer(): NativePointer {
+    const exported = Module.findExportByName(null, "_ZN4GNET15GDeliveryServer8instanceE");
+    if (exported && !exported.isNull()) return exported;
+    return rebase(0x8670240);
+}
+
+function dispatchZone(zone: number, type: number, body: number[]): boolean {
+    const addr = Module.findExportByName(null, "_ZN4GNET21CentralDeliveryServer16DispatchProtocolEiPNS_8ProtocolE");
+    const server = Module.findExportByName(null, "_ZN4GNET21CentralDeliveryServer8instanceE");
+    if (!addr || !server || !nw) return false;
+    const call = new NativeFunction(addr, "int", ["pointer", "int", "pointer"]);
+    const obj = allocProto(type);
+    bodies.set(obj.toString(), body);
+    try {
+        const ok = call(server, zone, obj) !== 0;
+        console.log("[UniqFactionPk] \u4e2d\u5fc3\u8f6c\u533a zone=" + zone + " type=" + type + " ok=" + (ok ? 1 : 0));
+        return ok;
+    } finally {
+        bodies.delete(obj.toString());
+        if (delFn) delFn(obj);
+    }
+}
+
 function deliver(outs: {type: number; body: number[]}[], fallback: {manager: NativePointer; sid: number} | null) {
     for (let i = 0; i < outs.length; i++) {
         const out = outs[i];
@@ -88,11 +118,7 @@ function deliver(outs: {type: number; body: number[]}[], fallback: {manager: Nat
             console.log(`[UniqFactionPk] 没有玩家会话 role=${role} type=${out.type}`);
             continue;
         }
-        if (mode === "glink") {
-            sendOn(sess.manager, sess.sid, out.type, out.body);
-        } else if (linkEndpoint) {
-            sendOn(linkEndpoint.manager, linkEndpoint.sid, out.type, out.body);
-        }
+        sendOn(sess.manager, sess.sid, out.type, out.body);
     }
 }
 
@@ -104,8 +130,20 @@ function onProcess(self: NativePointer, manager: NativePointer, sid: number) {
         sessions.set(role, {manager, sid});
     }
     if (mode === "glink" && REQUESTS.indexOf(type) >= 0 && forwardToDelivery) {
-        const sent = forwardToDelivery(deliveryObj, self);
-        if (sent) return;
+        const up = !deliveryObj.isNull() && deliveryObj.add(0x30).readU8() !== 0;
+        if (up) {
+            forwardToDelivery(deliveryObj, self);
+            return;
+        }
+    }
+    if (mode === "glink" && type === T.invite) {
+        const localsid = inviteLocalsid(body);
+        const link = rebase(0x8165b14);
+        if (localsid && mgrSend) {
+            sendOn(link, localsid, type, body);
+            console.log("[UniqFactionPk] \u9080\u8bf7\u9001\u5230\u5ba2\u6237\u7aef local=" + localsid);
+        }
+        return;
     }
     if (mode === "glink" && REPLIES.indexOf(type) >= 0) {
         const sess = sessions.get(role);
@@ -114,6 +152,40 @@ function onProcess(self: NativePointer, manager: NativePointer, sid: number) {
             return;
         }
         mgrSend!(sess.manager, sess.sid, self, 0);
+        return;
+    }
+    if (mode === "delivery" && type === T.register) {
+        takeRegister(body);
+        return;
+    }
+    if (mode === "delivery" && type === T.resend) {
+        onResend();
+        return;
+    }
+    if (mode === "delivery" && type === T.inviteAsk) {
+        if (isCentralServer()) {
+            const zone = intAt(body, 5);
+            if (!dispatchZone(zone, type, body)) dispatchZone(intAt(body, 2), T.inviteResult, askMissBody(body));
+        } else onInviteAsk(body);
+        return;
+    }
+    if (mode === "delivery" && type === T.inviteResult) {
+        if (isCentralServer()) dispatchZone(intAt(body, 1), type, body);
+        else onInviteResult(body);
+        return;
+    }
+    if (mode === "delivery" && (type === T.zone || type === T.faction) && shouldForward()) {
+        forwardRequest(self);
+        return;
+    }
+    if (mode === "delivery" && (type === T.zoneRe || type === T.factionRe) && shouldRouteReply()) {
+        const back = role ? sessions.get(role) : undefined;
+        if (back) {
+            sendOn(back.manager, back.sid, type, body);
+            console.log("[UniqFactionPk] \u8f6c\u53d1\u56de\u5305 role=" + role + " type=" + type);
+        } else {
+            console.log("[UniqFactionPk] \u56de\u5305\u627e\u4e0d\u5230\u4f1a\u8bdd role=" + role + " type=" + type);
+        }
         return;
     }
     if (mode === "delivery" && REQUESTS.indexOf(type) >= 0) {
@@ -166,7 +238,9 @@ function installCallbacks() {
         return allocProto(self.add(8).readU32());
     }, "pointer", ["pointer"]));
     const destroy = keep(new NativeCallback((self: NativePointer) => {
-        if (!self.isNull()) deleting(self);
+        if (self.isNull()) return ptr(0);
+        bodies.delete(self.toString());
+        if (delFn) delFn(self);
         return ptr(0);
     }, "pointer", ["pointer"]));
     const prior = keep(new NativeCallback(() => 1, "int", ["pointer"]));
@@ -186,7 +260,7 @@ function skipUnknownPolicy(addr: NativePointer) {
         console.log('[UniqFactionPk] CheckPolicy prologue mismatch ' + addr + ' ' + hex);
         return;
     }
-    const types = REQUESTS.concat(REPLIES).concat([T.fight]);
+    const types = trackedTypes();
     const list = Memory.alloc(4 * (types.length + 1));
     for (let i = 0; i < types.length; i++) list.add(i * 4).writeU32(types[i] >>> 0);
     list.add(types.length * 4).writeU32(0);
@@ -246,12 +320,51 @@ function skipUnknownPolicy(addr: NativePointer) {
 
 function registerTypes(ctorAddr: NativePointer) {
     const ctor = new NativeFunction(ctorAddr, "pointer", ["pointer", "uint32"]);
-    const types = REQUESTS.concat(REPLIES).concat([T.fight]);
+    const types = trackedTypes();
     for (let i = 0; i < types.length; i++) {
         const obj = nw!(32);
         ctor(obj, types[i]);
         obj.writePointer(vt);
     }
+}
+
+function rememberClient(addr: NativePointer) {
+    const link = rebase(0x8165b14);
+    Interceptor.attach(addr, {
+        onEnter() {
+            const ctx = this.context as unknown as {ebx: NativePointer; esi: NativePointer};
+            const role = ctx.ebx.add(0xc).readS32();
+            const sid = ctx.esi.toUInt32();
+            if (!role || !sid) return;
+            sessions.set(role, {manager: link, sid});
+        },
+    });
+}
+
+function restoreOnEnter(addr: NativePointer) {
+    const findRole = new NativeFunction(rebase(0x82ed0b0), "pointer", ["pointer", "int"]);
+    const users = rebase(0x866eff8);
+    Interceptor.attach(addr, {
+        onEnter(args) {
+            this.role = args[0].add(0xc).readS32();
+            this.manager = args[1];
+            this.sid = args[2].toUInt32();
+        },
+        onLeave() {
+            try {
+                const role = this.role as number;
+                const info = findRole(users, role);
+                if (info.isNull()) return;
+                const faction = info.add(0x28).readS32();
+                const body = beginForFaction(faction, role);
+                if (!body) return;
+                sendOn(this.manager as NativePointer, this.sid as number, T.begin, body);
+                console.log("[UniqFactionPk] \u767b\u5f55\u6062\u590d\u5e2e\u6218 role=" + role + " faction=" + faction);
+            } catch (e) {
+                console.log("[UniqFactionPk] \u767b\u5f55\u6062\u590d\u5931\u8d25 " + e);
+            }
+        },
+    });
 }
 
 export function installGnet(which: "glink" | "delivery") {
@@ -271,6 +384,11 @@ export function installGnet(which: "glink" | "delivery") {
         deliveryObj = rebase(0x8165d40);
         skipUnknownPolicy(rebase(0x805e906));
         registerTypes(rebase(0x80a1f0e));
+        try {
+            rememberClient(rebase(0x80c0463));
+        } catch (e) {
+            console.log("[UniqFactionPk] \u9009\u89d2\u4f1a\u8bdd\u6ca1\u6302\u4e0a " + e);
+        }
         console.log("[UniqFactionPk] glinkd 已注册跨服帮战协议");
         return;
     }
@@ -285,4 +403,57 @@ export function installGnet(which: "glink" | "delivery") {
     skipUnknownPolicy(policy);
     registerTypes(ctorAddr);
     console.log("[UniqFactionPk] gdeliveryd 已注册跨服帮战协议");
+    try {
+        restoreOnEnter(rebase(0x83fb6f2));
+    } catch (e) {
+        console.log("[UniqFactionPk] \u767b\u5f55\u6062\u590d\u6ca1\u6302\u4e0a " + e);
+    }
+    try {
+        attachRaid();
+    } catch (e) {
+        console.log("[UniqFactionPk] \u5f00\u623f\u95f4\u6ca1\u6302\u4e0a " + e);
+    }
+    const broadcastFn = new NativeFunction(rebase(0x83e7318), "void", ["pointer", "pointer"]);
+    const centralServer = rebase(0x8680364);
+    setLinkSend((linksid, body) => {
+        sendOn(deliveryServer(), linksid, T.invite, body);
+    });
+    setPushRole((role, type, body) => {
+        const sess = sessions.get(role);
+        if (!sess) {
+            console.log("[UniqFactionPk] \u6ca1\u6709\u73a9\u5bb6\u4f1a\u8bdd role=" + role + " type=" + type);
+            return;
+        }
+        sendOn(sess.manager, sess.sid, type, body);
+    });
+    setRelay((zone, type, body) => {
+        if (isCentralServer()) return dispatchZone(zone, type, body);
+        const centralClient = rebase(0x8680300);
+        const up = canReachCentral() && centralClient.add(52).readU8() !== 0;
+        if (!up) {
+            console.log("[UniqFactionPk] \u4e2d\u5fc3\u670d\u6ca1\u8fde\u4e0a zone=" + zone + " type=" + type);
+            return false;
+        }
+        sendOn(centralClient, centralClient.add(48).readU32(), type, body);
+        console.log("[UniqFactionPk] \u5df2\u4ea4\u7ed9\u4e2d\u5fc3\u670d zone=" + zone + " type=" + type);
+        return true;
+    });
+    attachCentral({
+        toCentral(type, body) {
+            const centralClient = rebase(0x8680300);
+            if (centralClient.add(52).readU8() === 0) return;
+            sendOn(centralClient, centralClient.add(48).readU32(), type, body);
+        },
+        broadcast(type, body) {
+            const obj = allocProto(type);
+            bodies.set(obj.toString(), body);
+            try {
+                broadcastFn(centralServer, obj);
+            } finally {
+                bodies.delete(obj.toString());
+                if (delFn) delFn(obj);
+            }
+        },
+    });
+
 }

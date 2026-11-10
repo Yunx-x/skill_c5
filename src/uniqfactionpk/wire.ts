@@ -46,7 +46,10 @@ export class W {
     }
 
     octets(text: string): this {
-        const raw = u16Name(text);
+        return this.bytes(u16Name(text));
+    }
+
+    bytes(raw: number[]): this {
         this.compact(raw.length);
         for (let i = 0; i < raw.length; i++) this.b.push(raw[i]);
         return this;
@@ -99,6 +102,13 @@ export class R {
         const n = this.compact();
         this.p += n;
         return n;
+    }
+
+    bytes(): number[] {
+        const n = this.compact();
+        const out: number[] = [];
+        for (let i = 0; i < n; i++) out.push(this.u8());
+        return out;
     }
 }
 

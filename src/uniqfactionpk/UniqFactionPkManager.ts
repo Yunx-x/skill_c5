@@ -6,7 +6,7 @@ import {installGnet} from "./gnet";
 /**
  * 18 职业跨服帮战。
  * 同一份脚本按进程挂到 glinkd、gdeliveryd、gs。
- * glinkd 把客户端协议转给交付服，交付服回区服列表、宣战和挑战，gs 在跨服副本创建和关闭时补 6900。
+ * glinkd 把客户端协议转给交付服，交付服回区服列表和挑战，gs 在跨服副本创建和关闭时补 6900。
  */
 export class UniqFactionPkManager extends BaseManager {
     private static readonly IDA_IMAGE_BASE = 0x8048000;
