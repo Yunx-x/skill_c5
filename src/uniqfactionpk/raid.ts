@@ -146,9 +146,21 @@ interface Arrival {
     gs: number;
     index: number;
     side: number;
+    zone: number;
+    homeRole: number;
 }
 
 const arrivals = new Map<number, Arrival>();
+const homes = new Map<number, {zone: number; role: number}>();
+
+export function homeOf(role: number): {zone: number; role: number} | null {
+    return homes.get(role) || null;
+}
+
+function rememberHome(remote: number, zone: number, role: number) {
+    if (!remote || !zone || !role) return;
+    homes.set(remote, {zone, role});
+}
 
 function isCentral(): boolean {
     return rebase(0x8670270).readU8() !== 0;
@@ -261,7 +273,7 @@ function askCentral(role: number, mapId: number, roomId: number, side: number) {
 }
 
 function pullHome(zone: number, role: number, mapId: number, world: World, side: number) {
-    arrivals.set(role, {gs: world.gs, index: world.index, side});
+    arrivals.set(role, {gs: world.gs, index: world.index, side, zone, homeRole: role});
     const obj = Memory.alloc(0x40);
     zero(obj, 0x40);
     obj.writePointer(rebase(0x8516108));
@@ -427,7 +439,9 @@ export function attachRaid() {
                 const src = arg.add(4).readS32();
                 const remote = res.add(0x10).readS32();
                 const spot = arrivals.get(src);
-                if (!spot || remote === 0 || remote === src) return;
+                if (!spot || remote === 0) return;
+                rememberHome(remote, spot.zone, src);
+                if (remote === src) return;
                 const prev = alias.get(src);
                 if (prev !== undefined && prev !== remote) arrivals.delete(prev);
                 alias.set(src, remote);

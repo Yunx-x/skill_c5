@@ -1,6 +1,7 @@
-import {openRaid} from "./raid";
+import {homeOf, openRaid} from "./raid";
 import {intAt, lastInt, R, u16Name, W} from "./wire";
 import {WarPeriod, warBroadcastText} from "./broadcast";
+import {grantsFor, loadReward, MailText} from "./reward";
 
 /** 和 18 客户端、16 服务端对过的协议号。 */
 export const T = {
@@ -75,6 +76,8 @@ interface ScoreRow {
     faction: number;
     side: number;
     name: number[];
+    homeRole: number;
+    homeZone: number;
 }
 
 interface Room {
@@ -99,6 +102,7 @@ interface Room {
     atkCount: number;
     defCount: number;
     broadcasted: WarPeriod[];
+    rewarded: boolean;
 }
 
 export interface Leader {
@@ -129,14 +133,16 @@ export function setPushRole(fn: (role: number, type: number, body: number[]) => 
     pushRole = fn;
 }
 
-const HOUR_FROM = 12;
-const HOUR_TO_MIN = 21 * 60 + 45;
+const CONFIG_PATH = "/root/uniqfaction.json";
+const DEFAULT_START = 12 * 60;
+const DEFAULT_END = 21 * 60 + 45;
 let gate: (role: number, faction: number, defLevel: number) => number = () => 0;
 let factionLevel: (faction: number) => number = () => 1;
 let localWar: (faction: number) => number = () => 0;
 let roster: (faction: number) => Leader[] = () => [];
 let askItem: (role: number, action: number, token: number) => boolean = () => false;
 let announce: (text: string) => void = () => {};
+let sendMail: (role: number, title: string, context: string, itemId: number, count: number, proctype: number) => boolean = () => false;
 let memberSend: (linksid: number, body: number[]) => void = () => {};
 
 export function setGate(fn: (role: number, faction: number, defLevel: number) => number) {
@@ -161,6 +167,10 @@ export function setAskItem(fn: (role: number, action: number, token: number) => 
 
 export function setAnnounce(fn: (text: string) => void) {
     announce = fn;
+}
+
+export function setSendMail(fn: (role: number, title: string, context: string, itemId: number, count: number, proctype: number) => boolean) {
+    sendMail = fn;
 }
 
 export function setMemberSend(fn: (linksid: number, body: number[]) => void) {
@@ -382,6 +392,7 @@ function openRoom(atkRole: number, atkFaction: number, atkZone: number, def: Dec
         atkCount: 0,
         defCount: 0,
         broadcasted: [],
+        rewarded: false,
     };
     rooms.set(room.id, room);
     return room;
@@ -624,6 +635,7 @@ function holdRoom(id: number, mapId: number, role: number, atkFaction: number, a
         atkCount: 0,
         defCount: 0,
         broadcasted: [],
+        rewarded: false,
     };
     rooms.set(room.id, room);
     return room;
@@ -646,14 +658,54 @@ interface ItemWait {
 }
 
 const itemWaits = new Map<number, ItemWait>();
-let itemToken = 1;
 const inside = new Map<number, {atk: number[]; def: number[]}>();
+
+function clockPart(v: unknown, max: number): number {
+    const n = typeof v === "number" ? v : parseInt(String(v), 10);
+    if (n !== n || n < 0 || n > max) return -1;
+    return n | 0;
+}
+
+function loadOpenHours(): {start: number; end: number} {
+    const fallback = {start: DEFAULT_START, end: DEFAULT_END};
+    let text = "";
+    try {
+        text = File.readAllText(CONFIG_PATH);
+    } catch (e) {
+        return fallback;
+    }
+    if (text.charCodeAt(0) === 0xfeff) text = text.slice(1);
+    try {
+        const data = JSON.parse(text);
+        const raw = data && data.hours;
+        if (!raw || typeof raw !== "object") return fallback;
+        const sh = clockPart(raw.startHour, 23);
+        const sm = clockPart(raw.startMinute, 59);
+        const eh = clockPart(raw.endHour, 23);
+        const em = clockPart(raw.endMinute, 59);
+        if (sh < 0 || sm < 0 || eh < 0 || em < 0) {
+            console.log("[UniqFactionPk] \u7533\u8bf7\u65f6\u6bb5\u914d\u7f6e\u65e0\u6548");
+            return fallback;
+        }
+        const start = sh * 60 + sm;
+        const end = eh * 60 + em;
+        if (end <= start) {
+            console.log("[UniqFactionPk] \u7533\u8bf7\u65f6\u6bb5\u7ed3\u675f\u4e0d\u665a\u4e8e\u5f00\u59cb");
+            return fallback;
+        }
+        return {start, end};
+    } catch (e) {
+        console.log("[UniqFactionPk] \u7533\u8bf7\u65f6\u6bb5\u89e3\u6790\u5931\u8d25 " + e);
+        return fallback;
+    }
+}
 
 function hourCode(): number {
     const now = new Date();
     const minutes = now.getHours() * 60 + now.getMinutes();
-    if (minutes < HOUR_FROM * 60 || minutes >= HOUR_TO_MIN) {
-        console.log("[UniqFactionPk] \u4e0d\u5728\u7533\u8bf7\u65f6\u6bb5 " + now.getHours() + ":" + now.getMinutes());
+    const open = loadOpenHours();
+    if (minutes < open.start || minutes >= open.end) {
+        console.log("[UniqFactionPk] \u4e0d\u5728\u7533\u8bf7\u65f6\u6bb5 " + now.getHours() + ":" + two(now.getMinutes()) + " open=" + (open.start / 60 | 0) + ":" + two(open.start % 60) + "-" + (open.end / 60 | 0) + ":" + two(open.end % 60));
         return 93;
     }
     return 0;
@@ -725,20 +777,20 @@ function onChallenge(body: number[]): Out[] {
         console.log("[UniqFactionPk] \u7533\u8bf7\u88ab\u62e6 code=" + blocked + " role=" + role);
         return failChallenge(blocked, srcZone, role, faction, mapId, targetZone, brief.faction);
     }
-    const token = itemToken++;
-    if (!askItem(role, 1, token)) {
-        console.log("[UniqFactionPk] \u67e5\u7269\u54c1\u6ca1\u9001\u51fa role=" + role);
-        return failChallenge(5, srcZone, role, faction, mapId, targetZone, brief.faction);
+    const itemCode = checkChallengeItem(role);
+    if (itemCode) {
+        console.log("[UniqFactionPk] \u7269\u54c1\u4e0d\u591f code=" + itemCode + " role=" + role);
+        return failChallenge(itemCode, srcZone, role, faction, mapId, targetZone, brief.faction);
     }
-    const timer = setTimeout(() => {
-        const wait = itemWaits.get(token);
-        if (!wait) return;
-        itemWaits.delete(token);
-        console.log("[UniqFactionPk] \u67e5\u7269\u54c1\u8d85\u65f6 role=" + role);
-        pushRole(role, T.challengeRe, challengeAnswer(5, srcZone, role, faction, mapId, targetZone, brief.faction));
-    }, 4000);
-    itemWaits.set(token, {role, srcZone, faction, mapId, dstZone: targetZone, dstFaction: brief.faction, timer});
+    launchChallenge(srcZone, role, faction, mapId, targetZone, brief.faction);
     return [];
+}
+
+function checkChallengeItem(role: number): number {
+    return 0;
+}
+
+function takeChallengeItem(role: number): void {
 }
 
 function findWaiting(mapId: number, atkZone: number, atkFaction: number, defZone: number, defFaction: number): Room | undefined {
@@ -774,6 +826,7 @@ function onInviteRe(body: number[]): Out[] {
     const leader = knownLeader(room, roleKey, otherKey);
     if (!leader) return [];
     if (result !== 0) {
+        broadcastWar(room, "accept");
         room.waiting = false;
         room.running = true;
         shareRoom(room);
@@ -789,6 +842,7 @@ function onInviteRe(body: number[]): Out[] {
     }
     room.left = room.left.filter((id) => id !== leader);
     if (room.left.length) return [];
+    broadcastWar(room, "retreat");
     room.waiting = false;
     rooms.delete(room.id);
     if (room.atkZone !== serverZone) relay(room.atkZone, T.inviteResult, resultBody(room, 0, roleKey));
@@ -827,6 +881,7 @@ export function onInviteAsk(body: number[]): void {
         console.log("[UniqFactionPk] \u5b88\u65b9\u4e0d\u7b26\u5408 level=" + level + " war=" + war + " faction=" + defFaction);
         return;
     }
+    broadcastWar(room, "ask");
     sendInvites(room, leaders);
     armWait(room, role);
     relay(atkZone, T.inviteResult, resultBody(room, 3, 0));
@@ -851,6 +906,7 @@ export function onInviteResult(body: number[]): void {
     const room = rooms.get(id);
     if (!room || room.atkZone !== serverZone) return;
     if (code === 3) {
+        broadcastWar(room, "ask");
         answerTo(room.atkRole, 0, room);
         return;
     }
@@ -867,6 +923,7 @@ export function onInviteResult(body: number[]): void {
         return;
     }
     if (code === 1) {
+        broadcastWar(room, "accept");
         room.waiting = false;
         room.running = true;
         shareRoom(room);
@@ -874,9 +931,10 @@ export function onInviteResult(body: number[]): void {
         room.defRole = replyRole;
         pushRole(room.atkRole, T.begin, beginOf(room, room.atkRole).body);
         tellMembers(room, room.atkFaction, [room.atkRole]);
-        askItem(room.atkRole, 2, itemToken++);
+        takeChallengeItem(room.atkRole);
         return;
     }
+    if (code === 0) broadcastWar(room, "retreat");
     room.waiting = false;
     rooms.delete(room.id);
     answerTo(room.atkRole, 50, room);
@@ -937,7 +995,7 @@ function packRoom(room: Room): number[] {
         .compact(room.rows.length);
     for (let i = 0; i < room.rows.length; i++) {
         const row = room.rows[i];
-        w.i32(row.role).i16(row.kills).i16(row.deaths).i32(row.faction).i32(row.side).bytes(row.name);
+        w.i32(row.role).i16(row.kills).i16(row.deaths).i32(row.faction).i32(row.side).bytes(row.name).i32(row.homeRole).i32(row.homeZone);
     }
     w.i16(room.atkCount).i16(room.defCount);
     return w.b;
@@ -947,7 +1005,7 @@ function blankRoom(id: number): Room {
     return {
         id, mapId: 0, atkRole: 0, atkFaction: 0, atkZone: 0, defRole: 0, defFaction: 0, defZone: 0,
         endTime: 0, running: false, waiting: false, left: [], atkName: [], defName: [], token: 0,
-        worldIndex: 0, trusted: false, rows: [], atkCount: 0, defCount: 0, broadcasted: [],
+        worldIndex: 0, trusted: false, rows: [], atkCount: 0, defCount: 0, broadcasted: [], rewarded: false,
     };
 }
 
@@ -978,6 +1036,8 @@ export function applyRoomSync(body: number[]) {
             faction: r.i32(),
             side: r.i32(),
             name: r.bytes(),
+            homeRole: r.i32(),
+            homeZone: r.i32(),
         });
     }
     let atkCount = -1;
@@ -1020,7 +1080,10 @@ export function applyRoomSync(body: number[]) {
         room.atkCount = atkCount;
         room.defCount = defCount;
     }
-    if (justStopped) broadcastWar(room, "end");
+    if (justStopped) {
+        broadcastWar(room, "end");
+        if (!centralNow()) payRewards(room);
+    }
     const pending = pendingFight.get(id);
     if (pending && pending.endTime && !room.trusted) {
         room.endTime = pending.endTime;
@@ -1063,8 +1126,13 @@ function bump(room: Room, role: number, side: number, faction: number, name: num
         if (room.rows[i].role === role) row = room.rows[i];
     }
     if (!row) {
-        row = {role, side, faction, name, kills: 0, deaths: 0};
+        row = {role, side, faction, name, kills: 0, deaths: 0, homeRole: 0, homeZone: 0};
         room.rows.push(row);
+    }
+    const home = homeOf(role);
+    if (home && !row.homeRole) {
+        row.homeRole = home.role;
+        row.homeZone = home.zone;
     }
     if (name.length) row.name = name;
     row.side = side;
@@ -1155,6 +1223,71 @@ function onScore(body: number[]): Out[] {
     return [{type: T.scoreRe, body: w.b}];
 }
 
+const SCORE_LOG_DIR = "/root/zxserver/logs";
+
+function two(n: number): string {
+    return n < 10 ? "0" + n : String(n);
+}
+
+function fileNamePart(name: string): string {
+    let out = "";
+    for (let i = 0; i < name.length && out.length < 32; i++) {
+        const c = name.charCodeAt(i);
+        if (c <= 32 || c === 47 || c === 92 || c === 58 || c === 42 || c === 63 || c === 34 || c === 60 || c === 62 || c === 124) out += "_";
+        else out += name.charAt(i);
+    }
+    return out || "\u672a\u77e5";
+}
+
+function scoreSideText(room: Room, side: number, title: string): string {
+    const list: ScoreRow[] = [];
+    for (let i = 0; i < room.rows.length; i++) if (room.rows[i].side === side) list.push(room.rows[i]);
+    list.sort((a, b) => (b.kills - a.kills) || (a.deaths - b.deaths) || (a.role - b.role));
+    const lines = [title, "\u540d\u5b57\t\u51fb\u6740\t\u6b7b\u4ea1\t\u8de8\u670d\u89d2\u8272\t\u672c\u533a\u89d2\u8272\t\u672c\u533a"];
+    if (!list.length) {
+        lines.push("\uff08\u65e0\u4eba\u4e0a\u699c\uff09");
+        return lines.join("\n");
+    }
+    for (let i = 0; i < list.length; i++) {
+        const row = list[i];
+        const name = textOf(row.name) || String(row.role);
+        lines.push(name + "\t" + row.kills + "\t" + row.deaths + "\t" + row.role + "\t" + row.homeRole + "\t" + row.homeZone);
+    }
+    return lines.join("\n");
+}
+
+function snapshotScore(room: Room) {
+    const atkName = textOf(room.atkName) || String(room.atkFaction || 0);
+    const defName = textOf(room.defName) || String(room.defFaction || 0);
+    const atkKills = sideSum(room, 1, "kills");
+    const defKills = sideSum(room, 2, "kills");
+    const winner = atkKills === defKills ? "\u5e73\u5c40" : atkKills > defKills ? "\u653b\u65b9\u80dc" : "\u5b88\u65b9\u80dc";
+    const now = new Date();
+    const stamp = now.getFullYear() + two(now.getMonth() + 1) + two(now.getDate()) + "_" + two(now.getHours()) + two(now.getMinutes()) + two(now.getSeconds());
+    const file = SCORE_LOG_DIR + "/" + stamp + "_" + fileNamePart(atkName) + "_vs_" + fileNamePart(defName) + ".txt";
+    const clock = now.getFullYear() + "-" + two(now.getMonth() + 1) + "-" + two(now.getDate()) + " " + two(now.getHours()) + ":" + two(now.getMinutes()) + ":" + two(now.getSeconds());
+    const text = [
+        "\u65f6\u95f4: " + clock,
+        "\u623f\u95f4: " + room.id + "  \u5730\u56fe: " + room.mapId,
+        "\u7ed3\u679c: " + winner,
+        "\u653b\u65b9: [" + room.atkZone + "]" + atkName + "  \u5e2e\u6d3e=" + room.atkFaction + "  \u51fb\u6740=" + atkKills + "  \u6b7b\u4ea1=" + sideSum(room, 1, "deaths") + "  \u8fdb\u573a=" + room.atkCount,
+        "\u5b88\u65b9: [" + room.defZone + "]" + defName + "  \u5e2e\u6d3e=" + room.defFaction + "  \u51fb\u6740=" + defKills + "  \u6b7b\u4ea1=" + sideSum(room, 2, "deaths") + "  \u8fdb\u573a=" + room.defCount,
+        "",
+        scoreSideText(room, 1, "\u653b\u65b9"),
+        "",
+        scoreSideText(room, 2, "\u5b88\u65b9"),
+        "",
+    ].join("\n");
+    try {
+        const mkdir = new NativeFunction(Module.getExportByName(null, "mkdir"), "int", ["pointer", "int"]);
+        mkdir(Memory.allocUtf8String(SCORE_LOG_DIR), 493);
+        File.writeAllText(file, text);
+        console.log("[UniqFactionPk] \u8ba1\u5206\u5feb\u7167 " + file);
+    } catch (err) {
+        console.log("[UniqFactionPk] \u8ba1\u5206\u5feb\u7167\u5931\u8d25 " + err);
+    }
+}
+
 function onFight(body: number[]): Out[] {
     const mapId = intAt(body, 0);
     const roomId = intAt(body, 1);
@@ -1176,6 +1309,7 @@ function onFight(body: number[]): Out[] {
     if (centralNow()) {
         if (started === 0) {
             broadcastWar(room, "end");
+            snapshotScore(room);
             rooms.delete(room.id);
         }
         return [];
@@ -1195,21 +1329,82 @@ function textOf(bytes: number[]): string {
     return text;
 }
 
-function sideKills(room: Room, side: number): number {
+function sideSum(room: Room, side: number, field: "kills" | "deaths"): number {
     let n = 0;
-    for (let i = 0; i < room.rows.length; i++) if (room.rows[i].side === side) n += room.rows[i].kills;
+    for (let i = 0; i < room.rows.length; i++) if (room.rows[i].side === side) n += room.rows[i][field];
     return n;
 }
 
+function mvpOf(room: Room, side: number): ScoreRow | null {
+    let best: ScoreRow | null = null;
+    for (let i = 0; i < room.rows.length; i++) {
+        const row = room.rows[i];
+        if (row.side !== side) continue;
+        if (!best || row.kills > best.kills || (row.kills === best.kills && row.deaths < best.deaths)) best = row;
+    }
+    return best;
+}
+
+function lineOf(row: ScoreRow | null) {
+    if (!row) return null;
+    return {role: row.role, name: textOf(row.name), kills: row.kills, deaths: row.deaths};
+}
+
 function factsOf(room: Room) {
+    const atkKills = sideSum(room, 1, "kills");
+    const defKills = sideSum(room, 2, "kills");
     return {
+        atkZone: room.atkZone,
+        defZone: room.defZone,
         atkName: textOf(room.atkName) || String(room.atkFaction),
         defName: textOf(room.defName) || String(room.defFaction),
-        atkKills: sideKills(room, 1),
-        defKills: sideKills(room, 2),
+        atkKills,
+        defKills,
+        atkDeaths: sideSum(room, 1, "deaths"),
+        defDeaths: sideSum(room, 2, "deaths"),
         atkCount: room.atkCount,
         defCount: room.defCount,
+        winner: atkKills === defKills ? "draw" as const : atkKills > defKills ? "atk" as const : "def" as const,
+        atkMvp: lineOf(mvpOf(room, 1)),
+        defMvp: lineOf(mvpOf(room, 2)),
     };
+}
+
+function deliverMail(role: number, mail: MailText) {
+    if (!mail.items.length) {
+        sendMail(role, mail.title, mail.context, 0, 0, 0);
+        return;
+    }
+    for (let i = 0; i < mail.items.length; i++) {
+        const item = mail.items[i];
+        sendMail(role, mail.title, mail.context, item.id, item.count, item.proctype);
+    }
+}
+
+function payRewards(room: Room) {
+    if (room.rewarded) return;
+    room.rewarded = true;
+    const cfg = loadReward();
+    if (!cfg) {
+        console.log("[UniqFactionPk] \u6ca1\u6709\u5956\u52b1\u914d\u7f6e room=" + room.id);
+        return;
+    }
+    const atkKills = sideSum(room, 1, "kills");
+    const defKills = sideSum(room, 2, "kills");
+    const winner = atkKills === defKills ? "draw" as const : atkKills > defKills ? "atk" as const : "def" as const;
+    for (let i = 0; i < room.rows.length; i++) {
+        const row = room.rows[i];
+        if (row.kills > cfg.kills && row.deaths > cfg.deaths && (!row.homeRole || row.homeZone !== serverZone)) {
+            console.log("[UniqFactionPk] \u5956\u52b1\u8df3\u8fc7 role=" + row.role + " home=" + row.homeRole + " zone=" + row.homeZone + " kills=" + row.kills + " deaths=" + row.deaths);
+        }
+    }
+    const grants = grantsFor(room.rows, winner, serverZone, cfg);
+    for (let i = 0; i < grants.length; i++) {
+        const grant = grants[i];
+        deliverMail(grant.homeRole, grant.mail);
+        console.log("[UniqFactionPk] \u53d1\u5956 room=" + room.id + " role=" + grant.homeRole + " " + grant.kind + " items=" + grant.mail.items.length);
+    }
+    console.log("[UniqFactionPk] \u5956\u52b1\u540d\u5355 room=" + room.id + " zone=" + serverZone + " n=" + grants.length + " winner=" + winner);
 }
 
 function broadcastWar(room: Room, period: WarPeriod) {

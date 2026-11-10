@@ -14,5 +14,59 @@
       "level": 0,
       "activity": 10000
     }
-  ]
+  ],
+  "hours": {
+    "startHour": 12,
+    "startMinute": 0,
+    "endHour": 21,
+    "endMinute": 45
+  },
+  "reward": {
+    "kills": 5,
+    "deaths": 5,
+    "win": {
+      "title": "跨服帮战-胜方奖励",
+      "context": "胜方奖励",
+      "items": [
+        {
+          "id": 340065,
+          "count": 10,
+          "proctype": 147
+        }
+      ]
+    },
+    "lose": {
+      "title": "跨服帮战-败方奖励",
+      "context": "败方奖励",
+      "items": [
+        {
+          "id": 340065,
+          "count": 5,
+          "proctype": 147
+        }
+      ]
+    },
+    "winMvp": {
+      "title": "跨服帮战-胜方MVP奖励",
+      "context": "胜方MVP奖励",
+      "items": [
+        {
+          "id": 340069,
+          "count": 3,
+          "proctype": 147
+        }
+      ]
+    },
+    "loseMvp": {
+      "title": "跨服帮战-败方MVP奖励",
+      "context": "败方MVP奖励",
+      "items": [
+        {
+          "id": 340069,
+          "count": 1,
+          "proctype": 147
+        }
+      ]
+    }
+  }
 }

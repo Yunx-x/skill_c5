@@ -1,7 +1,7 @@
 import {HookFuncCore} from "../base/HookFuncCore";
 import {attachRaid} from "./raid";
 import {intAt, u16Name, W} from "./wire";
-import {askMissBody, beginForFaction, handle, inviteLocalsid, noteLeave, onInviteAsk, onInviteResult, onItemReply, REPLIES, REQUESTS, roleOf, setAnnounce, setAskItem, setCentral, setFactionLevel, setGate, setLinkSend, setLocalWar, setMemberSend, setPushRole, setRelay, setRoster, takeRegister, T} from "./logic";
+import {askMissBody, beginForFaction, handle, inviteLocalsid, noteLeave, onInviteAsk, onInviteResult, onItemReply, REPLIES, REQUESTS, roleOf, setAnnounce, setAskItem, setCentral, setFactionLevel, setGate, setLinkSend, setLocalWar, setMemberSend, setPushRole, setRelay, setRoster, setSendMail, takeRegister, T} from "./logic";
 import {attachCentral, canReachCentral, forwardRequest, isCentralServer, onResend, shouldForward, shouldRouteReply} from "./central";
 
 const IDA_BASE = 0x8048000;
@@ -61,8 +61,10 @@ function appendBody(stream: NativePointer, bytes: number[]) {
         insert(stream, end(stream), mem, bytes.length);
         return;
     }
-    const end = new NativeFunction(rebase(0x80584b4), "int", ["pointer"]);
-    const insert = new NativeFunction(rebase(0x80584d0), "pointer", ["pointer", "int", "pointer", "int"]);
+    const endIda = mode === "gs" ? 0x8bac780 : 0x80584b4;
+    const insertIda = mode === "gs" ? 0x8bac800 : 0x80584d0;
+    const end = new NativeFunction(findFn("_ZN4GNET6Octets3endEv", endIda), "pointer", ["pointer"]);
+    const insert = new NativeFunction(findFn("_ZN4GNET6Octets6insertEPvPKvj", insertIda), "pointer", ["pointer", "pointer", "pointer", "uint32"]);
     insert(stream, end(stream), mem, bytes.length);
 }
 
@@ -425,7 +427,8 @@ function answerItem(body: number[]) {
     const obj = allocProto(T.itemRe);
     bodies.set(obj.toString(), reply);
     try {
-        gsClientSend(0, obj);
+        const sent = gsClientSend(0, obj);
+        console.log("[UniqFactionPk] gs\u56de\u7269\u54c1 token=" + token + " ok=" + ok + " sent=" + sent);
     } finally {
         bodies.delete(obj.toString());
         if (delFn) delFn(obj);
@@ -554,7 +557,7 @@ function installDeliveryExtras() {
             mem.writeByteArray(bytes);
             const obj = Memory.alloc(0x40);
             chatCtor(obj);
-            obj.add(0xc).writeU8(1);
+            obj.add(0xc).writeU8(9);
             obj.add(0xd).writeU8(0);
             obj.add(0x10).writeS32(0);
             replaceOctets(obj.add(0x14), mem, bytes.length);
@@ -565,6 +568,43 @@ function installDeliveryExtras() {
         }
     };
     setAnnounce(sendWorldChat);
+    const queryMail = new NativeFunction(rebase(0x83e525a), "int", ["pointer", "uint32"]);
+    const octCtor = new NativeFunction(rebase(0x82d44fc), "void", ["pointer"]);
+    const invVptr = rebase(0x84dd188);
+    const sendOneMail = (role: number, title: string, context: string, itemId: number, count: number, proctype: number) => {
+        try {
+            const obj = Memory.alloc(0x80);
+            for (let i = 0; i < 0x80; i += 4) obj.add(i).writeU32(0);
+            obj.add(0x18).writeS32(role);
+            const putText = (at: number, text: string) => {
+                const bytes = u16Name(text);
+                const mem = Memory.alloc(Math.max(2, bytes.length));
+                if (bytes.length) mem.writeByteArray(bytes);
+                octCtor(obj.add(at));
+                replaceOctets(obj.add(at), mem, bytes.length);
+            };
+            putText(0x1c, title);
+            putText(0x24, context);
+            if (itemId > 0 && count > 0) {
+                const inv = obj.add(0x2c);
+                inv.writePointer(invVptr);
+                inv.add(4).writeU32(itemId);
+                inv.add(8).writeS32(-1);
+                inv.add(12).writeS32(count);
+                inv.add(16).writeS16(0);
+                inv.add(18).writeS16(count > 32767 ? 32767 : count);
+                octCtor(inv.add(20));
+                inv.add(28).writeS32(proctype);
+            }
+            const ok = queryMail(obj, 0);
+            console.log("[UniqFactionPk] \u90ae\u4ef6 role=" + role + " item=" + itemId + " count=" + count + " ok=" + ok);
+            return ok !== 0;
+        } catch (e) {
+            console.log("[UniqFactionPk] \u90ae\u4ef6\u5931\u8d25 role=" + role + " " + e);
+            return false;
+        }
+    };
+    setSendMail(sendOneMail);
     try {
         const logout = findFn("_ZN4GNET12PlayerLogout7ProcessEPNS_8Protocol7ManagerEj", 0x8338f0c);
         Interceptor.attach(logout, {
