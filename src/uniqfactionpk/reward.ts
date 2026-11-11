@@ -1,5 +1,5 @@
 /** 跨服帮战结束奖励。配置在 /root/uniqfaction.json 的 reward 里。
- * kills、deaths 是必须超过的数，默认都是 5。名单只取计分板上过线的人。
+ * kills、deaths 是达到即可的数，默认都是 2。击杀或死亡达到其中一个就算。名单只取计分板上过线的人。
  * 同一边击杀最高的是 MVP，击杀相同再比死亡少。MVP 只领 MVP 邮件，不重复领阵营邮件。
  * 平局两边都发失败方奖励，MVP 发败方 MVP。
  * 系统邮件一次只能夹一件物品，多件就分多封，标题和正文相同。
@@ -113,7 +113,7 @@ export function grantsFor(rows: RewardRow[], winner: "atk" | "def" | "draw", ser
     const passed: RewardRow[] = [];
     for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
-        if (row.kills > cfg.kills && row.deaths > cfg.deaths && row.homeRole && row.homeZone === serverZone) passed.push(row);
+        if ((row.kills >= cfg.kills || row.deaths >= cfg.deaths) && row.homeRole && row.homeZone === serverZone) passed.push(row);
     }
     const atkMvp = mvpOf(passed, 1);
     const defMvp = mvpOf(passed, 2);

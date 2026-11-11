@@ -1,4 +1,4 @@
-import {homeOf, openRaid} from "./raid";
+import {centralLink, closeRaid, crossedRoles, forgetRaid, homeOf, openRaid} from "./raid";
 import {intAt, lastInt, R, u16Name, W} from "./wire";
 import {WarPeriod, warBroadcastText} from "./broadcast";
 import {grantsFor, loadReward, MailText} from "./reward";
@@ -143,7 +143,7 @@ let roster: (faction: number) => Leader[] = () => [];
 let askItem: (role: number, action: number, token: number) => boolean = () => false;
 let announce: (text: string) => void = () => {};
 let sendMail: (role: number, title: string, context: string, itemId: number, count: number, proctype: number) => boolean = () => false;
-let memberSend: (linksid: number, body: number[]) => void = () => {};
+let memberSend: (linksid: number, type: number, body: number[]) => void = () => {};
 
 export function setGate(fn: (role: number, faction: number, defLevel: number) => number) {
     gate = fn;
@@ -173,7 +173,7 @@ export function setSendMail(fn: (role: number, title: string, context: string, i
     sendMail = fn;
 }
 
-export function setMemberSend(fn: (linksid: number, body: number[]) => void) {
+export function setMemberSend(fn: (linksid: number, type: number, body: number[]) => void) {
     memberSend = fn;
 }
 
@@ -1071,10 +1071,7 @@ export function applyRoomSync(body: number[]) {
     if (trusted) room.running = running;
     else if (running) room.running = true;
     const justStopped = wasRunning && !room.running;
-    if (justStopped) {
-        pushRole(room.atkRole, T.stop, stopOf(room, room.atkRole).body);
-        pushRole(room.defRole, T.stop, stopOf(room, room.defRole).body);
-    }
+    if (justStopped) stopEveryone(room);
     if (count > 0) room.rows = rows;
     if (atkCount >= 0) {
         room.atkCount = atkCount;
@@ -1288,6 +1285,92 @@ function snapshotScore(room: Room) {
     }
 }
 
+const endTimers = new Map<number, ReturnType<typeof setTimeout>>();
+
+export function raidExpired(roomId: number): boolean {
+    const room = rooms.get(roomId);
+    if (!room || !room.endTime) return false;
+    return (Date.now() / 1000 | 0) >= room.endTime;
+}
+
+export function raidAccepting(roomId: number): boolean {
+    const room = rooms.get(roomId);
+    return !!room && room.running;
+}
+
+function clearRaidEnd(roomId: number) {
+    const timer = endTimers.get(roomId);
+    if (!timer) return;
+    clearTimeout(timer);
+    endTimers.delete(roomId);
+}
+
+function stopEveryone(room: Room) {
+    const sent: number[] = [];
+    const one = (role: number, linksid: number) => {
+        if (!role || sent.indexOf(role) >= 0) return;
+        sent.push(role);
+        const body = stopOf(room, role).body;
+        if (linksid) memberSend(linksid, T.stop, body);
+        else pushRole(role, T.stop, body);
+    };
+    one(room.atkRole, 0);
+    one(room.defRole, 0);
+    const factions = [room.atkFaction, room.defFaction];
+    for (let i = 0; i < factions.length; i++) {
+        const people = roster(factions[i]);
+        for (let n = 0; n < people.length; n++) one(people[n].role, people[n].linksid);
+    }
+    if (!centralNow()) return;
+    const inside = crossedRoles();
+    for (let i = 0; i < room.rows.length; i++) inside.push(room.rows[i].role);
+    for (let i = 0; i < inside.length; i++) {
+        const role = inside[i];
+        const link = centralLink(role);
+        if (link) one(role, link);
+    }
+}
+
+function finishWar(room: Room) {
+    if (!room.running || !rooms.has(room.id)) return;
+    room.running = false;
+    clearRaidEnd(room.id);
+    shareRoom(room);
+    broadcastWar(room, "end");
+    stopEveryone(room);
+    if (centralNow()) {
+        snapshotScore(room);
+        forgetRaid(room.id);
+    } else {
+        payRewards(room);
+    }
+    rooms.delete(room.id);
+}
+
+function armRaidEnd(room: Room) {
+    clearRaidEnd(room.id);
+    if (!centralNow() || !room.running || !room.endTime) return;
+    const token = room.endTime;
+    const wait = Math.max(0, token - (Date.now() / 1000 | 0));
+    endTimers.set(room.id, setTimeout(() => {
+        endTimers.delete(room.id);
+        const cur = rooms.get(room.id);
+        if (!cur || !cur.running || cur.endTime !== token) return;
+        console.log("[UniqFactionPk] \u65f6\u95f4\u5230\uff0c\u5173\u95ed\u526f\u672c room=" + cur.id);
+        stopEveryone(cur);
+        if (!closeRaid(cur.id)) {
+            finishWar(cur);
+            return;
+        }
+        setTimeout(() => {
+            const still = rooms.get(cur.id);
+            if (!still || !still.running) return;
+            console.log("[UniqFactionPk] \u5173\u95ed\u6ca1\u6709\u56de\u5305\uff0c\u6309\u65f6\u95f4\u7ed3\u675f room=" + cur.id);
+            finishWar(still);
+        }, 5000);
+    }, wait * 1000));
+}
+
 function onFight(body: number[]): Out[] {
     const mapId = intAt(body, 0);
     const roomId = intAt(body, 1);
@@ -1304,23 +1387,17 @@ function onFight(body: number[]): Out[] {
         room.endTime = endTime;
         room.trusted = true;
     }
-    room.running = started !== 0;
-    shareRoom(room);
-    if (centralNow()) {
-        if (started === 0) {
-            broadcastWar(room, "end");
-            snapshotScore(room);
-            rooms.delete(room.id);
-        }
+    if (started === 0) {
+        finishWar(room);
         return [];
     }
-    if (started !== 0) {
-        return [beginOf(room, room.atkRole), beginOf(room, room.defRole)];
+    room.running = true;
+    shareRoom(room);
+    if (centralNow()) {
+        armRaidEnd(room);
+        return [];
     }
-    broadcastWar(room, "end");
-    const outs = [stopOf(room, room.atkRole), stopOf(room, room.defRole)];
-    rooms.delete(room.id);
-    return outs;
+    return [beginOf(room, room.atkRole), beginOf(room, room.defRole)];
 }
 
 function textOf(bytes: number[]): string {
@@ -1394,7 +1471,10 @@ function payRewards(room: Room) {
     const winner = atkKills === defKills ? "draw" as const : atkKills > defKills ? "atk" as const : "def" as const;
     for (let i = 0; i < room.rows.length; i++) {
         const row = room.rows[i];
-        if (row.kills > cfg.kills && row.deaths > cfg.deaths && (!row.homeRole || row.homeZone !== serverZone)) {
+        const qualified = row.kills >= cfg.kills || row.deaths >= cfg.deaths;
+        if (!qualified) {
+            console.log("[UniqFactionPk] \u5956\u52b1\u672a\u8fbe role=" + row.role + " kills=" + row.kills + " deaths=" + row.deaths + " need=" + cfg.kills + "/" + cfg.deaths);
+        } else if (!row.homeRole || row.homeZone !== serverZone) {
             console.log("[UniqFactionPk] \u5956\u52b1\u8df3\u8fc7 role=" + row.role + " home=" + row.homeRole + " zone=" + row.homeZone + " kills=" + row.kills + " deaths=" + row.deaths);
         }
     }
@@ -1421,7 +1501,7 @@ function tellMembers(room: Room, faction: number, skip: number[]) {
     for (let i = 0; i < people.length; i++) {
         const one = people[i];
         if (skip.indexOf(one.role) >= 0 || !one.linksid) continue;
-        memberSend(one.linksid, beginOf(room, one.role).body);
+        memberSend(one.linksid, T.begin, beginOf(room, one.role).body);
     }
 }
 

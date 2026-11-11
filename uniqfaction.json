@@ -22,8 +22,8 @@
     "endMinute": 45
   },
   "reward": {
-    "kills": 5,
-    "deaths": 5,
+    "kills": 2,
+    "deaths": 2,
     "win": {
       "title": "跨服帮战-胜方奖励",
       "context": "胜方奖励",

@@ -547,8 +547,8 @@ function installDeliveryExtras() {
             return false;
         }
     });
-    setMemberSend((linksid, body) => {
-        sendOn(deliveryServer(), linksid, T.begin, body);
+    setMemberSend((linksid, type, body) => {
+        sendOn(deliveryServer(), linksid, type, body);
     });
     const sendWorldChat = (text: string) => {
         try {

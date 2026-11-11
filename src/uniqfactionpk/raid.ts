@@ -1,4 +1,4 @@
-import {bindInstance, noteEnter, noteKill} from "./logic";
+import {bindInstance, noteEnter, noteKill, raidAccepting, raidExpired} from "./logic";
 const IDA_BASE = 0x8048000;
 
 const SEND_RAID_START = 0x19ac;
@@ -87,6 +87,35 @@ function sendStart(gs: number, mapId: number, roomId: number) {
     const ret = send(rebase(0x8670430), gs, obj);
     new NativeFunction(rebase(0x83b11c8), "void", ["pointer"])(obj);
     return ret;
+}
+
+function sendClose(gs: number, roomId: number, mapId: number, index: number) {
+    const obj = Memory.alloc(0x20);
+    zero(obj, 0x20);
+    obj.writePointer(rebase(0x8516520));
+    obj.add(8).writeU32(SEND_RAID_CLOSE);
+    obj.add(0xc).writeS32(roomId);
+    obj.add(0x10).writeS32(mapId);
+    obj.add(0x14).writeS32(index);
+    obj.add(0x18).writeS32(0);
+    const send = new NativeFunction(rebase(0x82fe44e), "int", ["pointer", "int", "pointer"]);
+    return send(rebase(0x8670430), gs, obj);
+}
+
+export function closeRaid(roomId: number): boolean {
+    const world = worlds.get(roomId);
+    if (!world) {
+        console.log("[UniqFactionPk] \u6ca1\u6709\u526f\u672c\u53ef\u5173 room=" + roomId);
+        return false;
+    }
+    const ret = sendClose(world.gs, roomId, world.mapId, world.index);
+    console.log("[UniqFactionPk] \u5173\u95ed\u526f\u672c room=" + roomId + " gs=" + world.gs + " index=" + world.index + " send=" + ret);
+    if (ret !== 0) worlds.delete(roomId);
+    return ret !== 0;
+}
+
+export function forgetRaid(roomId: number) {
+    worlds.delete(roomId);
 }
 
 function sendEnter(gs: number, role: number, mapId: number, templateId: number, index: number) {
@@ -180,6 +209,19 @@ function roleName(role: number): number[] {
     if (n < 2 || n > 64 || (n & 1) !== 0) return [];
     const out: number[] = [];
     for (let i = 0; i < n; i++) out.push(data.add(i).readU8());
+    return out;
+}
+
+export function centralLink(role: number): number {
+    const info = findRole(role);
+    if (!info) return 0;
+    const link = info.add(0x20).readS32();
+    return link > 0 ? link : 0;
+}
+
+export function crossedRoles(): number[] {
+    const out: number[] = [];
+    homes.forEach((_home, role) => out.push(role));
     return out;
 }
 
@@ -331,7 +373,7 @@ export function attachRaid() {
     const realDispatch = new NativeFunction(rebase(0x82fe44e), "int", ["pointer", "int", "pointer"]);
     Interceptor.replace(rebase(0x84060d8), keep(new NativeCallback((self: NativePointer, gs: number, proto: NativePointer) => {
         try {
-            if (proto.add(8).readU32() === SEND_RAID_CLOSE && worlds.has(proto.add(0xc).readS32())) {
+            if (proto.add(8).readU32() === SEND_RAID_CLOSE && worlds.has(proto.add(0xc).readS32()) && !raidExpired(proto.add(0xc).readS32())) {
                 console.log("[UniqFactionPk] \u4fdd\u4f4f\u526f\u672c room=" + proto.add(0xc).readS32());
                 return 1;
             }
@@ -413,6 +455,10 @@ export function attachRaid() {
             const role = proto.add(0xc).readS32();
             const zone = proto.add(0x18).readS32();
             const side = proto.add(0x20).readS32();
+            if (!raidAccepting(room)) {
+                console.log("[UniqFactionPk] \u5e2e\u6218\u5df2\u7ed3\u675f\uff0c\u4e0d\u518d\u8fdb\u623f room=" + room + " role=" + role);
+                return;
+            }
             const world = worlds.get(room);
             if (!world) {
                 queueEnter(room, {zone, role, mapId: map, side});
