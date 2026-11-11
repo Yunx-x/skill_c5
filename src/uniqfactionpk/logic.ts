@@ -1293,9 +1293,14 @@ export function raidExpired(roomId: number): boolean {
     return (Date.now() / 1000 | 0) >= room.endTime;
 }
 
-export function raidAccepting(roomId: number): boolean {
-    const room = rooms.get(roomId);
-    return !!room && room.running;
+const closedRooms = new Set<number>();
+
+export function raidClosed(roomId: number): boolean {
+    return closedRooms.has(roomId);
+}
+
+function noteRaidClosed(roomId: number) {
+    if (roomId) closedRooms.add(roomId);
 }
 
 function clearRaidEnd(roomId: number) {
@@ -1333,6 +1338,7 @@ function stopEveryone(room: Room) {
 
 function finishWar(room: Room) {
     if (!room.running || !rooms.has(room.id)) return;
+    noteRaidClosed(room.id);
     room.running = false;
     clearRaidEnd(room.id);
     shareRoom(room);

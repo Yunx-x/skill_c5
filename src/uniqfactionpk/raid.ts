@@ -1,4 +1,4 @@
-import {bindInstance, noteEnter, noteKill, raidAccepting, raidExpired} from "./logic";
+import {bindInstance, noteEnter, noteKill, raidClosed, raidExpired} from "./logic";
 const IDA_BASE = 0x8048000;
 
 const SEND_RAID_START = 0x19ac;
@@ -455,7 +455,7 @@ export function attachRaid() {
             const role = proto.add(0xc).readS32();
             const zone = proto.add(0x18).readS32();
             const side = proto.add(0x20).readS32();
-            if (!raidAccepting(room)) {
+            if (raidClosed(room)) {
                 console.log("[UniqFactionPk] \u5e2e\u6218\u5df2\u7ed3\u675f\uff0c\u4e0d\u518d\u8fdb\u623f room=" + room + " role=" + role);
                 return;
             }
