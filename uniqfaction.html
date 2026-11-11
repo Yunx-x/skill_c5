@@ -45,7 +45,7 @@
       <tbody id="factions"></tbody>
     </table>
     <div class="bar"><button type="button" id="addFaction">加一行</button></div>
-    <div class="warn">等级填 0 时，申请时向游戏读取真实等级。</div>
+    <!--    <div class="warn">等级填 0 时，申请时向游戏读取真实等级。</div>-->
   </section>
 
   <section>
@@ -90,8 +90,8 @@ const MAIL = [
 ];
 const blank = {
   factions: [
-    {zone: 1, faction: 0, name: "帮派名", level: 0, activity: 10000},
-    {zone: 2, faction: 0, name: "帮派名", level: 0, activity: 10000}
+    {zone: 1, faction: 0, name: "帮派名", level: 5, activity: 10000},
+    {zone: 2, faction: 0, name: "帮派名", level: 5, activity: 10000}
   ],
   hours: {startHour: 12, startMinute: 0, endHour: 21, endMinute: 45},
   reward: {
@@ -172,7 +172,7 @@ function paintHours(d) {
 function paintFactions() {
   const body = document.getElementById("factions");
   body.innerHTML = data.factions.map(function (row) {
-    const mark = row.faction ? "" : " <span class='warn'>不进名单</span>";
+    const mark = row.faction ? "" : " <span class='warn'>为0不进名单</span>";
     return "<tr><td><input class='num' data-k='zone' value='" + row.zone + "'></td>"
       + "<td><input class='num' data-k='faction' value='" + row.faction + "'>" + mark + "</td>"
       + "<td><input data-k='name' value='" + esc(row.name) + "'></td>"
@@ -231,7 +231,7 @@ function build() {
 
 document.getElementById("addFaction").onclick = function () {
   data = read();
-  data.factions.push({zone: 1, faction: 0, name: "", level: 0, activity: 0});
+  data.factions.push({zone: 1, faction: 0, name: "", level: 5, activity: 9000});
   paintFactions();
 };
 document.getElementById("factions").onclick = function (ev) {

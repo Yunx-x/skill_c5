@@ -11,7 +11,7 @@ module.exports = {
 	target: "node",
 	mode: "production",
 	optimization: {
-		minimize: false,
+		minimize: true,
 		minimizer: [
 			new TerserPlugin({
 				terserOptions: {

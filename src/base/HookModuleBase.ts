@@ -134,17 +134,6 @@ export class HookModuleBase {
 		originValue: number,
 		newValue: number,
 	) {
-		// const readOriginValue = HookModuleBase.readOriginValue(
-		//   HookModuleBase.skillBaseIndex(),
-		//   address,
-		//   type,
-		// );
-
-		// if (readOriginValue !== null && readOriginValue !== originValue) {
-		//   console.log(
-		//     `warn: readValue does not match originValue: readValue: ${readOriginValue}, originValue: ${originValue}`,
-		//   );
-		// }
 		try {
 			HookModuleBase.modifyValueByAddress(
 				HookModuleBase.skillBaseIndex().add(address),
@@ -170,17 +159,6 @@ export class HookModuleBase {
 		originValue: number,
 		newValue: number,
 	) {
-		// const readOriginValue = HookModuleBase.readOriginValue(
-		//   HookModuleBase.gsBaseIndex(),
-		//   address,
-		//   type,
-		// );
-
-		// if (readOriginValue !== null && readOriginValue !== originValue) {
-		//   console.log(
-		//     `warn: readValue does not match originValue: readValue: ${readOriginValue}, originValue: ${originValue}`,
-		//   );
-		// }
 		try {
 			HookModuleBase.modifyValueByAddress(
 				HookModuleBase.gsBaseIndex().add(address),
