@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>跨服帮战配置</title>
+<style>
+  body { margin: 0; font: 14px/1.5 "Microsoft YaHei", sans-serif; color: #1c1c1c; background: #f4f5f7; }
+  main { max-width: 920px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 22px; margin: 0 0 6px; }
+  h2 { font-size: 16px; margin: 0 0 10px; }
+  p.note { margin: 0 0 18px; color: #555; }
+  section { background: #fff; border: 1px solid #e2e4e8; border-radius: 8px; padding: 16px; margin: 0 0 14px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 6px 4px; vertical-align: middle; }
+  th { color: #666; font-weight: 600; font-size: 12px; }
+  input, textarea { box-sizing: border-box; border: 1px solid #cfd3da; border-radius: 4px; padding: 6px 8px; font: inherit; width: 100%; background: #fff; }
+  input.num { width: 88px; }
+  textarea.json { font-family: Consolas, monospace; min-height: 280px; }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; }
+  label.field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #555; }
+  .mails { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .mail { border: 1px solid #eceef2; border-radius: 6px; padding: 10px; }
+  .mail h3 { margin: 0 0 8px; font-size: 14px; }
+  button { border: 1px solid #cfd3da; background: #fff; border-radius: 4px; padding: 6px 12px; font: inherit; cursor: pointer; }
+  button.primary { background: #1f6feb; color: #fff; border-color: #1f6feb; }
+  button.tiny { padding: 4px 8px; }
+  .bar { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+  .warn { color: #9a3412; font-size: 12px; }
+  .ok { color: #166534; font-size: 12px; }
+  @media (max-width: 720px) { .mails { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>跨服帮战配置</h1>
+  <p class="note">改完点生成，下载 <b>uniqfaction.json</b>，再拷到服务器 <b>/root/uniqfaction.json</b>。帮派 id 为 0 的行不会进名单。击杀和死亡满足一个就发奖。</p>
+
+  <section>
+    <h2>帮派名单</h2>
+    <table>
+      <thead>
+        <tr><th>区号</th><th>帮派 id</th><th>名字</th><th>等级</th><th>活跃</th><th></th></tr>
+      </thead>
+      <tbody id="factions"></tbody>
+    </table>
+    <div class="bar"><button type="button" id="addFaction">加一行</button></div>
+    <div class="warn">等级填 0 时，申请时向游戏读取真实等级。</div>
+  </section>
+
+  <section>
+    <h2>申请时段</h2>
+    <div class="row">
+      <label class="field">开始时<input class="num" id="startHour" type="number" min="0" max="23"></label>
+      <label class="field">开始分<input class="num" id="startMinute" type="number" min="0" max="59"></label>
+      <label class="field">结束时<input class="num" id="endHour" type="number" min="0" max="23"></label>
+      <label class="field">结束分<input class="num" id="endMinute" type="number" min="0" max="59"></label>
+    </div>
+    <p class="note" id="hourHint"></p>
+  </section>
+
+  <section>
+    <h2>结束邮件发奖</h2>
+    <p class="note">达到击杀或死亡的人，用系统邮件发奖。下面的标题和内容就是邮件的标题和正文。一封邮件一件物品，多件会拆成多封。</p>
+    <div class="row">
+      <label class="field">击杀达到<input class="num" id="kills" type="number" min="0"></label>
+      <label class="field">或死亡达到<input class="num" id="deaths" type="number" min="0"></label>
+    </div>
+    <div class="mails" id="mails"></div>
+  </section>
+
+  <section>
+    <h2>生成的 JSON</h2>
+    <div class="bar">
+      <button type="button" class="primary" id="make">生成</button>
+      <button type="button" id="download">下载 uniqfaction.json</button>
+      <button type="button" id="copy">复制</button>
+      <label class="field">导入已有文件<input id="open" type="file" accept=".json,application/json"></label>
+    </div>
+    <div id="msg"></div>
+    <textarea class="json" id="out" spellcheck="false"></textarea>
+  </section>
+</main>
+<script>
+const MAIL = [
+  ["win", "胜方邮件"],
+  ["lose", "败方邮件"],
+  ["winMvp", "胜方MVP邮件"],
+  ["loseMvp", "败方MVP邮件"]
+];
+const blank = {
+  factions: [
+    {zone: 1, faction: 0, name: "帮派名", level: 0, activity: 10000},
+    {zone: 2, faction: 0, name: "帮派名", level: 0, activity: 10000}
+  ],
+  hours: {startHour: 12, startMinute: 0, endHour: 21, endMinute: 45},
+  reward: {
+    kills: 2,
+    deaths: 2,
+    win: {title: "跨服帮战-胜方奖励", context: "胜方奖励", items: [{id: 340065, count: 10, proctype: 147}]},
+    lose: {title: "跨服帮战-败方奖励", context: "败方奖励", items: [{id: 340065, count: 5, proctype: 147}]},
+    winMvp: {title: "跨服帮战-胜方MVP奖励", context: "胜方MVP奖励", items: [{id: 340069, count: 3, proctype: 147}]},
+    loseMvp: {title: "跨服帮战-败方MVP奖励", context: "败方MVP奖励", items: [{id: 340069, count: 1, proctype: 147}]}
+  }
+};
+let data = JSON.parse(JSON.stringify(blank));
+
+function n(v) {
+  const x = parseInt(v, 10);
+  return x === x ? x : 0;
+}
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+    return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c];
+  });
+}
+function two(v) { return v < 10 ? "0" + v : String(v); }
+
+function read() {
+  const factions = [];
+  document.querySelectorAll("#factions tr").forEach(function (tr) {
+    factions.push({
+      zone: n(tr.querySelector("[data-k=zone]").value),
+      faction: n(tr.querySelector("[data-k=faction]").value),
+      name: tr.querySelector("[data-k=name]").value,
+      level: n(tr.querySelector("[data-k=level]").value),
+      activity: n(tr.querySelector("[data-k=activity]").value)
+    });
+  });
+  const hours = {
+    startHour: n(document.getElementById("startHour").value),
+    startMinute: n(document.getElementById("startMinute").value),
+    endHour: n(document.getElementById("endHour").value),
+    endMinute: n(document.getElementById("endMinute").value)
+  };
+  const reward = {kills: n(document.getElementById("kills").value), deaths: n(document.getElementById("deaths").value)};
+  MAIL.forEach(function (pair) {
+    const box = document.querySelector("[data-mail=" + pair[0] + "]");
+    const items = [];
+    box.querySelectorAll("[data-item]").forEach(function (row) {
+      const id = n(row.querySelector("[data-k=id]").value);
+      const count = n(row.querySelector("[data-k=count]").value);
+      if (id > 0 && count > 0) items.push({id: id, count: count, proctype: n(row.querySelector("[data-k=proctype]").value)});
+    });
+    reward[pair[0]] = {
+      title: box.querySelector("[data-k=title]").value,
+      context: box.querySelector("[data-k=context]").value,
+      items: items
+    };
+  });
+  return {factions: factions, hours: hours, reward: reward};
+}
+
+function check(d) {
+  const h = d.hours;
+  if (h.startHour < 0 || h.startHour > 23 || h.endHour < 0 || h.endHour > 23) return "小时要在 0 到 23";
+  if (h.startMinute < 0 || h.startMinute > 59 || h.endMinute < 0 || h.endMinute > 59) return "分钟要在 0 到 59";
+  if (h.endHour * 60 + h.endMinute <= h.startHour * 60 + h.startMinute) return "结束时间必须晚于开始时间";
+  if (d.reward.kills < 0 || d.reward.deaths < 0) return "击杀和死亡不能是负数";
+  return "";
+}
+
+function paintHours(d) {
+  const h = d.hours;
+  document.getElementById("startHour").value = h.startHour;
+  document.getElementById("startMinute").value = h.startMinute;
+  document.getElementById("endHour").value = h.endHour;
+  document.getElementById("endMinute").value = h.endMinute;
+  document.getElementById("hourHint").textContent = two(h.startHour) + ":" + two(h.startMinute) + " 起可以申请，" + two(h.endHour) + ":" + two(h.endMinute) + " 起不再接受。";
+}
+
+function paintFactions() {
+  const body = document.getElementById("factions");
+  body.innerHTML = data.factions.map(function (row) {
+    const mark = row.faction ? "" : " <span class='warn'>不进名单</span>";
+    return "<tr><td><input class='num' data-k='zone' value='" + row.zone + "'></td>"
+      + "<td><input class='num' data-k='faction' value='" + row.faction + "'>" + mark + "</td>"
+      + "<td><input data-k='name' value='" + esc(row.name) + "'></td>"
+      + "<td><input class='num' data-k='level' value='" + row.level + "'></td>"
+      + "<td><input class='num' data-k='activity' value='" + row.activity + "'></td>"
+      + "<td><button type='button' class='tiny' data-del>删除</button></td></tr>";
+  }).join("");
+}
+
+function itemRow(item) {
+  return "<div class='row' data-item>"
+    + "<label class='field'>物品 id<input class='num' data-k='id' value='" + item.id + "'></label>"
+    + "<label class='field'>数量<input class='num' data-k='count' value='" + item.count + "'></label>"
+    + "<label class='field'>保护类型<input class='num' data-k='proctype' value='" + item.proctype + "'></label>"
+    + "<button type='button' class='tiny' data-del-item>删除</button></div>";
+}
+
+function paintMails() {
+  document.getElementById("kills").value = data.reward.kills;
+  document.getElementById("deaths").value = data.reward.deaths;
+  document.getElementById("mails").innerHTML = MAIL.map(function (pair) {
+    const mail = data.reward[pair[0]];
+    return "<div class='mail' data-mail='" + pair[0] + "'><h3>" + pair[1] + "</h3>"
+      + "<label class='field'>邮件标题<input data-k='title' value='" + esc(mail.title) + "'></label>"
+      + "<label class='field'>邮件内容<input data-k='context' value='" + esc(mail.context) + "'></label>"
+      + mail.items.map(itemRow).join("")
+      + "<div class='bar'><button type='button' class='tiny' data-add-item>加物品</button></div></div>";
+  }).join("");
+}
+
+function paint() {
+  paintFactions();
+  paintHours(data);
+  paintMails();
+}
+
+function show(cls, text) {
+  const el = document.getElementById("msg");
+  el.className = cls;
+  el.textContent = text;
+}
+
+function build() {
+  data = read();
+  const err = check(data);
+  paintHours(data);
+  if (err) {
+    show("warn", err);
+    return "";
+  }
+  const text = JSON.stringify(data, null, 2) + "\n";
+  document.getElementById("out").value = text;
+  show("ok", "已生成。下载后覆盖服务器上的 /root/uniqfaction.json，下一场发奖和申请会用新数字。");
+  return text;
+}
+
+document.getElementById("addFaction").onclick = function () {
+  data = read();
+  data.factions.push({zone: 1, faction: 0, name: "", level: 0, activity: 0});
+  paintFactions();
+};
+document.getElementById("factions").onclick = function (ev) {
+  const btn = ev.target.closest("[data-del]");
+  if (!btn) return;
+  data = read();
+  const rows = [].slice.call(document.querySelectorAll("#factions tr"));
+  data.factions.splice(rows.indexOf(btn.closest("tr")), 1);
+  paintFactions();
+};
+document.getElementById("mails").onclick = function (ev) {
+  const add = ev.target.closest("[data-add-item]");
+  const del = ev.target.closest("[data-del-item]");
+  if (!add && !del) return;
+  data = read();
+  const key = (add || del).closest("[data-mail]").getAttribute("data-mail");
+  if (add) data.reward[key].items.push({id: 0, count: 1, proctype: 0});
+  else {
+    const rows = [].slice.call((del.closest("[data-mail]")).querySelectorAll("[data-item]"));
+    data.reward[key].items.splice(rows.indexOf(del.closest("[data-item]")), 1);
+  }
+  paintMails();
+};
+document.getElementById("make").onclick = build;
+document.getElementById("download").onclick = function () {
+  const text = build();
+  if (!text) return;
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text], {type: "application/json"}));
+  a.download = "uniqfaction.json";
+  a.click();
+};
+document.getElementById("copy").onclick = function () {
+  const text = build();
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(function () { show("ok", "已复制。"); });
+};
+document.getElementById("open").onchange = function () {
+  const file = this.files && this.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function () {
+    try {
+      const raw = JSON.parse(String(reader.result).replace(/^\uFEFF/, ""));
+      data = JSON.parse(JSON.stringify(blank));
+      if (Array.isArray(raw.factions)) data.factions = raw.factions;
+      if (raw.hours) data.hours = Object.assign(data.hours, raw.hours);
+      if (raw.reward) {
+        data.reward.kills = raw.reward.kills;
+        data.reward.deaths = raw.reward.deaths;
+        MAIL.forEach(function (pair) {
+          if (raw.reward[pair[0]]) data.reward[pair[0]] = raw.reward[pair[0]];
+        });
+      }
+      paint();
+      build();
+    } catch (e) {
+      show("warn", "这个文件不是合法的 JSON");
+    }
+  };
+  reader.readAsText(file);
+};
+paint();
+build();
+</script>
+</body>
+</html>
