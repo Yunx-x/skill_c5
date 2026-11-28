@@ -326,7 +326,7 @@ class Skill261 extends BaseHookSkillStub {
             }
 
             //屏障，屏障2
-            if (player.GetHasbuff(9339)||player.GetHasbuff(9343)) {
+            if (player.GetHasbuff(9339) || player.GetHasbuff(9343)) {
                 player.SetDispel(120, 9339, 9343, 9339)
                 return true
             }
@@ -508,48 +508,49 @@ class Skill248 extends BaseHookSkillStub {
     }
 
     GetCooldowntime(stub: NativePointer, skill: Skill, originFunc: NativeFunction<number, NativePointer[]>): number {
-        return super.GetCooldowntime(stub, skill, originFunc) + 8000;
+        // return super.GetCooldowntime(stub, skill, originFunc) + 8000;
+        return 0;
     }
 
     Calculate2(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>) {
         const player = skill.GetPlayerNice();
-
-        const v12 = (skill.GetT3() * 0.05 + 1.2);
-        skill.SetRatio(v12);
-
-        const Level = skill.GetLevel();
-        const v9 = Math.floor(1.42 - Level * 0.05);
-        const v6 = Level * 0.014;
-        const v7 = Level * v6;
-        const v10 = ((Level * 2.9 + v7 + 34.0) * v9);
-        const v8 = Math.floor(Level * 0.05 + 0.55);
-        const v5 = Level * 0.37;
-        const v11 = ((Level * v5 + 44.0) * v8 + v10);
-        const v13 = (skill.GetT2() * 0.08 + 1.0) * v11;
-        skill.SetPlus(v13 + 2240);
-
-        player.SetVar1(player.GetRes1())
-        player.SetVar2(player.GetMaxmp())
+        //
+        // const v12 = (skill.GetT3() * 0.05 + 1.2);
+        // skill.SetRatio(v12);
+        //
+        // const Level = skill.GetLevel();
+        // const v9 = Math.floor(1.42 - Level * 0.05);
+        // const v6 = Level * 0.014;
+        // const v7 = Level * v6;
+        // const v10 = ((Level * 2.9 + v7 + 34.0) * v9);
+        // const v8 = Math.floor(Level * 0.05 + 0.55);
+        // const v5 = Level * 0.37;
+        // const v11 = ((Level * v5 + 44.0) * v8 + v10);
+        // const v13 = (skill.GetT2() * 0.08 + 1.0) * v11;
+        // skill.SetPlus(v13 + 2240);
+        //
+        // player.SetVar1(player.GetRes1())
+        // player.SetVar2(player.GetMaxmp())
 
         player.SetPerform(1);
     }
 
     StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
         const player = skill.GetPlayerNice();
-        player.SetFlamecurse(120, 12000, 0.1, 1)
-        player.SetBlazingSun(120, 12000, 0.2, player.GetVar2() * 0.1)
+        // player.SetFlamecurse(120, 12000, 0.1, 1)
+        // player.SetBlazingSun(120, 12000, 0.2, player.GetVar2() * 0.1)
+        //
+        // const res = player.GetVar1()
+        // // 为目标增加最多3层灼烧状态，每层灼烧状态持续12秒，造成伤害总量为人物眩晕抗性的120倍。
+        // player.SetHpleak4(120, 12000, res * 40, 0, 1)
+        // player.SetHpleak4(120, 12000, res * 40, 0, 2)
+        // player.SetHpleak4(120, 12000, res * 40, 0, 3)
+        //
+        // if (player.GetTypeIsPlayer() && player.GetHasmultbuff(111)) {
+        //     player.SetDispel(120, 111, 111, 111)
+        // }
 
-        const res = player.GetVar1()
-        // 为目标增加最多3层灼烧状态，每层灼烧状态持续12秒，造成伤害总量为人物眩晕抗性的120倍。
-        player.SetHpleak4(120, 12000, res * 40, 0, 1)
-        player.SetHpleak4(120, 12000, res * 40, 0, 2)
-        player.SetHpleak4(120, 12000, res * 40, 0, 3)
-
-        if (player.GetTypeIsPlayer() && player.GetHasmultbuff(111)) {
-            player.SetDispel(120, 111, 111, 111)
-            player.SetDirecthurt(120, player.GetVar2() * 2)
-        }
-
+        player.SetDirecthurt(120, 10000)
         return true
     }
 

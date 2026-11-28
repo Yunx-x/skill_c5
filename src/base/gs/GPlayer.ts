@@ -915,6 +915,15 @@ export class GPlayer extends GActiveImp {
         return func(this.pointer);
     }
 
+    PlayerGetProperty(): number {
+        const func = HookFuncCore.getNativeFunc(
+            "_ZN11gplayer_imp17PlayerGetPropertyEv",
+            "void",
+            ["pointer"],
+        );
+        return func(this.pointer);
+    }
+
     CalcEquipmentInfo(): number {
         const func = HookFuncCore.getNativeFunc(
             "_ZN11gplayer_imp17CalcEquipmentInfoEv",
@@ -927,6 +936,15 @@ export class GPlayer extends GActiveImp {
     RefreshFuwen(): number {
         const func = HookFuncCore.getNativeFunc(
             "_ZN11gplayer_imp12RefreshFuwenEv",
+            "void",
+            ["pointer"],
+        );
+        return func(this.pointer);
+    }
+
+    RefreshEquipment(): number {
+        const func = HookFuncCore.getNativeFunc(
+            "_ZN11gplayer_imp16RefreshEquipmentEv",
             "void",
             ["pointer"],
         );

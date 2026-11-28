@@ -27,18 +27,18 @@ class GsManager extends BaseManager {
 
     attach() {
         this.attachHeart();
-        this.addRuneScore(10000);
-        this.attachMsg();
-        this.clearAd();
-        this.multiStoneReinforceSupport();
-        this.fanZha();
-        this.mysticStoneEmbed();
-        this.ok10Upgrade();
-        this.OnPlayerDeath();
-        this.fixCaoMiaoBug();
-        this.CatchPetSuccess();
-        this.TransferEquipmentAttr2();
-        this.EventUpdateLiveness()
+        // this.addRuneScore(10000);
+        // this.attachMsg();
+        // this.clearAd();
+        // this.multiStoneReinforceSupport();
+        // this.fanZha();
+        // this.mysticStoneEmbed();
+        // this.ok10Upgrade();
+        // this.OnPlayerDeath();
+        // this.fixCaoMiaoBug();
+        // this.CatchPetSuccess();
+        // this.TransferEquipmentAttr2();
+        // this.EventUpdateLiveness()
     }
 
     /**

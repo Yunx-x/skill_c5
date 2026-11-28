@@ -91,10 +91,14 @@ class Skill1740 extends BaseHookSkillStub {
  * 并使你在天常修元分页上的每个非主动天书技能的本体加点（不计装备加点)，额外为你提供0.5%的致命一击伤害减免。
  *
 */
-class Skill221 extends BaseHookSkillStub {
+class Skill244 extends BaseHookSkillStub {
 
     constructor() {
-        super(221);
+        super(244);
+    }
+
+    StateAttack(stub: NativePointer, skill: Skill, originFunc: NativeFunction<void, NativePointer[]>): boolean {
+        return super.StateAttack(stub, skill, originFunc);
     }
 
 }
@@ -169,5 +173,6 @@ export class TongYongSkillList {
         // new Skill1970()
         // new Skill1926()
         new Skill1740()
+        new Skill244()
     }
 }
